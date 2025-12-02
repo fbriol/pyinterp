@@ -1,0 +1,461 @@
+// Copyright (c) 2025 CNES
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+#include "pyinterp/math/axis.hpp"
+
+#include <gtest/gtest.h>
+
+#include <Eigen/Core>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+
+#include "pyinterp/eigen.hpp"
+#include "pyinterp/math/fill.hpp"
+#include "pyinterp/serialization_buffer.hpp"
+
+namespace interpolate = pyinterp::math;
+namespace serialization = pyinterp::serialization;
+
+// =============================================================================
+// Test Fixture
+// =============================================================================
+
+template <typename T>
+class Axis : public testing::Test {
+ protected:
+  static constexpr T kDefaultEpsilon = static_cast<T>(1e-6);
+  static constexpr T kPeriodicCircle = 360;
+
+  void CreateRegularAxis(T start, T stop, T num, bool is_periodic = false) {
+    axis_ = std::make_unique<interpolate::Axis<T>>(
+        start, stop, num, kDefaultEpsilon, is_periodic ? kPeriodicCircle : 0);
+  }
+
+  void CreateIrregularAxis(const pyinterp::Vector<T>& values,
+                           bool is_periodic = false) {
+    axis_ = std::make_unique<interpolate::Axis<T>>(
+        values, kDefaultEpsilon, is_periodic ? kPeriodicCircle : 0);
+  }
+
+  auto axis() -> interpolate::Axis<T>* { return axis_.get(); }
+
+ private:
+  std::unique_ptr<interpolate::Axis<T>> axis_{
+      std::make_unique<interpolate::Axis<T>>()};
+};
+
+using NumericTypes = testing::Types<int32_t, int64_t, float, double>;
+TYPED_TEST_SUITE(Axis, NumericTypes);
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+template <typename T>
+void ExpectIndexPair(const std::optional<std::tuple<int64_t, int64_t>>& result,
+                     int64_t expected_first, int64_t expected_second) {
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(std::get<0>(*result), expected_first);
+  EXPECT_EQ(std::get<1>(*result), expected_second);
+}
+
+void ExpectIndexVector(const std::vector<int64_t>& actual,
+                       const std::vector<int64_t>& expected) {
+  ASSERT_EQ(actual.size(), expected.size());
+  for (size_t i = 0; i < expected.size(); ++i) {
+    EXPECT_EQ(actual[i], expected[i]) << "Mismatch at index " << i;
+  }
+}
+
+// =============================================================================
+// Default Constructor Tests
+// =============================================================================
+
+TYPED_TEST(Axis, DefaultConstructorHasUndefinedValues) {
+  auto* axis = this->axis();
+
+  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis->front()));
+  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis->back()));
+  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis->min_value()));
+  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis->max_value()));
+  EXPECT_EQ(axis->size(), 0);
+  EXPECT_FALSE(axis->is_periodic());
+  EXPECT_TRUE(axis->is_ascending());
+  EXPECT_FALSE(axis->is_regular());
+  auto repr = std::string(*axis);
+  EXPECT_NE(repr.find("Axis(irregular)"), std::string::npos);
+}
+
+TYPED_TEST(Axis, DefaultConstructorThrowsOnInvalidOperations) {
+  auto* axis = this->axis();
+
+  EXPECT_THROW(static_cast<void>(axis->increment()), std::logic_error);
+  EXPECT_THROW(static_cast<void>(axis->coordinate_value(0)), std::out_of_range);
+  EXPECT_THROW(static_cast<void>(axis->slice(0, 1)), std::out_of_range);
+}
+
+TYPED_TEST(Axis, DefaultConstructorReturnsInvalidIndexes) {
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->find_index(360, true), -1);
+  EXPECT_EQ(axis->find_index(360, false), -1);
+  EXPECT_FALSE(axis->find_indexes(360).has_value());
+}
+
+// =============================================================================
+// Singleton Axis Tests
+// =============================================================================
+
+TYPED_TEST(Axis, SingletonAxisHasCorrectProperties) {
+  this->CreateRegularAxis(0, 1, 1);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->front(), 0);
+  EXPECT_EQ(axis->back(), 0);
+  EXPECT_EQ(axis->min_value(), 0);
+  EXPECT_EQ(axis->max_value(), 0);
+  EXPECT_EQ(axis->increment(), 1);
+  EXPECT_EQ(axis->size(), 1);
+  EXPECT_TRUE(axis->is_ascending());
+  EXPECT_TRUE(axis->is_regular());
+  EXPECT_FALSE(axis->is_periodic());
+}
+
+TYPED_TEST(Axis, SingletonAxisFindIndexBehavior) {
+  this->CreateRegularAxis(0, 1, 1);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->find_index(0, false), 0);
+  EXPECT_EQ(axis->find_index(1, false), -1);
+  EXPECT_EQ(axis->find_index(1, true), 0);
+  EXPECT_FALSE(axis->find_indexes(0).has_value());
+}
+
+TYPED_TEST(Axis, SingletonAxisSliceAndAccess) {
+  this->CreateRegularAxis(0, 1, 1);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->coordinate_value(0), 0);
+
+  auto slice = axis->slice(0, 1);
+  EXPECT_EQ(slice.size(), 1);
+  EXPECT_EQ(slice[0], 0);
+
+  EXPECT_THROW(static_cast<void>(axis->coordinate_value(1)), std::exception);
+  EXPECT_THROW(static_cast<void>(axis->slice(0, 2)), std::exception);
+}
+
+// =============================================================================
+// Binary Axis Tests
+// =============================================================================
+
+TYPED_TEST(Axis, BinaryAxisHasCorrectProperties) {
+  this->CreateRegularAxis(0, 1, 2);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->front(), 0);
+  EXPECT_EQ(axis->back(), 1);
+  EXPECT_EQ(axis->min_value(), 0);
+  EXPECT_EQ(axis->max_value(), 1);
+  EXPECT_EQ(axis->increment(), 1);
+  EXPECT_EQ(axis->size(), 2);
+  EXPECT_TRUE(axis->is_ascending());
+  EXPECT_TRUE(axis->is_regular());
+  EXPECT_FALSE(axis->is_periodic());
+}
+
+TYPED_TEST(Axis, BinaryAxisFindIndexesBoundary) {
+  this->CreateRegularAxis(0, 1, 2);
+  auto* axis = this->axis();
+
+  ExpectIndexPair<TypeParam>(axis->find_indexes(0), 0, 1);
+  ExpectIndexPair<TypeParam>(axis->find_indexes(1), 0, 1);
+}
+
+TYPED_TEST(Axis, BinaryAxisFindIndexesFloat) {
+  if constexpr (std::is_floating_point_v<TypeParam>) {
+    this->CreateRegularAxis(0, 1, 2);
+    auto* axis = this->axis();
+
+    EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(-0.1)));
+    EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(1.1)));
+    ExpectIndexPair<TypeParam>(axis->find_indexes(static_cast<TypeParam>(0.4)),
+                               0, 1);
+    ExpectIndexPair<TypeParam>(axis->find_indexes(static_cast<TypeParam>(0.6)),
+                               0, 1);
+  }
+}
+
+TYPED_TEST(Axis, BinaryAxisFindIndexesInteger) {
+  if constexpr (std::is_integral_v<TypeParam>) {
+    this->CreateRegularAxis(0, 1, 2);
+    auto* axis = this->axis();
+
+    EXPECT_FALSE(axis->find_indexes(-1));
+    EXPECT_FALSE(axis->find_indexes(2));
+    ExpectIndexPair<TypeParam>(axis->find_indexes(0), 0, 1);
+  }
+}
+
+// =============================================================================
+// Periodic Axis Tests (Longitude Wrapping)
+// =============================================================================
+
+TYPED_TEST(Axis, PeriodicAxis0To359Properties) {
+  this->CreateRegularAxis(0, 359, 360, true);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->front(), 0);
+  EXPECT_EQ(axis->back(), 359);
+  EXPECT_EQ(axis->min_value(), 0);
+  EXPECT_EQ(axis->max_value(), 359);
+  EXPECT_EQ(axis->increment(), 1);
+  EXPECT_EQ(axis->size(), 360);
+  EXPECT_TRUE(axis->is_ascending());
+  EXPECT_TRUE(axis->is_regular());
+  EXPECT_TRUE(axis->is_periodic());
+  auto repr = std::string(*axis);
+  EXPECT_EQ(repr, R"(Axis(regular, period=360)
+  range: [0, 359]
+  step: 1
+  size: 360)");
+}
+
+TYPED_TEST(Axis, PeriodicAxis0To359WrapBehavior) {
+  this->CreateRegularAxis(0, 359, 360, true);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->find_index(0, false), 0);
+  EXPECT_EQ(axis->find_index(360, true), 0);
+  EXPECT_EQ(axis->find_index(360, false), 0);
+
+  ExpectIndexPair<TypeParam>(axis->find_indexes(360), 0, 1);
+  ExpectIndexPair<TypeParam>(axis->find_indexes(370), 10, 11);
+}
+
+TYPED_TEST(Axis, PeriodicAxis0To359NegativeWrap) {
+  if constexpr (std::is_floating_point_v<TypeParam>) {
+    this->CreateRegularAxis(0, 359, 360, true);
+    auto* axis = this->axis();
+
+    ExpectIndexPair<TypeParam>(axis->find_indexes(static_cast<TypeParam>(-9.5)),
+                               350, 351);
+  } else {
+    this->CreateRegularAxis(0, 359, 360, true);
+    auto* axis = this->axis();
+
+    ExpectIndexPair<TypeParam>(axis->find_indexes(-10), 350, 351);
+  }
+}
+
+TYPED_TEST(Axis, PeriodicAxisFlippedBehavior) {
+  this->CreateRegularAxis(0, 359, 360, true);
+  auto* axis = this->axis();
+  axis->flip();
+
+  EXPECT_EQ(axis->front(), 359);
+  EXPECT_EQ(axis->back(), 0);
+  EXPECT_EQ(axis->increment(), -1);
+  EXPECT_FALSE(axis->is_ascending());
+  EXPECT_TRUE(axis->is_periodic());
+  EXPECT_TRUE(axis->is_regular());
+}
+
+TYPED_TEST(Axis, PeriodicAxisMinus180To179Properties) {
+  auto axis = interpolate::Axis<TypeParam>(
+      -180, 179, 360, this->kDefaultEpsilon, this->kPeriodicCircle);
+
+  EXPECT_EQ(axis.front(), -180);
+  EXPECT_EQ(axis.back(), 179);
+  EXPECT_EQ(axis.min_value(), -180);
+  EXPECT_EQ(axis.max_value(), 179);
+  EXPECT_EQ(axis.increment(), 1);
+  EXPECT_TRUE(axis.is_ascending());
+  EXPECT_TRUE(axis.is_periodic());
+  EXPECT_TRUE(axis.is_regular());
+}
+
+// =============================================================================
+// Irregular Axis Tests
+// =============================================================================
+
+TEST(Axis, IrregularAxisProperties) {
+  std::vector<double> values{-89.0,      -88.908818, -88.809323, -88.700757,
+                             -88.582294, -88.453032, -88.311987, -88.158087,
+                             -87.990161, -87.806932};
+
+  interpolate::Axis<double> axis(
+      Eigen::Map<Eigen::VectorXd>(values.data(), values.size()), 1e-6);
+
+  EXPECT_EQ(axis.front(), -89.0);
+  EXPECT_EQ(axis.back(), -87.806932);
+  EXPECT_EQ(axis.min_value(), -89.0);
+  EXPECT_EQ(axis.max_value(), -87.806932);
+  EXPECT_EQ(axis.size(), values.size());
+  EXPECT_FALSE(axis.is_periodic());
+  EXPECT_TRUE(axis.is_ascending());
+  EXPECT_FALSE(axis.is_regular());
+  EXPECT_THROW(static_cast<void>(axis.increment()), std::logic_error);
+  auto repr = std::string(axis);
+  EXPECT_EQ(repr,
+            R"(Axis(irregular)
+  values: [-89, -88.908818, -88.809323, ..., -88.158087, -87.990161, -87.806932]
+  size: 10)");
+}
+
+TEST(Axis, IrregularAxisFindIndex) {
+  std::vector<double> values{-89.0, -50.0, 0.0, 50.0, 88.940374};
+
+  interpolate::Axis<double> axis(
+      Eigen::Map<Eigen::VectorXd>(values.data(), values.size()), 1e-6);
+
+  EXPECT_EQ(axis.find_index(0.0, false), 2);
+  EXPECT_EQ(axis.find_index(-90.0, false), -1);
+  EXPECT_EQ(axis.find_index(-90.0, true), 0);
+  EXPECT_EQ(axis.find_index(90.0, false), -1);
+  EXPECT_EQ(axis.find_index(90.0, true), 4);
+}
+
+// =============================================================================
+// Constant Values Tests
+// =============================================================================
+
+TYPED_TEST(Axis, ConstantValuesThrowsOnDuplicates) {
+  auto values = pyinterp::Vector<TypeParam>(5);
+  values[0] = 0;
+  values[1] = 1;
+  values[2] = 5;
+  values[3] = 5;  // Duplicate
+  values[4] = 5;  // Duplicate
+
+  EXPECT_THROW(this->CreateIrregularAxis(values), std::invalid_argument);
+}
+
+TYPED_TEST(Axis, ConstantValuesThrowsOnAllSame) {
+  auto values = pyinterp::Vector<TypeParam>(5);
+  values[0] = 5;
+  values[1] = 5;
+  values[2] = 5;
+  values[3] = 5;
+  values[4] = 5;
+
+  EXPECT_THROW(this->CreateIrregularAxis(values), std::invalid_argument);
+}
+
+// =============================================================================
+// Search Window Tests
+// =============================================================================
+
+TYPED_TEST(Axis, SearchWindowPeriodicAxis) {
+  this->CreateRegularAxis(-180, 179, 360, true);
+  auto* axis = this->axis();
+
+  auto indexes = axis->find_indexes(0, 5, interpolate::axis::kUndef);
+  ExpectIndexVector(indexes,
+                    {176, 177, 178, 179, 180, 181, 182, 183, 184, 185});
+
+  indexes = axis->find_indexes(-180, 5, interpolate::axis::kUndef);
+  ExpectIndexVector(indexes, {356, 357, 358, 359, 0, 1, 2, 3, 4, 5});
+}
+
+TYPED_TEST(Axis, SearchWindowBoundaryModes) {
+  this->CreateRegularAxis(0, 9, 10, false);
+  auto* axis = this->axis();
+
+  // Symmetric mode
+  auto indexes = axis->find_indexes(1, 4, interpolate::axis::kSym);
+  ExpectIndexVector(indexes, {2, 1, 0, 1, 2, 3, 4, 5});
+
+  // Wrap mode
+  indexes = axis->find_indexes(1, 4, interpolate::axis::kWrap);
+  ExpectIndexVector(indexes, {8, 9, 0, 1, 2, 3, 4, 5});
+
+  // Expand mode
+  indexes = axis->find_indexes(1, 4, interpolate::axis::kExpand);
+  ExpectIndexVector(indexes, {0, 0, 0, 1, 2, 3, 4, 5});
+}
+
+// =============================================================================
+// Timestamp Tests
+// =============================================================================
+
+TEST(Axis, TimestampFindIndex) {
+  auto axis = interpolate::Axis<int64_t>(946684800, 946771140, 1440, 0);
+
+  EXPECT_EQ(axis.find_index(946684880, true), 1);
+  EXPECT_EQ(axis.find_index(946684900, true), 2);
+
+  axis.flip();
+  EXPECT_EQ(axis.find_index(946684880, true), 1438);
+  EXPECT_EQ(axis.find_index(946684900, true), 1437);
+}
+
+// =============================================================================
+// Nearest Index Tests
+// =============================================================================
+
+TYPED_TEST(Axis, FindNearestIndexPeriodicAxis) {
+  this->CreateRegularAxis(0, 355, 72, true);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->find_index(356, false), 71);
+  EXPECT_EQ(axis->find_index(358, false), 0);
+  EXPECT_EQ(axis->find_index(-2, false), 0);
+  EXPECT_EQ(axis->find_index(-4, false), 71);
+}
+
+TYPED_TEST(Axis, FindNearestIndexCenteredPeriodicAxis) {
+  this->CreateRegularAxis(-180, 175, 72, true);
+  auto* axis = this->axis();
+
+  EXPECT_EQ(axis->find_index(176, false), 71);
+  EXPECT_EQ(axis->find_index(178, false), 0);
+  EXPECT_EQ(axis->find_index(-182, false), 0);
+  EXPECT_EQ(axis->find_index(-184, false), 71);
+}
+
+// =============================================================================
+// GetState/SetState Tests
+// =============================================================================
+TYPED_TEST(Axis, RegularSerializationDeserialization) {
+  this->CreateRegularAxis(0, 359, 360, true);
+  auto* axis = this->axis();
+
+  auto state_reader = serialization::Reader(axis->getstate());
+  auto restored_axis = interpolate::Axis<TypeParam>::setstate(state_reader);
+
+  EXPECT_EQ(*axis, restored_axis);
+}
+
+TYPED_TEST(Axis, IrregularSerializationDeserialization) {
+  pyinterp::Vector<TypeParam> values(10);
+  for (int64_t ix = 0; ix < 10; ++ix) {
+    values[ix] = TypeParam(ix * ix);
+  }
+  this->CreateIrregularAxis(values);
+
+  auto* axis = this->axis();
+
+  auto state_reader = serialization::Reader(axis->getstate());
+  auto restored_axis = interpolate::Axis<TypeParam>::setstate(state_reader);
+
+  EXPECT_EQ(*axis, restored_axis);
+}
+
+TYPED_TEST(Axis, UndefinedSerializationDeserialization) {
+  auto axis = interpolate::Axis<TypeParam>();
+
+  auto state_reader = serialization::Reader(axis.getstate());
+  auto restored_axis = interpolate::Axis<TypeParam>::setstate(state_reader);
+
+  EXPECT_EQ(axis, restored_axis);
+}

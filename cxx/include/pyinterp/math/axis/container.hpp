@@ -47,7 +47,7 @@ class Abstract {
 
   /// Move constructor
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   Abstract(Abstract &&rhs) noexcept = default;
 
   /// Copy assignment operator
@@ -57,7 +57,7 @@ class Abstract {
 
   /// Move assignment operator
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   auto operator=(Abstract &&rhs) noexcept -> Abstract & = default;
 
   /// Returns true if the data is arranged in ascending order.
@@ -174,7 +174,7 @@ class Undefined : public Abstract<T> {
 
   /// Move constructor
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   Undefined(Undefined &&rhs) noexcept = default;
 
   /// Copy assignment operator
@@ -184,7 +184,7 @@ class Undefined : public Abstract<T> {
 
   /// Move assignment operator
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   auto operator=(Undefined &&rhs) noexcept -> Undefined & = default;
 
   /// @copydoc Abstract::type()
@@ -269,7 +269,7 @@ class Irregular : public Abstract<T> {
 
   /// Move constructor
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   Irregular(Irregular &&rhs) noexcept = default;
 
   /// Copy assignment operator
@@ -279,7 +279,7 @@ class Irregular : public Abstract<T> {
 
   /// Move assignment operator
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   auto operator=(Irregular &&rhs) noexcept -> Irregular & = default;
 
   /// @copydoc Abstract::type()
@@ -440,7 +440,7 @@ class AbstractRegular : public Abstract<T> {
 
   /// Move constructor
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   AbstractRegular(AbstractRegular &&rhs) noexcept = default;
 
   /// Copy assignment operator
@@ -450,7 +450,7 @@ class AbstractRegular : public Abstract<T> {
 
   /// Move assignment operator
   ///
-  /// @param[inout] rhs right value
+  /// @param[in,out] rhs right value
   auto operator=(AbstractRegular &&rhs) noexcept -> AbstractRegular & = default;
 
   /// Get the step between two successive values.

@@ -5,6 +5,7 @@
 #include <Eigen/Core>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 namespace pyinterp::serialization {
@@ -30,7 +31,7 @@ TEST_F(WriterTest, WriteTriviallyCopiableInt) {
 }
 
 TEST_F(WriterTest, WriteTriviallyCopiableDouble) {
-  double value = 3.14159;
+  double value = std::numbers::pi;
   writer_.write(value);
   EXPECT_EQ(writer_.size(), sizeof(double));
 }
@@ -322,11 +323,11 @@ TEST_F(ReaderTest, ReadInt) {
 }
 
 TEST_F(ReaderTest, ReadDouble) {
-  double original = 3.14159;
+  double original = std::numbers::pi;
   writer_.write(original);
 
   Reader reader(std::move(writer_));
-  double read_value = reader.read<double>();
+  auto read_value = reader.read<double>();
 
   EXPECT_DOUBLE_EQ(read_value, original);
 }
@@ -353,7 +354,7 @@ TEST_F(ReaderTest, ReadMultipleValues) {
   Reader reader(std::move(writer_));
 
   int read_int = reader.read<int>();
-  double read_double = reader.read<double>();
+  auto read_double = reader.read<double>();
   char read_char = reader.read<char>();
 
   EXPECT_EQ(read_int, int_val);
@@ -515,7 +516,7 @@ TEST_F(ReaderTest, ReadEigenMatrixFixed) {
   writer_.write(original);
 
   Reader reader(std::move(writer_));
-  auto read_mat = reader.read_eigen<double, 2, 2>();
+  auto read_mat = reader.read_eigen<double>();
 
   EXPECT_EQ(read_mat.rows(), 2);
   EXPECT_EQ(read_mat.cols(), 2);
@@ -569,7 +570,7 @@ TEST_F(RoundTripTest, RoundTripInt) {
 
 TEST_F(RoundTripTest, RoundTripMultiplePrimitives) {
   int int_val = 100;
-  double double_val = 2.71828;
+  double double_val = std::numbers::e;
   char char_val = 'Q';
 
   writer_.write(int_val);
@@ -579,7 +580,7 @@ TEST_F(RoundTripTest, RoundTripMultiplePrimitives) {
   Reader reader(std::move(writer_));
 
   int read_int = reader.read<int>();
-  double read_double = reader.read<double>();
+  auto read_double = reader.read<double>();
   char read_char = reader.read<char>();
 
   EXPECT_EQ(read_int, int_val);
@@ -628,7 +629,7 @@ TEST_F(RoundTripTest, RoundTripEigenMatrix) {
 TEST_F(RoundTripTest, RoundTripComplexMixedData) {
   // Write various data types
   int int_val = 255;
-  double double_val = 1.414213562;
+  double double_val = std::numbers::sqrt2;
   std::string str = "Complex test";
   std::vector<int> vec = {1, 1, 2, 3, 5, 8, 13};
   Eigen::MatrixXd mat(2, 2);
@@ -644,7 +645,7 @@ TEST_F(RoundTripTest, RoundTripComplexMixedData) {
   Reader reader(std::move(writer_));
 
   int read_int = reader.read<int>();
-  double read_double = reader.read<double>();
+  auto read_double = reader.read<double>();
   std::string read_str = reader.read_string();
   auto read_vec = reader.read_vector<int>();
   auto read_mat = reader.read_eigen<double>();
@@ -717,7 +718,7 @@ TEST_F(EdgeCaseTest, WriteVerySmallDouble) {
   writer_.write(value);
 
   Reader reader(std::move(writer_));
-  double read_value = reader.read<double>();
+  auto read_value = reader.read<double>();
 
   EXPECT_DOUBLE_EQ(read_value, value);
 }

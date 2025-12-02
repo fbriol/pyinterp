@@ -157,7 +157,7 @@ class Reader {
   Reader() = default;
 
   /// Construct from a Writer, taking ownership of its buffer
-  /// @param[inout] writer A Writer instance (consumed by moving)
+  /// @param[in,out] writer A Writer instance (consumed by moving)
   explicit Reader(Writer&& writer) {
     auto vec =
         std::make_shared<std::vector<std::byte>>(std::move(writer).release());
@@ -189,7 +189,7 @@ class Reader {
   /// @tparam Owner Type of the owner object (typically a smart pointer)
   /// @param[in] data Raw data pointer to buffer
   /// @param[in] size Size of the buffer in bytes
-  /// @param[inout] owner Owner object (moved) to manage buffer lifetime
+  /// @param[in,out] owner Owner object (moved) to manage buffer lifetime
   template <typename Owner>
   Reader(const std::byte* data, size_t size, Owner&& owner)
       : data_ptr_(data), size_(size), owner_(std::forward<Owner>(owner)) {}
@@ -301,11 +301,17 @@ class Reader {
   /// size, or fixed compile-time size)
   /// @return The deserialized Eigen matrix
   /// @throws std::out_of_range if not enough data in buffer
-  template <typename T, int Rows = Eigen::Dynamic, int Cols = Eigen::Dynamic>
-  [[nodiscard]] auto read_eigen() -> Eigen::Matrix<T, Rows, Cols> {
+  template <typename T>
+  [[nodiscard]] auto read_eigen()
+      -> Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> {
     auto rows = static_cast<Eigen::Index>(read<size_t>());
     auto cols = static_cast<Eigen::Index>(read<size_t>());
     auto storage_order = read<char>();  // 0 = ColumnMajor, 1 = RowMajor
+
+    using MatrixColMajor =
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
+    using MatrixRowMajor =
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
     if constexpr (TriviallyCopyable<T>) {
       auto total_size = static_cast<size_t>(rows * cols) * sizeof(T);
@@ -315,13 +321,13 @@ class Reader {
 
       if (storage_order == 1) {
         // Read as RowMajor
-        Eigen::Matrix<T, Rows, Cols, Eigen::RowMajor> result(rows, cols);
+        MatrixRowMajor result(rows, cols);
         std::memcpy(result.data(), data() + read_pos_, total_size);
         read_pos_ += total_size;
         return result;
       }
       // Read as ColumnMajor
-      Eigen::Matrix<T, Rows, Cols, Eigen::ColMajor> result(rows, cols);
+      MatrixColMajor result(rows, cols);
       std::memcpy(result.data(), data() + read_pos_, total_size);
       read_pos_ += total_size;
       return result;
@@ -330,7 +336,7 @@ class Reader {
     // Non-trivially copyable: read element-wise in the correct order
     if (storage_order == 1) {
       // RowMajor: iterate rows first
-      Eigen::Matrix<T, Rows, Cols, Eigen::RowMajor> result(rows, cols);
+      MatrixRowMajor result(rows, cols);
       for (Eigen::Index i = 0; i < rows; ++i) {
         for (Eigen::Index j = 0; j < cols; ++j) {
           result(i, j) = read<T>();
@@ -339,7 +345,7 @@ class Reader {
       return result;
     }
     // ColumnMajor: iterate columns first
-    Eigen::Matrix<T, Rows, Cols, Eigen::ColMajor> result(rows, cols);
+    MatrixColMajor result(rows, cols);
     for (Eigen::Index j = 0; j < cols; ++j) {
       for (Eigen::Index i = 0; i < rows; ++i) {
         result(i, j) = read<T>();

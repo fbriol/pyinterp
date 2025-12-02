@@ -27,6 +27,10 @@ file(GLOB_RECURSE serialization_buffer_src
      "${CMAKE_CURRENT_SOURCE_DIR}/serialization_buffer.cpp")
 add_testcase(serialization_buffer "${serialization_buffer_src}")
 
+# axis
+file(GLOB_RECURSE axis_src "${CMAKE_CURRENT_SOURCE_DIR}/math/axis/*.cpp")
+add_testcase(axis "${axis_src}")
+
 # # test_math file(GLOB_RECURSE math_src
 # "${CMAKE_CURRENT_SOURCE_DIR}/math/*.cpp") add_testcase(math "${math_src}"
 # BLAS::BLAS)

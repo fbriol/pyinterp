@@ -349,6 +349,26 @@ if(FFT_IMPLEMENTATION STREQUAL "pocketfft")
   set(FFT_LIBRARIES)
 endif()
 
+# When building Python bindings with a static library, we need to set symbol
+# visibility to hidden to prevent symbol conflicts in the Python module. This
+# avoids collisions between symbols from different libraries when the Python
+# extension is loaded.
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# ##############################################################################
+# Add subdirectories
+# ##############################################################################
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind)
+add_subdirectory(cxx)
+
+# ##############################################################################
+# External dependencies
+# ##############################################################################
+find_package(Boost 1.79 REQUIRED)
+target_include_directories(core SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+
 # ##############################################################################
 # Enable clang-tidy if requested
 # ##############################################################################
@@ -370,30 +390,16 @@ if(ENABLE_CLANG_TIDY)
       "clang-analyzer-*,portability-*,-portability-simd-intrinsics,google-*,"
       ";-fix")
   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_CMD}")
+
+  # Disable clang-tidy for third-party source files
+  set_source_files_properties(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind
+    PROPERTIES SKIP_LINTING ON)
+
+  unset(THIRD_PARTY)
   unset(CLANG_TIDY_EXE CACHE)
   unset(CLANG_TIDY_CMD CACHE)
-  message(STATUS "clang-tidy enabled.")
 endif()
-
-# When building Python bindings with a static library, we need to set symbol
-# visibility to hidden to prevent symbol conflicts in the Python module. This
-# avoids collisions between symbols from different libraries when the Python
-# extension is loaded.
-set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# ##############################################################################
-# Add subdirectories
-# ##############################################################################
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind)
-add_subdirectory(cxx)
-
-# ##############################################################################
-# External dependencies
-# ##############################################################################
-find_package(Boost 1.79 REQUIRED)
-target_include_directories(core SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 # ##############################################################################
 # Print configuration summary
