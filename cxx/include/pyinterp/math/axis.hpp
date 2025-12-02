@@ -154,8 +154,8 @@ class Axis {
   /// @param[in] count Number of elements to include in the slice
   /// @return A slice of the axis
   /// @throw std::out_of_range If the slice exceeds axis bounds
-  [[nodiscard]] constexpr auto slice(int64_t start,
-                                     int64_t count) const -> Vector<T> {
+  [[nodiscard]] constexpr auto slice(int64_t start, int64_t count) const
+      -> Vector<T> {
     if (start < 0 || start + count > size()) {
       throw std::out_of_range("axis index out of range");
     }
@@ -270,8 +270,9 @@ class Axis {
   /// @param[in] coordinate Position in this coordinate system
   /// @param[in] min Minimum value of the axis
   /// @return Normalized coordinate value
-  [[nodiscard]] constexpr auto normalize_coordinate(
-      const T coordinate, const T min) const noexcept -> T {
+  [[nodiscard]] constexpr auto normalize_coordinate(const T coordinate,
+                                                    const T min) const noexcept
+      -> T {
     if (is_periodic_ && (coordinate >= min + period_ || coordinate < min)) {
       return math::normalize_period<T>(coordinate, min, period_);
     }
@@ -348,7 +349,7 @@ class Axis {
   /// and period value into a serialization buffer.
   /// @return Serialized state as a Writer object
   /// @throw std::runtime_error If the axis container type is unknown
-  [[nodiscard]] virtual auto getstate() const -> serialization::Writer;
+  [[nodiscard]] virtual auto pack() const -> serialization::Writer;
 
   /// @brief Deserialize an axis from serialized state.
   ///
@@ -360,7 +361,7 @@ class Axis {
   /// @return New Axis instance with restored properties
   /// @throw std::invalid_argument If the state is invalid, empty, or contains
   /// an unrecognized container type identifier
-  [[nodiscard]] static auto setstate(serialization::Reader& state) -> Axis<T>;
+  [[nodiscard]] static auto unpack(serialization::Reader& state) -> Axis<T>;
 
  protected:
   /// @brief Get the axis container.
@@ -433,8 +434,8 @@ class Axis {
   /// @return The uniform step size if points are evenly spaced, std::nullopt
   /// otherwise
   [[nodiscard]] static auto is_evenly_spaced(
-      const Eigen::Ref<const Vector<T>>& points,
-      const T epsilon) -> std::optional<T>;
+      const Eigen::Ref<const Vector<T>>& points, const T epsilon)
+      -> std::optional<T>;
 
   /// @brief Validate and compute axis properties after container creation.
   ///
@@ -496,8 +497,9 @@ class Axis {
   /// @param[in] is_periodic True to use periodic (modulo) wrapping
   /// @return Function pointer taking (index, size) and returning wrapped index
   /// or -1 if boundary violation cannot be handled
-  static constexpr auto make_boundary_handler(
-      axis::Boundary boundary, bool is_periodic) noexcept -> BoundaryHandler;
+  static constexpr auto make_boundary_handler(axis::Boundary boundary,
+                                              bool is_periodic) noexcept
+      -> BoundaryHandler;
 
   /// @brief Format a list of values for string representation.
   /// @tparam Formatter Type of the value formatting function
@@ -733,8 +735,9 @@ auto Axis<T>::find_indexes(T coordinate) const
 
 template <typename T>
   requires std::is_arithmetic_v<T>
-constexpr auto Axis<T>::make_boundary_handler(
-    axis::Boundary boundary, bool is_periodic) noexcept -> BoundaryHandler {
+constexpr auto Axis<T>::make_boundary_handler(axis::Boundary boundary,
+                                              bool is_periodic) noexcept
+    -> BoundaryHandler {
   if (is_periodic) {
     return [](int64_t idx, int64_t size) { return math::remainder(idx, size); };
   }
@@ -878,7 +881,7 @@ Axis<T>::operator std::string() const {
 
 template <typename T>
   requires std::is_arithmetic_v<T>
-auto Axis<T>::getstate() const -> serialization::Writer {
+auto Axis<T>::pack() const -> serialization::Writer {
   serialization::Writer buffer;
   // Serialize the axis container type identifier (axis::AxisType) as a single
   // byte.
@@ -910,7 +913,7 @@ auto Axis<T>::getstate() const -> serialization::Writer {
 
 template <typename T>
   requires std::is_arithmetic_v<T>
-auto Axis<T>::setstate(serialization::Reader& state) -> Axis<T> {
+auto Axis<T>::unpack(serialization::Reader& state) -> Axis<T> {
   if (state.size() == 0) {
     throw std::invalid_argument("Cannot restore axis from empty state.");
   }

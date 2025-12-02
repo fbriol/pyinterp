@@ -424,14 +424,14 @@ TYPED_TEST(Axis, FindNearestIndexCenteredPeriodicAxis) {
 }
 
 // =============================================================================
-// GetState/SetState Tests
+// pack/unpack Tests
 // =============================================================================
 TYPED_TEST(Axis, RegularSerializationDeserialization) {
   this->CreateRegularAxis(0, 359, 360, true);
   auto* axis = this->axis();
 
-  auto state_reader = serialization::Reader(axis->getstate());
-  auto restored_axis = interpolate::Axis<TypeParam>::setstate(state_reader);
+  auto state_reader = serialization::Reader(axis->pack());
+  auto restored_axis = interpolate::Axis<TypeParam>::unpack(state_reader);
 
   EXPECT_EQ(*axis, restored_axis);
 }
@@ -445,8 +445,8 @@ TYPED_TEST(Axis, IrregularSerializationDeserialization) {
 
   auto* axis = this->axis();
 
-  auto state_reader = serialization::Reader(axis->getstate());
-  auto restored_axis = interpolate::Axis<TypeParam>::setstate(state_reader);
+  auto state_reader = serialization::Reader(axis->pack());
+  auto restored_axis = interpolate::Axis<TypeParam>::unpack(state_reader);
 
   EXPECT_EQ(*axis, restored_axis);
 }
@@ -454,8 +454,8 @@ TYPED_TEST(Axis, IrregularSerializationDeserialization) {
 TYPED_TEST(Axis, UndefinedSerializationDeserialization) {
   auto axis = interpolate::Axis<TypeParam>();
 
-  auto state_reader = serialization::Reader(axis.getstate());
-  auto restored_axis = interpolate::Axis<TypeParam>::setstate(state_reader);
+  auto state_reader = serialization::Reader(axis.pack());
+  auto restored_axis = interpolate::Axis<TypeParam>::unpack(state_reader);
 
   EXPECT_EQ(axis, restored_axis);
 }
