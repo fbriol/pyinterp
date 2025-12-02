@@ -34,14 +34,16 @@ inline auto writer_to_ndarray(serialization::Writer&& writer)
   auto data = std::move(writer).release();
   auto size = data.size();
 
-  auto* ptr = new std::vector<std::byte>(std::move(data));
+  auto ptr = std::make_unique<std::vector<std::byte>>(std::move(data));
+  auto* data_ptr = ptr->data();
 
   // Create capsule with deleter that owns the vector
-  nanobind::capsule capsule(ptr, [](void* data) noexcept {
+  nanobind::capsule capsule(ptr.get(), [](void* data) noexcept {
     delete static_cast<std::vector<std::byte>*>(data);
   });
+  ptr.release();
 
-  return NanobindArray1DUInt8(reinterpret_cast<uint8_t*>(ptr->data()), {size},
+  return NanobindArray1DUInt8(reinterpret_cast<uint8_t*>(data_ptr), {size},
                               capsule);
 }
 

@@ -1,11 +1,13 @@
 #include "pyinterp/pybind/axis.hpp"
 
 #include <nanobind/eigen/dense.h>
+#include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 
-#include "nanobind/nanobind.h"
+#include "pyinterp/math/temporal_axis.hpp"
+#include "pyinterp/pybind/temporal_axis.hpp"
 
 namespace nb = nanobind;
 
@@ -93,16 +95,90 @@ Returns:
     The flipped axis (self when inplace is True, otherwise a copy).
 )";
 
+constexpr const char *const kTemporalAxisDoc =
+    R"(Create a coordinate axis for datetime64 or timedelta64 values.
+
+This class accepts numpy.datetime64 or numpy.timedelta64 arrays and
+supports periodicity and tolerance (epsilon) using timedelta64 values.
+
+Args:
+    points: Axis coordinate values as a numpy datetime64 or timedelta64
+        array.
+    epsilon: Maximum allowed difference between two values to consider
+        them equal. Must have the same or a coarser resolution than
+        points. Defaults to None.
+    period: Period for cyclic/periodic axes (for example, 24 hours or
+        365 days). Must have the same or a coarser resolution than
+        points. Defaults to None.
+
+Raises:
+    ValueError: If epsilon or period have a finer resolution than points.
+    TypeError: If points is not a datetime64 or timedelta64 array.
+
+Examples:
+
+    >>> import numpy as np
+    >>> import pyinterp
+
+    # Create a regular hourly axis over one day
+    >>> times = np.arange('2024-01-01', '2024-01-02', dtype='datetime64[h]')
+    >>> axis = pyinterp.TemporalAxis(times)
+
+    # Create a daily periodic axis (24-hour cycle)
+    >>> axis_periodic = pyinterp.TemporalAxis(
+    ...     times,
+    ...     epsilon=np.timedelta64(1, 'm'),  # 1 minute tolerance
+    ...     period=np.timedelta64(24, 'h')   # 24-hour period
+    ... )
+
+    # Create an irregular axis with tolerance
+    >>> irregular_times = np.array([
+    ...     '2024-01-01T00:00',
+    ...     '2024-01-01T06:15',
+    ...     '2024-01-01T12:30',
+    ...     '2024-01-01T18:45'
+    ... ], dtype='datetime64[m]')
+    >>> axis_irregular = pyinterp.TemporalAxis(
+    ...     irregular_times,
+    ...     epsilon=np.timedelta64(5, 'm')  # 5 minute tolerance
+    ... )
+
+    # Create a timedelta64 axis for durations
+    >>> durations = np.array([0, 3600, 7200, 10800], dtype='timedelta64[s]')
+    >>> axis_duration = pyinterp.TemporalAxis(durations)
+)";
+
+const char *const kSafeCastDoc =
+    R"(Safely cast an array to the axis resolution.
+
+Convert an input numpy datetime64 or timedelta64 array to the internal
+resolution of the axis.
+
+Args:
+    array: Numpy array of datetime64 or timedelta64 values.
+
+Returns:
+    Numpy array converted to the axis resolution.
+)";
+
 /// Common axis operations for all axis types
-template <class Axis>
-auto implement_axis(nanobind::class_<Axis> &axis, const std::string &name) {
-  axis.def(
+template <class Axis, typename... T>
+auto implement_axis(nanobind::class_<Axis, T...> &axis,
+                    const std::string &name) {
+  axis.def_prop_ro(
+          "is_periodic",
+          [](const Axis &self) -> bool { return self.is_periodic(); },
+          "True if this axis represents a periodic variable.",
+          nb::call_guard<nb::gil_scoped_release>())
+
+      .def(
           "__repr__",
           [](const Axis &self) -> std::string {
             return static_cast<std::string>(self);
           },
           "Return the string representation of this Axis.",
           nanobind::call_guard<nb::gil_scoped_release>())
+
       .def(
           "__copy__", [](const Axis &self) { return Axis(self); },
           "Implement the shallow copy operation.",
@@ -113,7 +189,7 @@ auto implement_axis(nanobind::class_<Axis> &axis, const std::string &name) {
           [](const Axis &self, size_t index) {
             return self.coordinate_value(index);
           },
-          nb::arg("index"), nanobind::call_guard<nb::gil_scoped_release>())
+          nb::arg("index"))
 
       .def("__getitem__",
            [](const Axis &self, const nb::slice &slice) {
@@ -188,12 +264,6 @@ void init_axis(nb::module_ &m) {
            nb::call_guard<nb::gil_scoped_release>())
 
       .def_prop_ro(
-          "is_periodic",
-          [](const Axis<T> &self) -> bool { return self.is_periodic(); },
-          "True if this axis represents a periodic variable.",
-          nb::call_guard<nb::gil_scoped_release>())
-
-      .def_prop_ro(
           "period",
           [](const Axis<T> &self) -> std::optional<T> { return self.period(); },
           "Period value of this axis.",
@@ -243,6 +313,62 @@ void init_axis(nb::module_ &m) {
   implement_axis<Axis<T>>(axis, "Axis");
 }
 
-void init_axis(nanobind::module_ &m) { init_axis<double>(m); }
+inline void init_temporal_axis(nb::module_ &m) {
+  nb::class_<math::TemporalAxis>(m, "TemporalAxisBase",
+                                 "Base class for temporal axes.");
+
+  auto temporal_axis = nb::class_<TemporalAxis, math::TemporalAxis>(
+      m, "TemporalAxis", "Temporal axis for datetime64 or timedelta64 values.");
+
+  temporal_axis
+      .def(nb::init<const nb::object &, const nb::object &,
+                    const nb::object &>(),
+           nb::arg("points"), nb::arg("epsilon") = nb::none(),
+           nb::arg("period") = nb::none(), kTemporalAxisDoc)
+
+      .def_prop_ro("dtype", &TemporalAxis::dtype,
+                   "Get the numpy dtype of this axis.")
+
+      .def_prop_ro("period", &TemporalAxis::period,
+                   "Get the period of this axis.")
+
+      .def("front", &TemporalAxis::front, "Get the first value of this axis.")
+
+      .def("back", &TemporalAxis::back, "Get the last value of this axis.")
+
+      .def("min_value", &TemporalAxis::min_value,
+           "Get the minimum value of this axis.")
+
+      .def("max_value", &TemporalAxis::max_value,
+           "Get the maximum value of this axis.")
+
+      .def("increment", &TemporalAxis::increment,
+           "Get the increment (step) between values in this axis.")
+
+      .def(
+          "find_index",
+          [](const TemporalAxis &self, const nb::object &coordinates,
+             const bool bounded) {
+            return self.find_index(coordinates, bounded);
+          },
+          nb::arg("coordinates"), nb::arg("bounded"), kFindIndexDoc)
+
+      .def(
+          "find_indexes",
+          [](const TemporalAxis &self, const nb::object &coordinates) {
+            return self.find_indexes(coordinates);
+          },
+          nb::arg("coordinates"), kFindIndexesDoc)
+
+      .def("safe_cast", &TemporalAxis::safe_cast, nb::arg("array"),
+           kSafeCastDoc);
+
+  implement_axis<TemporalAxis>(temporal_axis, "TemporalAxis");
+}
+
+void init_axis(nanobind::module_ &m) {
+  init_axis<double>(m);
+  init_temporal_axis(m);
+}
 
 }  // namespace pyinterp::pybind

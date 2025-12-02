@@ -121,7 +121,7 @@ class Axis : public math::Axis<T> {
 
  private:
   /// @brief Build an Axis from the base class
-  /// @param[in] base_class Base class to copy
+  /// @param[in,out] base_class Base class to copy
   explicit Axis(math::Axis<T> &&base_class)
       : math::Axis<T>(std::move(base_class)) {}
 };

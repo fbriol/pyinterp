@@ -14,6 +14,12 @@ namespace pyinterp::math {
 /// @brief Temporal axis used to represent datetime64 or timedelta64 values.
 class TemporalAxis : public Axis<int64_t> {
  public:
+  /// @brief Default constructor
+  TemporalAxis()
+      : Axis<int64_t>(),
+        dtype_(dateutils::DType(dateutils::DType::DateType::kDatetime64,
+                                dateutils::DType::Resolution::kSecond)) {}
+
   /// @brief Construct a TemporalAxis from evenly spaced numbers.
   /// @param[in] dtype Data type used to encode datetime64 or timedelta64 values
   /// @param[in] start Start value of the axis
@@ -48,8 +54,20 @@ class TemporalAxis : public Axis<int64_t> {
       : Axis<int64_t>(std::move(axis)), dtype_(dtype) {}
 
   /// @brief Get the data type used to encode datetime64 or timedelta64 values
-  [[nodiscard]] constexpr auto dtype() const -> dateutils::DType {
+  [[nodiscard]] constexpr auto dtype() const -> const dateutils::DType& {
     return dtype_;
+  }
+
+  /// @brief Check if two TemporalAxis objects are equal
+  [[nodiscard]] auto operator==(const TemporalAxis& other) const -> bool {
+    return dtype_ == other.dtype_ &&
+           static_cast<math::Axis<int64_t>>(*this) ==
+               static_cast<math::Axis<int64_t>>(other);
+  }
+
+  /// @brief Check if two TemporalAxis objects are not equal
+  [[nodiscard]] auto operator!=(const TemporalAxis& other) const -> bool {
+    return !(*this == other);
   }
 
   /// @brief Get string representation of this axis.
