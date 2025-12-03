@@ -34,7 +34,7 @@ add_testcase(axis "${axis_src}")
 # interpolate
 file(GLOB_RECURSE interpolate_src
      "${CMAKE_CURRENT_SOURCE_DIR}/math/interpolate/*.cpp")
-add_testcase(interpolate "${interpolate_src}")
+add_testcase(interpolate "${interpolate_src}" BLAS::BLAS)
 
 # # test_math file(GLOB_RECURSE math_src
 # "${CMAKE_CURRENT_SOURCE_DIR}/math/*.cpp") add_testcase(math "${math_src}"
