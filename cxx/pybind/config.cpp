@@ -2,6 +2,7 @@
 
 #include <nanobind/nanobind.h>
 
+#include "pyinterp/pybind/config/common.hpp"
 #include "pyinterp/pybind/config/geometric.hpp"
 #include "pyinterp/pybind/config/windowed.hpp"
 
@@ -138,6 +139,17 @@ auto bind(nb::module_& m) -> void {
              "Symmetrical boundary conditions.")
       .value("UNDEF", math::axis::Boundary::kUndef,
              "Boundary violation is not defined.");
+
+  nb::class_<AxisConfig>(m, "AxisConfig",
+                         "Configuration for a single-axis interpolation.")
+      .def(nb::init<>(), "Default constructor.",
+           nb::call_guard<nb::gil_scoped_release>())
+      .def_static("linear", &AxisConfig::linear,
+                  "Create a configuration for linear interpolation.",
+                  nb::call_guard<nb::gil_scoped_release>())
+      .def_static("nearest", &AxisConfig::nearest,
+                  "Create a configuration for nearest-neighbor interpolation.",
+                  nb::call_guard<nb::gil_scoped_release>());
 
   add_common_attributes(add_methods(
       nb::class_<Bivariate>(m, "Bivariate",
