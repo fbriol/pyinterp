@@ -33,9 +33,10 @@ file(GLOB_RECURSE interpolate_src
      "${CMAKE_CURRENT_SOURCE_DIR}/math/interpolate/*.cpp")
 add_testcase(interpolate "${interpolate_src}" BLAS::BLAS)
 
-# descriptive_statistics
-add_testcase(descriptive_statistics
-             "${CMAKE_CURRENT_SOURCE_DIR}/math/descriptive_statistics.cpp")
+# statistics
+file(GLOB_RECURSE statistics_src
+     "${CMAKE_CURRENT_SOURCE_DIR}/math/statistics/*.cpp")
+add_testcase(statistics "${statistics_src}")
 
 # # test_math file(GLOB_RECURSE math_src
 # "${CMAKE_CURRENT_SOURCE_DIR}/math/*.cpp") add_testcase(math "${math_src}"
