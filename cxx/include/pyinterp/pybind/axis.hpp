@@ -23,6 +23,15 @@ class Axis : public math::Axis<T> {
  public:
   using math::Axis<T>::Axis;
 
+  /// @brief Build an Axis from the base class
+  /// @param[in] base_class Base class to copy
+  explicit Axis(const math::Axis<T> &base_class) : math::Axis<T>(base_class) {}
+
+  /// @brief Build an Axis from the base class
+  /// @param[in,out] base_class Base class to copy
+  explicit Axis(math::Axis<T> &&base_class)
+      : math::Axis<T>(std::move(base_class)) {}
+
   /// @brief Get coordinate values.
   ///
   /// @param[in] slice Slice of indexes to read
@@ -118,12 +127,6 @@ class Axis : public math::Axis<T> {
       return Axis<T>(math::Axis<T>::unpack(reader));
     }
   }
-
- private:
-  /// @brief Build an Axis from the base class
-  /// @param[in,out] base_class Base class to copy
-  explicit Axis(math::Axis<T> &&base_class)
-      : math::Axis<T>(std::move(base_class)) {}
 };
 
 /// @brief Initialize the core Axis class

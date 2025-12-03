@@ -15,6 +15,16 @@ namespace pyinterp::pybind {
 /// @brief Temporal axis wrapper for datetime64 and timedelta64 types
 class TemporalAxis : public math::TemporalAxis {
  public:
+  /// @brief Build a TemporalAxis from its base class.
+  /// @param[in] base_class Base class to copy
+  explicit TemporalAxis(const math::TemporalAxis &base_class)
+      : math::TemporalAxis(base_class) {}
+
+  /// @brief Build a TemporalAxis from its base class.
+  /// @param[in,out] base_class Base class to copy
+  explicit TemporalAxis(math::TemporalAxis &&base_class)
+      : math::TemporalAxis(std::move(base_class)) {}
+
   /// @brief Create a coordinate axis from datetime64 or timedelta64 values
   ///
   /// @param[in] points Axis values (datetime64 or timedelta64 array)
@@ -92,12 +102,6 @@ class TemporalAxis : public math::TemporalAxis {
   /// @throw std::invalid_argument If the state is invalid or empty
   [[nodiscard]] static auto setstate(const nanobind::tuple &state)
       -> TemporalAxis;
-
- private:
-  /// @brief Build a TemporalAxis from its base class.
-  /// @param[in,out] base_class Base class to copy
-  explicit TemporalAxis(math::TemporalAxis &&base_class)
-      : math::TemporalAxis(std::move(base_class)) {}
 };
 
 }  // namespace pyinterp::pybind

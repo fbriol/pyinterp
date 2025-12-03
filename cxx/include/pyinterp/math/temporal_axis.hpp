@@ -70,6 +70,14 @@ class TemporalAxis : public Axis<int64_t> {
     return !(*this == other);
   }
 
+  /// @brief Get string representation of a coordinate value
+  /// @param[in] value Coordinate value
+  /// @return String representation of the coordinate value
+  [[nodiscard]] auto coordinate_repr(const int64_t value) const
+      -> std::string final {
+    return TemporalAxis::format_temporal(value, dtype_);
+  }
+
   /// @brief Get string representation of this axis.
   ///
   /// @return String representation of this axis
@@ -141,14 +149,6 @@ class TemporalAxis : public Axis<int64_t> {
     return dtype.datetype() == dateutils::DType::DateType::kDatetime64
                ? TemporalAxis::format_datetime(value, dtype)
                : TemporalAxis::format_timedelta(value, dtype);
-  }
-
-  /// @brief Get string representation of a coordinate value
-  /// @param[in] value Coordinate value
-  /// @return String representation of the coordinate value
-  [[nodiscard]] auto coordinate_repr(const int64_t value) const
-      -> std::string final {
-    return TemporalAxis::format_temporal(value, dtype_);
   }
 
   /// @brief Get string representation of a scalar value

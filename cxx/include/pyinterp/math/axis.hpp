@@ -51,6 +51,8 @@ template <typename T>
   requires std::is_arithmetic_v<T>
 class Axis {
  public:
+  using value_type = T;
+
   /// @brief Default constructor
   Axis() = default;
 
@@ -338,6 +340,15 @@ class Axis {
                                   axis::Boundary boundary) const
       -> std::vector<int64_t>;
 
+  /// @brief Get a string representation of a coordinate handled by this axis.
+  ///
+  /// @param[in] value Value to be converted to string
+  /// @return String representation of the value
+  [[nodiscard]] virtual inline auto coordinate_repr(const T value) const
+      -> std::string {
+    return std::format("{}", value);
+  }
+
   /// @brief Get a string representation of this axis.
   ///
   /// @return String representation of this axis
@@ -370,15 +381,6 @@ class Axis {
   [[nodiscard]] constexpr auto container() const noexcept
       -> const std::unique_ptr<axis::Abstract<T>>& {
     return container_;
-  }
-
-  /// @brief Get a string representation of a coordinate handled by this axis.
-  ///
-  /// @param[in] value Value to be converted to string
-  /// @return String representation of the value
-  [[nodiscard]] virtual inline auto coordinate_repr(const T value) const
-      -> std::string {
-    return std::format("{}", value);
   }
 
   /// @brief Get a string representation of a scalar value handled by this axis.
