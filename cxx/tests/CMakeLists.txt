@@ -19,14 +19,11 @@ macro(ADD_TESTCASE testname sources)
 endmacro()
 
 # dateutils
-file(GLOB_RECURSE dateutils_src "${CMAKE_CURRENT_SOURCE_DIR}/dateutils.cpp")
-add_testcase(dateutils "${dateutils_src}")
+add_testcase(dateutils "${CMAKE_CURRENT_SOURCE_DIR}/dateutils.cpp")
 
 # serialization_buffer
-file(GLOB_RECURSE serialization_buffer_src
-     "${CMAKE_CURRENT_SOURCE_DIR}/serialization_buffer.cpp")
-add_testcase(serialization_buffer "${serialization_buffer_src}")
-
+add_testcase(serialization_buffer
+             "${CMAKE_CURRENT_SOURCE_DIR}/serialization_buffer.cpp")
 # axis
 file(GLOB_RECURSE axis_src "${CMAKE_CURRENT_SOURCE_DIR}/math/axis/*.cpp")
 add_testcase(axis "${axis_src}")
@@ -35,6 +32,10 @@ add_testcase(axis "${axis_src}")
 file(GLOB_RECURSE interpolate_src
      "${CMAKE_CURRENT_SOURCE_DIR}/math/interpolate/*.cpp")
 add_testcase(interpolate "${interpolate_src}" BLAS::BLAS)
+
+# descriptive_statistics
+add_testcase(descriptive_statistics
+             "${CMAKE_CURRENT_SOURCE_DIR}/math/descriptive_statistics.cpp")
 
 # # test_math file(GLOB_RECURSE math_src
 # "${CMAKE_CURRENT_SOURCE_DIR}/math/*.cpp") add_testcase(math "${math_src}"
