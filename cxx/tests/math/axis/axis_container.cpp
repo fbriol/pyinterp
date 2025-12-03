@@ -15,8 +15,7 @@
 #include "pyinterp/math/axis/container.hpp"
 #include "pyinterp/math/fill.hpp"
 
-namespace axis = pyinterp::math::axis;
-namespace interpolate = pyinterp::math;
+namespace pyinterp::math {
 
 // =============================================================================
 // Helper Functions
@@ -56,12 +55,11 @@ TYPED_TEST_SUITE(UndefinedTest, NumericTypes);
 TYPED_TEST(UndefinedTest, DefaultStateAllValuesFilled) {
   auto axis = this->CreateUndefinedAxis();
 
-  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis.front()));
-  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis.back()));
-  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis.min_value()));
-  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis.max_value()));
-  EXPECT_TRUE(
-      interpolate::Fill<TypeParam>::is_fill_value(axis.coordinate_value(0)));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(axis.front()));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(axis.back()));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(axis.min_value()));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(axis.max_value()));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(axis.coordinate_value(0)));
 }
 
 TYPED_TEST(UndefinedTest, DefaultStateHasZeroSize) {
@@ -82,15 +80,15 @@ TYPED_TEST(UndefinedTest, SliceReturnsSingleFilledValue) {
 
   auto slice = axis.slice(0, 1);
   EXPECT_EQ(slice.size(), 1);
-  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(slice[0]));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(slice[0]));
 }
 
 TYPED_TEST(UndefinedTest, FlipDoesNotChangeState) {
   auto axis = this->CreateUndefinedAxis();
   axis.flip();
 
-  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis.front()));
-  EXPECT_TRUE(interpolate::Fill<TypeParam>::is_fill_value(axis.back()));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(axis.front()));
+  EXPECT_TRUE(Fill<TypeParam>::is_fill_value(axis.back()));
   EXPECT_EQ(axis.size(), 0);
 }
 
@@ -367,3 +365,5 @@ TYPED_TEST(RegularTest, EqualityAfterFlip) {
   // the same axis (this depends on implementation)
   EXPECT_EQ(axis1, axis1);
 }
+
+}  // namespace pyinterp::math

@@ -14,9 +14,7 @@
 
 #include "pyinterp/serialization_buffer.hpp"
 
-namespace math = pyinterp::math;
-namespace dateutils = pyinterp::dateutils;
-namespace serialization = pyinterp::serialization;
+namespace pyinterp {
 
 TEST(TemporalAxis, RegularWithoutPeriod) {
   auto dtype = dateutils::DType(dateutils::DType::DateType::kDatetime64,
@@ -100,3 +98,5 @@ TEST(TemporalAxis, IrregularAxis) {
   auto other = math::TemporalAxis::unpack(state_reader);
   EXPECT_EQ(axis, other);
 }
+
+}  // namespace pyinterp
