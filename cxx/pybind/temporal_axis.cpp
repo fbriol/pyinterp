@@ -188,10 +188,15 @@ TemporalAxis::TemporalAxis(const nb::object &points, const nb::object &epsilon,
                            const nb::object &period)
     : math::TemporalAxis() {
   auto dtype = retrieve_dtype("points", points);
-  new (static_cast<Axis<int64_t> *>(this)) math::TemporalAxis(
-      dtype, numpy_to_vector(points),
-      convert_timedelta64("epsilon", epsilon, dtype).value_or(0),
-      convert_timedelta64("period", period, dtype));
+  auto mapped_integer_values = numpy_to_vector(points);
+  auto integer_epsilon =
+      convert_timedelta64("epsilon", epsilon, dtype).value_or(0);
+  auto integer_period = convert_timedelta64("period", period, dtype);
+  {
+    nb::gil_scoped_release release;
+    new (static_cast<math::TemporalAxis *>(this)) math::TemporalAxis(
+        dtype, mapped_integer_values, integer_epsilon, integer_period);
+  }
 }
 
 auto TemporalAxis::dtype() const -> nb::object {
