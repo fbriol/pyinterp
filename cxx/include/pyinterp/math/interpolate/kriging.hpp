@@ -401,16 +401,8 @@ class Kriging {
     b.head(n) = c;
     b.tail(p) = f;
 
-    // Solve using LDLT (handles symmetric indefinite matrices)
-    const Eigen::LDLT<Matrix<T>> ldlt(A);
-    if (ldlt.info() != Eigen::Success) {
-      // Fall back to QR for numerical stability
-      const Vector<T> x = A.colPivHouseholderQr().solve(b);
-      const T variance = std::max(math::sqr(sigma_) + nugget_ - b.dot(x), T{0});
-      return {values.dot(x.head(n)), variance};
-    }
-
-    const Vector<T> x = ldlt.solve(b);
+    // Solve using QR decomposition (robust for indefinite augmented system)
+    const Vector<T> x = A.colPivHouseholderQr().solve(b);
 
     // Prediction: w · values (first n components are weights)
     const T prediction = values.dot(x.head(n));
