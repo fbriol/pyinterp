@@ -336,8 +336,10 @@ class Grid {
   /// dtype, and memory size
   [[nodiscard]] explicit operator std::string() const {
     constexpr std::array<std::string_view, 4> dim_names{"1D", "2D", "3D", "4D"};
+    std::string_view prefix = has_temporal_axis() ? "Temporal" : "";
+
     return std::format(
-        "Grid{}(shape={}, dtype={}, nbytes={})", dim_names[kNDim - 1],
+        "{}Grid{}(shape={}, dtype={}, nbytes={})", prefix, dim_names[kNDim - 1],
         detail::array_shape_str<kNDim>(array_), detail::dtype_name<DataType>(),
         detail::format_bytes(array_.nbytes()));
   }
@@ -387,6 +389,17 @@ class Grid {
           }
         }(),
         ...);
+  }
+
+  /// Check if this grid has a temporal axis
+  template <size_t... Is>
+  [[nodiscard]] constexpr auto has_temporal_axis_impl(
+      std::index_sequence<Is...>) const -> bool {
+    return ((std::is_same_v<math_axis_t<Is>, math::TemporalAxis>) || ...);
+  }
+
+  [[nodiscard]] constexpr auto has_temporal_axis() const -> bool {
+    return has_temporal_axis_impl(std::index_sequence_for<MathAxes...>{});
   }
 
   /// Serialize the grid state for pickling
@@ -464,9 +477,7 @@ auto bind_grid(nanobind::module_& m, std::string_view name,
   cls.def_prop_ro("array", &GridType::array, "Gets the data array")
       .def(
           "__repr__",
-          [](const GridType& self) -> std::string {
-            return static_cast<std::string>(self);
-          },
+          [](const GridType& self) -> std::string { return std::string(self); },
           "Return the string representation of this Grid.")
       .def("__getstate__", &GridType::getstate, "Get the state for pickling.")
       .def(
