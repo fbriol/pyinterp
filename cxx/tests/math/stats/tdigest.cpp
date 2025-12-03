@@ -99,10 +99,10 @@ TEST(MathTDigest, CompressionValidation) {
 // Test set_compression validation
 TEST(MathTDigest, SetCompressionValidation) {
   auto digest = TDigest<double>(100);
-  
+
   // Zero compression should throw
   EXPECT_THROW(digest.set_compression(0), std::invalid_argument);
-  
+
   // Valid compression should work
   EXPECT_NO_THROW(digest.set_compression(50));
   EXPECT_NO_THROW(digest.set_compression(200));
@@ -355,8 +355,7 @@ TEST(MathTDigest, MergeEmpty) {
 
 // Test accuracy at distribution tails
 TEST(MathTDigest, TailAccuracy) {
-  auto digest =
-      TDigest<double>(200);  // Higher compression for tails
+  auto digest = TDigest<double>(200);  // Higher compression for tails
   auto values = std::vector<double>();
 
   auto rd = std::random_device();
@@ -483,7 +482,7 @@ TEST(MathTDigest, SerializationInvalid) {
   // Invalid version
   auto invalid_version = std::vector<std::byte>{
       std::byte{0xFF}, std::byte{0xFF}, std::byte{0xFF}, std::byte{0xFF},
-      std::byte{0}, std::byte{0}, std::byte{0}, std::byte{0}};
+      std::byte{0},    std::byte{0},    std::byte{0},    std::byte{0}};
   auto version_reader = serialization::Reader(std::move(invalid_version));
   EXPECT_THROW(static_cast<void>(TDigest<double>::unpack(version_reader)),
                std::invalid_argument);
@@ -662,4 +661,4 @@ TEST(MathTDigest, CentroidComparison) {
   EXPECT_FALSE(c3.mean < c1.mean);  // Same mean
 }
 
-}
+}  // namespace pyinterp::math

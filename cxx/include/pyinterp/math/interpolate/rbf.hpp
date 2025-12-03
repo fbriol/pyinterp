@@ -264,8 +264,9 @@ class RBF {
   /// @param[in] A Coefficient matrix
   /// @param[in] b Right-hand side vector
   /// @return Solution vector
-  [[nodiscard]] static auto solve_linear_system(
-      const Matrix<T>& A, const Vector<T>& b) -> Vector<T> {
+  [[nodiscard]] static auto solve_linear_system(const Matrix<T>& A,
+                                                const Vector<T>& b)
+      -> Vector<T> {
     Eigen::PartialPivLU<Matrix<T>> lu(A);
     return lu.solve(b);
   }

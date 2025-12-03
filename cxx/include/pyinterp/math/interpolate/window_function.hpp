@@ -278,8 +278,8 @@ class WindowFunction {
   /// @tparam T Floating-point type
   /// @param[in] data Distance from window center
   /// @param[in] r Radius (half-width) of the window
-  /// @param[in] arg Optional argument (depends on window type: nlobes for Lanczos,
-  /// sigma for Gaussian)
+  /// @param[in] arg Optional argument (depends on window type: nlobes for
+  /// Lanczos, sigma for Gaussian)
   /// @return Window coefficient [0, 1]
   [[nodiscard]] constexpr auto operator()(const T data, const T r,
                                           const T arg = T{0}) const noexcept
