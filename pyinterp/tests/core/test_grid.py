@@ -4,8 +4,6 @@
 # BSD-style license that can be found in the LICENSE file.
 """Unit tests for Grid."""
 
-from typing import Any
-
 import numpy as np
 import pytest
 
@@ -13,14 +11,16 @@ from pyinterp import core
 
 from .. import load_grid2d, load_grid3d, load_grid4d
 
+DType = type[np.int8] | type[np.float32] | type[np.float64]
 
-def _get_suffix(dtype: np.dtype[Any]) -> str:
-    suffix_map: dict[type[Any], str] = {
+
+def _get_suffix(dtype: DType) -> str:
+    suffix_map: dict[DType, str] = {
         np.int8: 'Int8',
         np.float32: 'Float32',
         np.float64: 'Float64'
     }
-    return suffix_map.get(dtype.type, f"Unsupported dtype: {dtype}")
+    return suffix_map.get(dtype, f"Unsupported dtype: {dtype}")
 
 
 @pytest.mark.parametrize(
@@ -31,14 +31,15 @@ def _get_suffix(dtype: np.dtype[Any]) -> str:
         np.float64,
     ],
 )
-def test_grid2d_load(dtype: np.dtype) -> None:
+def test_grid2d_load(dtype: DType) -> None:
     """Test loading a 2D grid."""
     grid = load_grid2d()
     x_axis = core.Axis(grid.lon.values, period=360.0)
     y_axis = core.Axis(grid.lat.values)
     matrix = np.ascontiguousarray(grid.mss.values.transpose())
     if np.issubdtype(dtype, np.integer):
-        matrix[np.isnan(matrix)] = np.iinfo(dtype).min
+        matrix[np.isnan(matrix)] = np.iinfo(
+            dtype).min  # type: ignore[type-var]
     matrix = matrix.astype(dtype)
 
     grid = getattr(core, f"Grid2D{_get_suffix(dtype)}")(x_axis, y_axis, matrix)
@@ -58,7 +59,7 @@ def test_grid2d_load(dtype: np.dtype) -> None:
     ],
 )
 @pytest.mark.parametrize('temporal_axis', [True, False])
-def test_grid3d_load(dtype: np.dtype, temporal_axis: bool) -> None:
+def test_grid3d_load(dtype: DType, temporal_axis: bool) -> None:
     """Test loading a 3D grid."""
     grid = load_grid3d()
     x_axis = core.Axis(grid.longitude.values, period=360.0)
@@ -67,7 +68,8 @@ def test_grid3d_load(dtype: np.dtype, temporal_axis: bool) -> None:
               core.Axis(grid.time.values.astype('float64')))
     matrix = np.ascontiguousarray(grid.tcw.values.transpose())
     if np.issubdtype(dtype, np.integer):
-        matrix[np.isnan(matrix)] = np.iinfo(dtype).min
+        matrix[np.isnan(matrix)] = np.iinfo(
+            dtype).min  # type: ignore[type-var]
     matrix = matrix.astype(dtype)
     class_name = 'TemporalGrid3D' if temporal_axis else 'Grid3D'
     grid = getattr(core, f"{class_name}{_get_suffix(dtype)}")(x_axis, y_axis,
@@ -89,7 +91,7 @@ def test_grid3d_load(dtype: np.dtype, temporal_axis: bool) -> None:
     ],
 )
 @pytest.mark.parametrize('temporal_axis', [True, False])
-def test_grid4d_load(dtype: np.dtype, temporal_axis: bool) -> None:
+def test_grid4d_load(dtype: DType, temporal_axis: bool) -> None:
     """Test loading a 4D grid."""
     grid = load_grid4d()
     x_axis = core.Axis(grid.longitude.values, period=360.0)
@@ -99,7 +101,8 @@ def test_grid4d_load(dtype: np.dtype, temporal_axis: bool) -> None:
     u_axis = core.Axis(grid.level.values)
     matrix = np.ascontiguousarray(grid.temperature.values.transpose())
     if np.issubdtype(dtype, np.integer):
-        matrix[np.isnan(matrix)] = np.iinfo(dtype).min
+        matrix[np.isnan(matrix)] = np.iinfo(
+            dtype).min  # type: ignore[type-var]
     matrix = matrix.astype(dtype)
     class_name = 'TemporalGrid4D' if temporal_axis else 'Grid4D'
     grid = getattr(core,
