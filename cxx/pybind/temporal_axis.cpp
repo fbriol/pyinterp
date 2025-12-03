@@ -49,16 +49,11 @@ inline auto retrieve_dtype(const std::string &name, const nb::object &array)
 // @param[in] array Numpy array to convert
 // @return Eigen vector of int64_t values
 inline auto numpy_to_vector(const nb::object &array) -> Vector<int64_t> {
-  nb::object arr_viewed = array.attr("view")("int64");
-  auto ndarray =
+  auto viewed =
       nb::cast<nb::ndarray<nb::numpy, int64_t, nb::ndim<1>, nb::c_contig>>(
-          arr_viewed);
-  if (ndarray.ndim() != 1) {
-    throw std::invalid_argument("Input array must be one-dimensional, got " +
-                                std::to_string(ndarray.ndim()) + " dimensions");
-  }
-  return Eigen::Map<const Vector<int64_t>>(ndarray.data(), ndarray.shape(0),
-                                           ndarray.stride(0));
+          array.attr("view")("int64"));
+  return Eigen::Map<const Vector<int64_t>>(
+      viewed.data(), static_cast<int64_t>(viewed.shape(0)));
 }
 
 // Convert timedelta64 scalar to int64_t with resolution validation
@@ -129,13 +124,13 @@ inline auto vector_to_numpy(Vector<int64_t> &&vector, dateutils::DType dtype)
   nb::ndarray<nb::numpy, int64_t, nb::ndim<1>> arr(data, {size}, capsule);
 
   // Convert to numpy object and view as datetime64/timedelta64
-  return arr.cast().attr("view")(static_cast<std::string>(dtype));
+  return arr.cast().attr("view")(std::string(dtype));
 }
 
 // Return the numpy dtype of the axis (datetime64 or timedelta64)
 inline auto to_dtype(const dateutils::DType &dtype) -> nb::object {
   auto np = NumpyContext::get().module;
-  return np.attr("dtype")(static_cast<std::string>(dtype));
+  return np.attr("dtype")(std::string(dtype));
 }
 
 // Return a datetime64 scalar from int64
