@@ -63,7 +63,7 @@ class CSplineBase : public Univariate<T> {
   /// @return The interpolated value at the point x.
   [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
                                             const Vector<T>& ya,
-                                            const T x) const -> T override;
+                                            const T x) const -> T final;
 
   /// @brief Returns the derivative of the interpolation function at point x.
   /// @param[in] xa X-coordinates of the data points.
@@ -72,7 +72,7 @@ class CSplineBase : public Univariate<T> {
   /// @return The derivative of the interpolation function at the point x.
   [[nodiscard]] constexpr auto derivative_(const Vector<T>& xa,
                                            const Vector<T>& ya, const T x) const
-      -> T override;
+      -> T final;
 };
 
 // /////////////////////////////////////////////////////////////////////////////

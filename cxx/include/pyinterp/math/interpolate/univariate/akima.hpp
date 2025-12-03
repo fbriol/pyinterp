@@ -27,9 +27,7 @@ class Akima : public Univariate<T> {
   /// @brief Returns the minimum number of points required for the
   /// interpolation.
   /// @return Minimum number of points
-  [[nodiscard]] constexpr auto min_size() const -> int64_t override {
-    return 5;
-  }
+  [[nodiscard]] constexpr auto min_size() const -> int64_t final { return 5; }
 
  private:
   /// Segment slopes (including extended boundary points)
@@ -57,7 +55,7 @@ class Akima : public Univariate<T> {
   /// @return True if coefficients computed successfully
   [[nodiscard]] constexpr auto compute_coefficients(const Vector<T>& xa,
                                                     const Vector<T>& ya)
-      -> bool override;
+      -> bool final;
 
   /// @brief Interpolation using Akima cubic polynomials
   /// @param[in] xa X-coordinates of the data points.
@@ -66,7 +64,7 @@ class Akima : public Univariate<T> {
   /// @return The interpolated value at the point x.
   [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
                                             const Vector<T>& ya,
-                                            const T x) const -> T override;
+                                            const T x) const -> T final;
 
   /// @brief Returns the derivative of the interpolation function at point x.
   /// @param[in] xa X-coordinates of the data points.
@@ -75,7 +73,7 @@ class Akima : public Univariate<T> {
   /// @return The derivative of the interpolation function at the point x.
   [[nodiscard]] constexpr auto derivative_(const Vector<T>& xa,
                                            const Vector<T>& ya, const T x) const
-      -> T override;
+      -> T final;
 };
 
 // /////////////////////////////////////////////////////////////////////////////

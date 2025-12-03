@@ -22,9 +22,7 @@ class Polynomial : public Univariate<T> {
 
   /// @brief The minimum size of the arrays to be interpolated.
   /// @return Minimum size of the arrays
-  [[nodiscard]] constexpr auto min_size() const -> int64_t override {
-    return 3;
-  }
+  [[nodiscard]] constexpr auto min_size() const -> int64_t final { return 3; }
 
  private:
   /// @brief Coefficients of the interpolation (Newton's divided differences)
@@ -37,7 +35,7 @@ class Polynomial : public Univariate<T> {
   /// @return True if coefficients were computed successfully
   [[nodiscard]] constexpr auto compute_coefficients(const Vector<T>& xa,
                                                     const Vector<T>& ya)
-      -> bool override;
+      -> bool final;
 
   /// @brief Compute Taylor series coefficients around point x
   /// @param[in] xa X-coordinates of the data points.
@@ -52,7 +50,7 @@ class Polynomial : public Univariate<T> {
   /// @return The interpolated value at the point x.
   [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
                                             const Vector<T>& ya, T x) const
-      -> T override;
+      -> T final;
 
   /// @brief Returns the derivative of the interpolation function at point x.
   /// @param[in] xa X-coordinates of the data points.
@@ -60,7 +58,7 @@ class Polynomial : public Univariate<T> {
   /// @param[in] x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
   [[nodiscard]] auto derivative_(const Vector<T>& xa, const Vector<T>& ya,
-                                 T x) const -> T override;
+                                 T x) const -> T final;
 };
 
 // /////////////////////////////////////////////////////////////////////////////

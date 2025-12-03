@@ -37,9 +37,7 @@ class CSplineNotAKnot : public CSplineBase<T> {
 
   /// @brief Minimum number of data points required is 4.
   /// @return Minimum number of data points required
-  [[nodiscard]] constexpr auto min_size() const -> int64_t override {
-    return 4;
-  }
+  [[nodiscard]] constexpr auto min_size() const -> int64_t final { return 4; }
 
  protected:
   /// @brief Compute the spline coefficients (i.e. the first derivatives at the
@@ -48,12 +46,12 @@ class CSplineNotAKnot : public CSplineBase<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @return True if coefficients computed successfully
   [[nodiscard]] auto compute_coefficients(const Vector<T>& xa,
-                                          const Vector<T>& ya) -> bool override;
+                                          const Vector<T>& ya) -> bool final;
 
  private:
   /// @brief Member variable to avoid reallocations in repeated calls to
   /// compute_coefficients
-  std::vector<Triplet> triplets_;
+  std::vector<Triplet> triplets_{};
 };
 
 // /////////////////////////////////////////////////////////////////////////////

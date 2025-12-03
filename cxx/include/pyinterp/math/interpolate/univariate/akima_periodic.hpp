@@ -24,7 +24,7 @@ class AkimaPeriodic : public Akima<T> {
   /// [size+2..size+3] right boundary
   /// @param[in] m Pointer to slope array (with 2-element offset for boundary)
   /// @param[in] size Number of data points
-  auto boundary_condition(std::span<T> m, const int64_t size) -> void override {
+  auto boundary_condition(std::span<T> m, const int64_t size) -> void final {
     // Wrap slopes from the end to fill left boundary
     m[0] = m[size - 1];  // Second-to-last slope
     m[1] = m[size];      // Last slope

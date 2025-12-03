@@ -20,9 +20,7 @@ class Linear : public Univariate<T> {
   using Univariate<T>::derivative;
 
   /// Returns the minimum number of points required for the interpolation.
-  [[nodiscard]] constexpr auto min_size() const -> int64_t override {
-    return 2;
-  }
+  [[nodiscard]] constexpr auto min_size() const -> int64_t final { return 2; }
 
  private:
   /// Interpolation
@@ -32,7 +30,7 @@ class Linear : public Univariate<T> {
   /// @return The interpolated value at the point x.
   [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
                                             const Vector<T>& ya, T x) const
-      -> T override {
+      -> T final {
     const auto where = this->search(xa, x);
     if (!where) [[unlikely]] {
       return Fill<T>::value();
@@ -54,7 +52,7 @@ class Linear : public Univariate<T> {
   /// @return The derivative of the interpolation function at the point x.
   [[nodiscard]] constexpr auto derivative_(const Vector<T>& xa,
                                            const Vector<T>& ya, T x) const
-      -> T override {
+      -> T final {
     const auto where = this->search(xa, x);
     if (!where) [[unlikely]] {
       return Fill<T>::value();
