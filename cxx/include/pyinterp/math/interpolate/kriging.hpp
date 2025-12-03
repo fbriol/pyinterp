@@ -152,11 +152,11 @@ class Kriging {
   };
 
   /// @brief Constructor
-  /// @param sigma Magnitude parameter (sill - nugget, must be > 0)
-  /// @param lambda Correlation length parameter (range, must be > 0)
-  /// @param nugget Nugget effect (measurement error variance, must be >= 0)
-  /// @param function Covariance function to use
-  /// @param drift_function Optional drift function for universal kriging
+  /// @param[in] sigma Magnitude parameter (sill - nugget, must be > 0)
+  /// @param[in] lambda Correlation length parameter (range, must be > 0)
+  /// @param[in] nugget Nugget effect (measurement error variance, must be >= 0)
+  /// @param[in] function Covariance function to use
+  /// @param[in] drift_function Optional drift function for universal kriging
   /// @throws std::invalid_argument if parameters are invalid
   Kriging(const T sigma, const T lambda, const T nugget,
           const CovarianceFunction function,
@@ -171,9 +171,9 @@ class Kriging {
   }
 
   /// @brief Estimate the value at a query point
-  /// @param coordinates Coordinates of known points (3 × n matrix)
-  /// @param values Values at known points (n-vector)
-  /// @param query Coordinates of query point (3-vector)
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @param[in] values Values at known points (n-vector)
+  /// @param[in] query Coordinates of query point (3-vector)
   /// @return Estimated value at query point
   /// @throws std::invalid_argument if dimensions mismatch
   [[nodiscard]] auto operator()(const Eigen::Matrix<T, 3, -1>& coordinates,
@@ -183,9 +183,9 @@ class Kriging {
   }
 
   /// @brief Estimate the value and variance at a query point
-  /// @param coordinates Coordinates of known points (3 × n matrix)
-  /// @param values Values at known points (n-vector)
-  /// @param query Coordinates of query point (3-vector)
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @param[in] values Values at known points (n-vector)
+  /// @param[in] query Coordinates of query point (3-vector)
   /// @return Result structure containing value and variance
   /// @throws std::invalid_argument if dimensions mismatch
   /// @throws std::runtime_error for universal kriging with insufficient points
@@ -219,6 +219,7 @@ class Kriging {
   bool use_universal_;
   CovarianceFunctionPtr function_;
 
+  /// @brief Validate constructor parameters
   void validate_parameters() const {
     if (sigma_ <= T{0}) {
       throw std::invalid_argument("sigma must be greater than 0");
@@ -231,6 +232,9 @@ class Kriging {
     }
   }
 
+  /// @brief Validate input data
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @param[in] values Values at known points (n-vector)
   void validate_input(const Eigen::Matrix<T, 3, -1>& coordinates,
                       const Eigen::Matrix<T, -1, 1>& values) const {
     if (coordinates.cols() != values.rows()) {
@@ -243,6 +247,9 @@ class Kriging {
     }
   }
 
+  /// @brief Select covariance function based on enum
+  /// @param[in] func Covariance function enum
+  /// @return Pointer to the selected covariance function
   [[nodiscard]] static auto select_covariance_function(CovarianceFunction func)
       -> CovarianceFunctionPtr {
     switch (func) {
@@ -266,12 +273,16 @@ class Kriging {
   }
 
   /// @brief Get size of drift basis
+  /// @param[in] func Drift function enum
+  /// @return Size of drift basis
   [[nodiscard]] static constexpr auto drift_basis_size(DriftFunction func)
       -> Eigen::Index {
     return func == DriftFunction::kLinear ? 4 : 10;
   }
 
   /// @brief Build covariance matrix C (n × n)
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @return Covariance matrix C
   [[nodiscard]] auto build_covariance_matrix(
       const Eigen::Matrix<T, 3, -1>& coordinates) const -> Matrix<T> {
     const auto n = coordinates.cols();
@@ -293,6 +304,9 @@ class Kriging {
   }
 
   /// @brief Build covariance vector c (n-vector) between query and data points
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @param[in] query Coordinates of query point (3-vector)
+  /// @return Covariance vector c
   [[nodiscard]] auto build_covariance_vector(
       const Eigen::Matrix<T, 3, -1>& coordinates,
       const Eigen::Vector3<T>& query) const -> Vector<T> {
@@ -306,6 +320,8 @@ class Kriging {
   }
 
   /// @brief Evaluate drift basis at a point
+  /// @param[in] point Coordinates of the point (3-vector)
+  /// @return Drift basis vector
   [[nodiscard]] auto evaluate_drift(const Eigen::Vector3<T>& point) const
       -> Vector<T> {
     const auto p = drift_basis_size(drift_function_);
@@ -328,6 +344,8 @@ class Kriging {
   }
 
   /// @brief Build drift matrix F (n × p)
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @return Drift matrix F
   [[nodiscard]] auto build_drift_matrix(
       const Eigen::Matrix<T, 3, -1>& coordinates) const -> Matrix<T> {
     const auto n = coordinates.cols();
@@ -341,6 +359,10 @@ class Kriging {
   }
 
   /// @brief Simple kriging (assumes zero mean)
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @param[in] values Values at known points (n-vector)
+  /// @param[in] query Coordinates of query point (3-vector)
+  /// @return Result structure containing value and variance
   [[nodiscard]] auto simple_kriging(const Eigen::Matrix<T, 3, -1>& coordinates,
                                     const Eigen::Matrix<T, -1, 1>& values,
                                     const Eigen::Vector3<T>& query) const
@@ -368,6 +390,10 @@ class Kriging {
   }
 
   /// @brief Universal kriging (with polynomial drift)
+  /// @param[in] coordinates Coordinates of known points (3 × n matrix)
+  /// @param[in] values Values at known points (n-vector)
+  /// @param[in] query Coordinates of query point (3-vector)
+  /// @return Result structure containing value and variance
   [[nodiscard]] auto universal_kriging(
       const Eigen::Matrix<T, 3, -1>& coordinates,
       const Eigen::Matrix<T, -1, 1>& values,
