@@ -4,6 +4,7 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 
+#include <mutex>
 #include <ranges>
 
 #include "pyinterp/math/temporal_axis.hpp"
@@ -20,9 +21,10 @@ struct NumpyContext {
   // Get the singleton instance
   static auto get() -> const NumpyContext & {
     static NumpyContext ctx;
-    if (!ctx.module.is_valid()) {
-      ctx.module = nb::module_::import_("numpy");
-    }
+    static std::once_flag init_flag;
+
+    std::call_once(init_flag,
+                   []() { ctx.module = nb::module_::import_("numpy"); });
     return ctx;
   }
 };
