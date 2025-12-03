@@ -31,7 +31,7 @@ def load_grid2d() -> xr.Dataset:
     return ds
 
 
-def load_grid3d(decode_time: bool = True) -> xr.Dataset:
+def load_grid3d() -> xr.Dataset:
     """Load the Grid 3D."""
 
     def _decode_datetime64(array: np.ndarray) -> np.ndarray:
@@ -45,15 +45,14 @@ def load_grid3d(decode_time: bool = True) -> xr.Dataset:
     ds = xr.Dataset.from_dict(data)
     ds.variables['tcw'].values = _mask_and_scale(ds['tcw'])
     ds['time'] = xr.DataArray(
-        _decode_datetime64(ds['time'].values) if decode_time else
-        ds['time'].values.astype(ds.variables['tcw'].dtype),
+        _decode_datetime64(ds['time'].values),
         dims=['time'],
         attrs={'long_name': 'time'},
     )
     return ds
 
 
-def load_grid4d(decode_time: bool = True) -> xr.Dataset:
+def load_grid4d() -> xr.Dataset:
     """Return path to the Grid 4D."""
 
     def _decode_datetime64(array: np.ndarray) -> np.ndarray:
@@ -66,13 +65,9 @@ def load_grid4d(decode_time: bool = True) -> xr.Dataset:
     with path.open('r') as stream:
         data = json.load(stream)
     ds = xr.Dataset.from_dict(data)
-    ds['time'] = xr.DataArray(
-        _decode_datetime64(ds['time'].values),
-        dims=['time'],
-        attrs={'long_name': 'time'}) if decode_time else xr.DataArray(
-            ds['time'].values.astype(ds.variables['pressure'].dtype),
-            dims=['time'],
-            attrs={'long_name': 'time'})
+    ds['time'] = xr.DataArray(_decode_datetime64(ds['time'].values),
+                              dims=['time'],
+                              attrs={'long_name': 'time'})
     ds = ds.assign_coords({
         'longitude': ds['longitude'].astype('float32'),
         'latitude': ds['latitude'].astype('float32')
