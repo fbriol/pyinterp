@@ -55,43 +55,7 @@ class DescriptiveStatistics {
   /// @brief Push a new value into the accumulator (weight = 1)
   ///
   /// @param[in] value The value to add
-  constexpr auto operator()(const T value) noexcept -> void {
-    using WorkT = typename Accumulators<T>::WorkT;
-
-    if (acc_.sum_of_weights == 0) [[unlikely]] {
-      *this = DescriptiveStatistics{value, T{1}};
-      return;
-    }
-    auto converted_value = static_cast<WorkT>(value);
-    const auto r = acc_.sum_of_weights;
-
-    acc_.sum_of_weights += 1;
-    acc_.count += 1;
-    acc_.sum += converted_value;
-
-    const auto inv_n = kOne / acc_.sum_of_weights;
-    const auto delta = converted_value - acc_.mean;
-    const auto A = delta * inv_n;
-
-    acc_.mean += A;
-    acc_.mom4 +=
-        A *
-        (A * A * delta * r *
-             (acc_.sum_of_weights * (acc_.sum_of_weights - kThree) + kThree) +
-         kSix * A * acc_.mom2 - kFour * acc_.mom3);
-
-    const auto B = value - acc_.mean;
-
-    acc_.mom3 +=
-        A * (B * delta * (acc_.sum_of_weights - kTwo) - kThree * acc_.mom2);
-    acc_.mom2 = std::fma(delta, B, acc_.mom2);
-
-    if (value < acc_.min) {
-      acc_.min = value;
-    } else if (value > acc_.max) {
-      acc_.max = value;
-    }
-  }
+  constexpr auto operator()(const T value) noexcept -> void;
 
   /// @brief Push a new value into the accumulator with an associated weight
   ///
@@ -185,56 +149,7 @@ class DescriptiveStatistics {
   /// @param[in] rhs The right-hand side accumulator
   /// @return The updated accumulator
   constexpr auto operator+=(const DescriptiveStatistics& rhs) noexcept
-      -> DescriptiveStatistics& {
-    auto w = acc_.sum_of_weights + rhs.acc_.sum_of_weights;
-
-    // Update min/max
-    acc_.min = std::min(acc_.min, rhs.acc_.min);
-    acc_.max = std::max(acc_.max, rhs.acc_.max);
-
-    const auto delta = rhs.acc_.mean - acc_.mean;
-    const auto delta_w = delta / w;
-    const auto delta2_w2 = delta_w * delta_w;
-
-    const auto w2 = acc_.sum_of_weights * acc_.sum_of_weights;
-    const auto ww = acc_.sum_of_weights * rhs.acc_.sum_of_weights;
-    const auto rhs_w2 = rhs.acc_.sum_of_weights * rhs.acc_.sum_of_weights;
-
-    // Update fourth moment
-    acc_.mom4 += rhs.acc_.mom4 +
-                 ww * (w2 - ww + rhs_w2) * delta * delta_w * delta2_w2 +
-                 kSix * (w2 * rhs.acc_.mom2 + rhs_w2 * acc_.mom2) * delta2_w2 +
-                 kFour *
-                     (acc_.sum_of_weights * rhs.acc_.mom3 -
-                      rhs.acc_.sum_of_weights * acc_.mom3) *
-                     delta_w;
-
-    // Update third moment
-    acc_.mom3 += rhs.acc_.mom3 +
-                 ww * (acc_.sum_of_weights - rhs.acc_.sum_of_weights) * delta *
-                     delta2_w2 +
-                 kThree *
-                     (acc_.sum_of_weights * rhs.acc_.mom2 -
-                      rhs.acc_.sum_of_weights * acc_.mom2) *
-                     delta_w;
-
-    // Update second moment
-    acc_.mom2 = std::fma(ww * delta, delta_w, acc_.mom2 + rhs.acc_.mom2);
-
-    // Update mean
-    acc_.mean = std::fma(rhs.acc_.sum_of_weights, delta_w, acc_.mean);
-
-    // Update sum
-    acc_.sum_of_weights = w;
-
-    // Update count
-    acc_.count += rhs.acc_.count;
-
-    // Update sum of values
-    acc_.sum += rhs.acc_.sum;
-
-    return *this;
-  }
+      -> DescriptiveStatistics&;
 
   /// @brief Combine two accumulators.
   ///
@@ -277,5 +192,103 @@ class DescriptiveStatistics {
                            .mom4 = WorkT{0}};
   }
 };
+
+// /////////////////////////////////////////////////////////////////////////////
+// Implementation
+// /////////////////////////////////////////////////////////////////////////////
+
+template <std::floating_point T>
+constexpr auto DescriptiveStatistics<T>::operator()(const T value) noexcept
+    -> void {
+  using WorkT = typename Accumulators<T>::WorkT;
+
+  if (acc_.sum_of_weights == 0) [[unlikely]] {
+    *this = DescriptiveStatistics{value, T{1}};
+    return;
+  }
+  auto converted_value = static_cast<WorkT>(value);
+  const auto r = acc_.sum_of_weights;
+
+  acc_.sum_of_weights += 1;
+  acc_.count += 1;
+  acc_.sum += converted_value;
+
+  const auto inv_n = kOne / acc_.sum_of_weights;
+  const auto delta = converted_value - acc_.mean;
+  const auto A = delta * inv_n;
+
+  acc_.mean += A;
+  acc_.mom4 +=
+      A * (A * A * delta * r *
+               (acc_.sum_of_weights * (acc_.sum_of_weights - kThree) + kThree) +
+           kSix * A * acc_.mom2 - kFour * acc_.mom3);
+
+  const auto B = value - acc_.mean;
+
+  acc_.mom3 +=
+      A * (B * delta * (acc_.sum_of_weights - kTwo) - kThree * acc_.mom2);
+  acc_.mom2 = std::fma(delta, B, acc_.mom2);
+
+  if (value < acc_.min) {
+    acc_.min = value;
+  } else if (value > acc_.max) {
+    acc_.max = value;
+  }
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+template <std::floating_point T>
+constexpr auto DescriptiveStatistics<T>::operator+=(
+    const DescriptiveStatistics& rhs) noexcept -> DescriptiveStatistics& {
+  auto w = acc_.sum_of_weights + rhs.acc_.sum_of_weights;
+
+  // Update min/max
+  acc_.min = std::min(acc_.min, rhs.acc_.min);
+  acc_.max = std::max(acc_.max, rhs.acc_.max);
+
+  const auto delta = rhs.acc_.mean - acc_.mean;
+  const auto delta_w = delta / w;
+  const auto delta2_w2 = delta_w * delta_w;
+
+  const auto w2 = acc_.sum_of_weights * acc_.sum_of_weights;
+  const auto ww = acc_.sum_of_weights * rhs.acc_.sum_of_weights;
+  const auto rhs_w2 = rhs.acc_.sum_of_weights * rhs.acc_.sum_of_weights;
+
+  // Update fourth moment
+  acc_.mom4 += rhs.acc_.mom4 +
+               ww * (w2 - ww + rhs_w2) * delta * delta_w * delta2_w2 +
+               kSix * (w2 * rhs.acc_.mom2 + rhs_w2 * acc_.mom2) * delta2_w2 +
+               kFour *
+                   (acc_.sum_of_weights * rhs.acc_.mom3 -
+                    rhs.acc_.sum_of_weights * acc_.mom3) *
+                   delta_w;
+
+  // Update third moment
+  acc_.mom3 +=
+      rhs.acc_.mom3 +
+      ww * (acc_.sum_of_weights - rhs.acc_.sum_of_weights) * delta * delta2_w2 +
+      kThree *
+          (acc_.sum_of_weights * rhs.acc_.mom2 -
+           rhs.acc_.sum_of_weights * acc_.mom2) *
+          delta_w;
+
+  // Update second moment
+  acc_.mom2 = std::fma(ww * delta, delta_w, acc_.mom2 + rhs.acc_.mom2);
+
+  // Update mean
+  acc_.mean = std::fma(rhs.acc_.sum_of_weights, delta_w, acc_.mean);
+
+  // Update sum
+  acc_.sum_of_weights = w;
+
+  // Update count
+  acc_.count += rhs.acc_.count;
+
+  // Update sum of values
+  acc_.sum += rhs.acc_.sum;
+
+  return *this;
+}
 
 }  // namespace pyinterp::math
