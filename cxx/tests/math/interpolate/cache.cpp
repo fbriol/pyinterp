@@ -6,7 +6,7 @@
 
 #include "pyinterp/math/interpolate/cache.hpp"
 
-namespace interpolate = pyinterp::math::interpolate;
+namespace pyinterp::math::interpolate {
 
 // Helper to ensure correct macro expansion for multi-index operator[]
 // (prevents issues with comma operator in EXPECT macros)
@@ -14,17 +14,17 @@ auto expect_float_eq(float a, float b) -> void { EXPECT_FLOAT_EQ(a, b); }
 
 TEST(IndependentCache1D, Construction) {
   // 1D cache: only X dimension, Y is ignored
-  interpolate::InterpolationCache<float, double> cache_linear(1, 1);
+  InterpolationCache<float, double> cache_linear(1, 1);
   EXPECT_EQ(cache_linear.x_half_window(), 1);
   EXPECT_EQ(cache_linear.x_points(), 2);
 
-  interpolate::InterpolationCache<float, double> cache_cubic(2, 2);
+  InterpolationCache<float, double> cache_cubic(2, 2);
   EXPECT_EQ(cache_cubic.x_half_window(), 2);
   EXPECT_EQ(cache_cubic.x_points(), 4);
 }
 
 TEST(IndependentCache1D, CoordinateAccess) {
-  interpolate::InterpolationCache<float, double> cache(2, 2);
+  InterpolationCache<float, double> cache(2, 2);
 
   cache.set_coord<0>(0, 1.0);
   cache.set_coord<0>(1, 2.0);
@@ -39,7 +39,7 @@ TEST(IndependentCache1D, CoordinateAccess) {
 
 TEST(IndependentCache2D, SymmetricWindow) {
   // Same window size for both dimensions (like before)
-  interpolate::InterpolationCache<float, double, double> cache(2, 2);
+  InterpolationCache<float, double, double> cache(2, 2);
 
   EXPECT_EQ(cache.x_half_window(), 2);
   EXPECT_EQ(cache.y_half_window(), 2);
@@ -50,7 +50,7 @@ TEST(IndependentCache2D, SymmetricWindow) {
 
 TEST(IndependentCache2D, AsymmetricWindow) {
   // Different window sizes: cubic in X, linear in Y
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   EXPECT_EQ(cache.x_half_window(), 2);
   EXPECT_EQ(cache.y_half_window(), 1);
@@ -61,7 +61,7 @@ TEST(IndependentCache2D, AsymmetricWindow) {
 
 TEST(IndependentCache2D, ReverseAsymmetric) {
   // Different window sizes: linear in X, cubic in Y
-  interpolate::InterpolationCache<float, double, double> cache(1, 2);
+  InterpolationCache<float, double, double> cache(1, 2);
 
   EXPECT_EQ(cache.x_half_window(), 1);
   EXPECT_EQ(cache.y_half_window(), 2);
@@ -72,7 +72,7 @@ TEST(IndependentCache2D, ReverseAsymmetric) {
 
 TEST(IndependentCache2D, ValueAccessAsymmetric) {
   // 4×2 cache (cubic X, linear Y)
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   // Set all values
   for (size_t i = 0; i < 4; ++i) {
@@ -90,7 +90,7 @@ TEST(IndependentCache2D, ValueAccessAsymmetric) {
 
 TEST(IndependentCache2D, MatrixViewAsymmetric) {
   // 4×2 cache
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 2; ++j) {
@@ -107,7 +107,7 @@ TEST(IndependentCache2D, MatrixViewAsymmetric) {
 
 TEST(IndependentCache2D, DomainTrackingAsymmetric) {
   // Cubic X, Linear Y
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   // Set X coordinates (4 points)
   for (size_t i = 0; i < 4; ++i) {
@@ -136,7 +136,7 @@ TEST(IndependentCache2D, DomainTrackingAsymmetric) {
 
 TEST(IndependentCache3D, SymmetricXY) {
   // X and Y symmetric, Z always 4 points
-  interpolate::InterpolationCache<float, double, double, double> cache(2, 2);
+  InterpolationCache<float, double, double, double> cache(2, 2);
 
   EXPECT_EQ(cache.x_points(), 4);
   EXPECT_EQ(cache.y_points(), 4);
@@ -146,7 +146,7 @@ TEST(IndependentCache3D, SymmetricXY) {
 
 TEST(IndependentCache3D, AsymmetricXY) {
   // X cubic, Y linear, Z always 4
-  interpolate::InterpolationCache<float, double, double, double> cache(2, 1);
+  InterpolationCache<float, double, double, double> cache(2, 1);
 
   EXPECT_EQ(cache.x_points(), 4);
   EXPECT_EQ(cache.y_points(), 2);
@@ -156,7 +156,7 @@ TEST(IndependentCache3D, AsymmetricXY) {
 
 TEST(IndependentCache3D, MatrixSliceAsymmetric) {
   // 4×2×4 cache (cubic X, linear Y, cubic Z)
-  interpolate::InterpolationCache<float, double, double, double> cache(2, 1);
+  InterpolationCache<float, double, double, double> cache(2, 1);
 
   // Fill z=2 slice
   for (size_t i = 0; i < 4; ++i) {
@@ -174,7 +174,7 @@ TEST(IndependentCache3D, MatrixSliceAsymmetric) {
 }
 
 TEST(IndependentCache3D, DomainTracking) {
-  interpolate::InterpolationCache<float, double, double, double> cache(2, 1);
+  InterpolationCache<float, double, double, double> cache(2, 1);
 
   // Set coordinates
   for (size_t i = 0; i < 4; ++i) {
@@ -202,8 +202,7 @@ TEST(IndependentCache3D, DomainTracking) {
 
 TEST(IndependentCache4D, AsymmetricXY) {
   // X cubic, Y linear, Z and U always 4
-  interpolate::InterpolationCache<float, double, double, double, double> cache(
-      2, 1);
+  InterpolationCache<float, double, double, double, double> cache(2, 1);
 
   EXPECT_EQ(cache.x_points(), 4);
   EXPECT_EQ(cache.y_points(), 2);
@@ -213,8 +212,7 @@ TEST(IndependentCache4D, AsymmetricXY) {
 }
 
 TEST(IndependentCache4D, MatrixSliceAsymmetric) {
-  interpolate::InterpolationCache<float, double, double, double, double> cache(
-      2, 1);
+  InterpolationCache<float, double, double, double, double> cache(2, 1);
 
   // Fill (z=1, u=2) slice
   for (size_t i = 0; i < 4; ++i) {
@@ -234,7 +232,7 @@ TEST(IndependentCache4D, MatrixSliceAsymmetric) {
 
 TEST(WindowCombinations, LinearLinear) {
   // Linear in both X and Y
-  interpolate::InterpolationCache<float, double, double> cache(1, 1);
+  InterpolationCache<float, double, double> cache(1, 1);
 
   EXPECT_EQ(cache.x_points(), 2);
   EXPECT_EQ(cache.y_points(), 2);
@@ -251,7 +249,7 @@ TEST(WindowCombinations, LinearLinear) {
 
 TEST(WindowCombinations, CubicLinear) {
   // Cubic X, Linear Y
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   EXPECT_EQ(cache.x_points(), 4);
   EXPECT_EQ(cache.y_points(), 2);
@@ -260,7 +258,7 @@ TEST(WindowCombinations, CubicLinear) {
 
 TEST(WindowCombinations, LinearCubic) {
   // Linear X, Cubic Y
-  interpolate::InterpolationCache<float, double, double> cache(1, 2);
+  InterpolationCache<float, double, double> cache(1, 2);
 
   EXPECT_EQ(cache.x_points(), 2);
   EXPECT_EQ(cache.y_points(), 4);
@@ -269,7 +267,7 @@ TEST(WindowCombinations, LinearCubic) {
 
 TEST(WindowCombinations, CubicCubic) {
   // Cubic in both
-  interpolate::InterpolationCache<float, double, double> cache(2, 2);
+  InterpolationCache<float, double, double> cache(2, 2);
 
   EXPECT_EQ(cache.x_points(), 4);
   EXPECT_EQ(cache.y_points(), 4);
@@ -278,7 +276,7 @@ TEST(WindowCombinations, CubicCubic) {
 
 TEST(WindowCombinations, QuinticLinear) {
   // Quintic X, Linear Y
-  interpolate::InterpolationCache<float, double, double> cache(3, 1);
+  InterpolationCache<float, double, double> cache(3, 1);
 
   EXPECT_EQ(cache.x_points(), 6);
   EXPECT_EQ(cache.y_points(), 2);
@@ -287,7 +285,7 @@ TEST(WindowCombinations, QuinticLinear) {
 
 TEST(WindowCombinations, LinearQuintic) {
   // Linear X, Quintic Y
-  interpolate::InterpolationCache<float, double, double> cache(1, 3);
+  InterpolationCache<float, double, double> cache(1, 3);
 
   EXPECT_EQ(cache.x_points(), 2);
   EXPECT_EQ(cache.y_points(), 6);
@@ -296,7 +294,7 @@ TEST(WindowCombinations, LinearQuintic) {
 
 TEST(WindowCombinations, QuinticCubic) {
   // Quintic X, Cubic Y
-  interpolate::InterpolationCache<float, double, double> cache(3, 2);
+  InterpolationCache<float, double, double> cache(3, 2);
 
   EXPECT_EQ(cache.x_points(), 6);
   EXPECT_EQ(cache.y_points(), 4);
@@ -307,7 +305,7 @@ TEST(WindowCombinations, QuinticCubic) {
 
 TEST(Strides, AsymmetricLayout) {
   // 4×2 cache (cubic X, linear Y)
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   // Fill with sequential values
   auto& flat = cache.values_flat();
@@ -328,7 +326,7 @@ TEST(Strides, AsymmetricLayout) {
 
 TEST(Strides, 3DAsymmetric) {
   // 4×2×4 cache
-  interpolate::InterpolationCache<float, double, double, double> cache(2, 1);
+  InterpolationCache<float, double, double, double> cache(2, 1);
 
   auto& flat = cache.values_flat();
   for (size_t i = 0; i < flat.size(); ++i) {
@@ -349,7 +347,7 @@ TEST(Strides, 3DAsymmetric) {
 
 TEST(MatrixOps, AsymmetricOperations) {
   // 4×2 cache
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 2; ++j) {
@@ -378,7 +376,7 @@ TEST(MatrixOps, AsymmetricOperations) {
 // ==================== Performance Tests ====================
 
 TEST(Performance, AsymmetricCache) {
-  interpolate::InterpolationCache<float, double, double> cache(2, 1);
+  InterpolationCache<float, double, double> cache(2, 1);
 
   constexpr int iterations = 100000;
   auto start = std::chrono::high_resolution_clock::now();
@@ -398,3 +396,5 @@ TEST(Performance, AsymmetricCache) {
   auto time_ns = duration / static_cast<double>(iterations);
   RecordProperty("AsymmetricCacheTimeNS", time_ns);
 }
+
+}  // namespace pyinterp::math::interpolate
