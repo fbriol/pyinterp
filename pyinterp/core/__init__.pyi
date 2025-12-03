@@ -1,6 +1,33 @@
 import typing
 from typing import Any, overload
 
+from ..type_hints import NDArray1DFloat64
+from .config import geometric
+
+@overload
+def bivariate(
+    grid: Grid2DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    config: geometric.Bivariate,
+) -> NDArray1DFloat64: ...
+
+@overload
+def bivariate(
+    grid: Grid2DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    config: geometric.Bivariate,
+) -> NDArray1DFloat64: ...
+
+@overload
+def bivariate(
+    grid: Grid2DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    config: geometric.Bivariate,
+) -> NDArray1DFloat64: ...
+
 class Axis:
     def __init__(
         self,
