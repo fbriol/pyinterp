@@ -51,9 +51,9 @@ class CSplineBase : public Univariate<T> {
   using Univariate<T>::derivative;
 
  protected:
-  Matrix<T> A_;
-  Vector<T> b_;
-  Vector<T> x_;
+  Matrix<T> A_;  ///< Coefficient matrix for the spline system
+  Vector<T> b_;  ///< Right-hand side vector for the spline system
+  Vector<T> x_;  ///< Solution vector for the spline system
 
  private:
   /// @brief Interpolation using cubic spline

@@ -236,6 +236,9 @@ struct InterpolationTraits<windowed::Quadrivariate> {
 
 namespace windowed {
 
+/// @brief Base class for multi-dimensional windowed interpolation
+/// configurations using the Curiously Recurring Template Pattern (CRTP).
+/// @tparam Derived The derived configuration class.
 template <typename Derived>
 struct WindowBase : public Base<Spatial, Derived> {
   /// @brief Create a configuration for akima spline interpolation
@@ -318,6 +321,9 @@ struct WindowBase : public Base<Spatial, Derived> {
   }
 };
 
+/// @brief Modifiers for spatial settings in windowed interpolation
+/// configurations.
+/// @tparam Derived The derived configuration class.
 template <typename Derived>
 struct WindowSpatialModifiers {
   /// @brief Update window size in the x direction on the derived config.

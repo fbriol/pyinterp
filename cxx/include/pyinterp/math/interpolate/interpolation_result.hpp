@@ -9,7 +9,7 @@ namespace pyinterp::math::interpolate {
 /// Result type for single-point interpolation
 template <typename T>
 struct InterpolationResult {
-  std::optional<T> value;  /// Interpolated value
+  std::optional<T> value;  ///< Interpolated value
 
   /// Returns true if the interpolation result contains a value
   [[nodiscard]] constexpr auto has_value() const noexcept -> bool {

@@ -169,8 +169,8 @@ struct SpatialPoint4D {
   /// @param[in] spatial 2D spatial point
   /// @param[in] z Third-axis coordinate
   /// @param[in] u Fourth-axis coordinate
-  constexpr SpatialPoint4D(Point<T> spatial_pt, Z z, U u)
-      : spatial(std::move(spatial_pt)), z_axis(z), u_axis(u) {}
+  constexpr SpatialPoint4D(Point<T> spatial, Z z, U u)
+      : spatial(std::move(spatial)), z_axis(z), u_axis(u) {}
 
   /// @brief Default constructor
   constexpr SpatialPoint4D() = default;

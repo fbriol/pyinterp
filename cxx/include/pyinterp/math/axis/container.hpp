@@ -195,13 +195,18 @@ class Undefined : public Abstract<T> {
   /// @copydoc Abstract::flip()
   auto flip() noexcept -> void override {}
 
-  /// @copydoc Abstract::coordinate_value(const int64_t) const
+  /// @brief Get the ith coordinate value.
+  /// @param[in] index which coordinate. Between 0 and size()-1 inclusive
+  /// @return coordinate value
   [[nodiscard]] constexpr auto coordinate_value(
       const int64_t /* index */) const noexcept -> T override {
     return math::Fill<T>::value();
   }
 
-  /// @copydoc Abstract::slice(const int64_t, const int64_t) const
+  /// @brief Get a slice of the axis.
+  /// @param[in] start index of the first element to include in the slice
+  /// @param[in] count number of elements to include in the slice
+  /// @return a slice of the axis
   [[nodiscard]] constexpr auto slice(const int64_t /* start */,
                                      const int64_t /* count */) const noexcept
       -> Vector<T> override {
@@ -233,7 +238,9 @@ class Undefined : public Abstract<T> {
     return coordinate_value(0);
   }
 
-  /// @copydoc Abstract::find_index(double,bool) const
+  /// @brief Search for the index corresponding to the requested value.
+  /// @return Always returns -1
+  [[nodiscard]]
   constexpr auto find_index(T /* coordinate */,
                             bool /* bounded */) const  /// NOLINT
       noexcept -> int64_t override {
@@ -350,7 +357,7 @@ class Irregular : public Abstract<T> {
     return points_[points_.size() - 1];
   }
 
-  /// @copydoc Abstract::find_index(double,bool) const
+  /// @copydoc Abstract::find_index(T,bool) const
   [[nodiscard]] constexpr auto find_index(const T coordinate,
                                           const bool bounded) const
       -> int64_t override {
@@ -543,7 +550,7 @@ class Regular<T, std::enable_if_t<std::floating_point<T>>>
   Regular(const T start, const T stop, const size_t num)
       : AbstractRegular<T>(start, stop, num), inv_step_(T(1.0) / this->step_) {}
 
-  /// @copydoc Abstract::find_index(double, bool) const
+  /// @copydoc Abstract::find_index(T, bool) const
   [[nodiscard]] auto find_index(const T coordinate,
                                 const bool bounded) const noexcept
       -> int64_t override {
@@ -581,7 +588,7 @@ class Regular<T, std::enable_if_t<std::integral<T>>>
   Regular(const T start, const T stop, const size_t num)
       : AbstractRegular<T>(start, stop, num), step_2_(this->step_ >> 1) {}
 
-  /// @copydoc Abstract::find_index(double, bool) const
+  /// @copydoc Abstract::find_index(T, bool) const
   [[nodiscard]] constexpr auto find_index(const T coordinate,
                                           const bool bounded) const noexcept
       -> int64_t override {

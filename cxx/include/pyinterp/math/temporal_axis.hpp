@@ -29,10 +29,10 @@ class TemporalAxis : public Axis<int64_t> {
   /// Two timestamps/durations whose absolute difference is <= epsilon are
   /// treated as equal.
   /// @param[in] period Period of the axis (optional)
-  TemporalAxis(const dateutils::DType& dype, const int64_t start,
+  TemporalAxis(const dateutils::DType& dtype, const int64_t start,
                const int64_t stop, const size_t num, const int64_t epsilon,
                const std::optional<int64_t>& period = std::nullopt)
-      : Axis<int64_t>(start, stop, num, epsilon, period), dtype_(dype) {}
+      : Axis<int64_t>(start, stop, num, epsilon, period), dtype_(dtype) {}
 
   /// @brief Construct a TemporalAxis from a set of points.
   /// @param[in] dtype Data type used to encode datetime64 or timedelta64 values

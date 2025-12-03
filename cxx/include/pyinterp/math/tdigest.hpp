@@ -18,8 +18,8 @@ namespace pyinterp::math {
 /// @tparam T The data type
 template <std::floating_point T>
 struct Centroid {
-  T mean;    // Mean value of the cluster
-  T weight;  // Total weight (count) of values in this cluster
+  T mean;    ///< Mean value of the cluster
+  T weight;  ///< Total weight (count) of values in this cluster
 };
 
 /// @brief T-Digest implementation for efficient quantile estimation

@@ -20,16 +20,15 @@
 #include <tuple>
 #include <utility>
 
-#include "nanobind/ndarray.h"
 #include "pyinterp/pybind/axis.hpp"
 #include "pyinterp/pybind/temporal_axis.hpp"
 
 namespace pyinterp::pybind {
 namespace detail {
 
-/// Format a number of bytes into a human-readable string
-/// @param nbytes Number of bytes
-/// @return Formatted string
+/// Format a number of bytes into a human-readable string.
+/// @param nbytes Number of bytes.
+/// @return Formatted string.
 [[nodiscard]] inline auto format_bytes(size_t nbytes) -> std::string {
   constexpr auto units =
       std::array<std::string_view, 5>{"B", "KB", "MB", "GB", "TB"};
@@ -43,56 +42,74 @@ namespace detail {
   return std::format("{} PB", nbytes);
 }
 
-/// Dtype name traits
-/// @tparam T Data type
+/// Dtype name traits.
+/// @tparam T Data type.
 template <typename T>
 struct dtype_name_traits;
 
-/// Specializations for common data types
+/// @brief Specializations of dtype_name_traits for int8_t.
 template <>
 struct dtype_name_traits<int8_t> {
   static constexpr const char* value = "int8";
 };
+
+/// @brief Specializations of dtype_name_traits for uint8_t.
 template <>
 struct dtype_name_traits<uint8_t> {
   static constexpr const char* value = "uint8";
 };
+
+/// @brief Specializations of dtype_name_traits for int16_t.
 template <>
 struct dtype_name_traits<int16_t> {
   static constexpr const char* value = "int16";
 };
+
+/// @brief Specializations of dtype_name_traits for uint16_t.
 template <>
 struct dtype_name_traits<uint16_t> {
   static constexpr const char* value = "uint16";
 };
+
+/// @brief Specializations of dtype_name_traits for int32_t.
 template <>
 struct dtype_name_traits<int32_t> {
   static constexpr const char* value = "int32";
 };
+
+/// @brief Specializations of dtype_name_traits for uint32_t.
 template <>
 struct dtype_name_traits<uint32_t> {
   static constexpr const char* value = "uint32";
 };
+
+/// @brief Specializations of dtype_name_traits for int64_t.
 template <>
 struct dtype_name_traits<int64_t> {
   static constexpr const char* value = "int64";
 };
+
+/// @brief Specializations of dtype_name_traits for uint64_t.
 template <>
 struct dtype_name_traits<uint64_t> {
   static constexpr const char* value = "uint64";
 };
+
+/// @brief Specializations of dtype_name_traits for float.
 template <>
 struct dtype_name_traits<float> {
   static constexpr const char* value = "float32";
 };
+
+/// @brief Specializations of dtype_name_traits for double.
 template <>
 struct dtype_name_traits<double> {
   static constexpr const char* value = "float64";
 };
 
-/// Get the dtype name for a given data type
-/// @tparam T Data type
-/// @return Dtype name as a string
+/// Get the dtype name for a given data type.
+/// @tparam T Data type.
+/// @return Dtype name as a C string.
 template <typename T>
 [[nodiscard]] constexpr auto dtype_name() -> const char* {
   if constexpr (requires { dtype_name_traits<T>::value; }) {
@@ -102,11 +119,11 @@ template <typename T>
   }
 }
 
-/// Get a string representation of the shape of a numpy array
-/// @tparam NDIMS Number of dimensions
-/// @tparam NDArray Numpy array type
-/// @param array Numpy array
-/// @return String representation of the shape
+/// Get a string representation of the shape of a NumPy array.
+/// @tparam NDIMS Number of dimensions.
+/// @tparam NDArray NumPy array type.
+/// @param array NumPy array.
+/// @return String representation of the shape.
 template <size_t NDIMS, typename NDArray>
 [[nodiscard]] inline auto array_shape_str(const NDArray& array) -> std::string {
   std::string shape_str = "(";
@@ -120,7 +137,7 @@ template <size_t NDIMS, typename NDArray>
   return shape_str;
 }
 
-/// Trait to map math axis types to their pybind wrappers
+/// Trait to map math axis types to their nanobind wrappers.
 template <typename MathAxisT>
 struct axis_pybind_wrapper;
 
@@ -137,14 +154,14 @@ struct axis_pybind_wrapper<math::TemporalAxis> {
   using type = TemporalAxis;
 };
 
-/// Helper alias to get the pybind wrapper type for a math axis type
-/// @tparam MathAxisT Math axis type
+/// Helper alias to get the nanobind wrapper type for a math axis type.
+/// @tparam MathAxisT Math axis type.
 template <typename MathAxisT>
 using axis_pybind_wrapper_t = typename axis_pybind_wrapper<MathAxisT>::type;
 
 }  // namespace detail
 
-/// Concept for valid axis
+/// Concept for a valid axis.
 template <typename T>
 concept AxisTypeConcept = requires(const T& ax, typename T::value_type val) {
   typename T::value_type;
@@ -158,44 +175,44 @@ concept AxisTypeConcept = requires(const T& ax, typename T::value_type val) {
   { ax.coordinate_repr(val) } -> std::convertible_to<std::string>;
 };
 
-/// Generic N-dimensional Cartesian grid
-/// @tparam DataType Type of data stored in the grid
-/// @tparam MathAxes Axis types (math::Axis<double>, math::TemporalAxis, etc.)
+/// Generic N-dimensional Cartesian grid.
+/// @tparam DataType Type of data stored in the grid.
+/// @tparam MathAxes Axis types (math::Axis<double>, math::TemporalAxis, etc.).
 template <typename DataType, AxisTypeConcept... MathAxes>
   requires(sizeof...(MathAxes) >= 1 && sizeof...(MathAxes) <= 4)
 class Grid {
  public:
-  /// Number of dimensions
+  /// Number of dimensions.
   static constexpr size_t kNDim = sizeof...(MathAxes);
 
-  /// Tuple of axes
+  /// Tuple of axes.
   using math_axes_tuple_t = std::tuple<MathAxes...>;
 
-  /// Math axis type at index I
-  /// @tparam I Index of the axis
+  /// Math axis type at index I.
+  /// @tparam I Index of the axis.
   template <size_t I>
   using math_axis_t = std::tuple_element_t<I, math_axes_tuple_t>;
 
-  /// Pybind axis type at index I (for Python-facing methods)
-  /// @tparam I Index of the axis
+  /// Nanobind axis type at index I (for Python-facing methods).
+  /// @tparam I Index of the axis.
   template <size_t I>
   using pybind_axis_t = detail::axis_pybind_wrapper_t<math_axis_t<I>>;
 
-  /// Extract the value type of the math axis at index I
-  /// @tparam I Index of the axis
+  /// Extract the value type of the math axis at index I.
+  /// @tparam I Index of the axis.
   template <size_t I>
   using math_axis_value_t = typename math_axis_t<I>::value_type;
 
-  /// N-dimensional array type
+  /// N-dimensional array type.
   using array_t = nanobind::ndarray<nanobind::numpy, DataType,
                                     nanobind::ndim<kNDim>, nanobind::c_contig>;
 
-  /// N-dimensional array view type
+  /// N-dimensional array view type.
   using view_t = nanobind::ndarray_view<DataType, kNDim, 'C'>;
 
-  /// Constructor
-  /// @param[in] axes Axes of the grid
-  /// @param[in] array N-dimensional data array
+  /// Constructor.
+  /// @param[in] axes Axes of the grid.
+  /// @param[in] array N-dimensional data array.
   explicit Grid(detail::axis_pybind_wrapper_t<MathAxes>... axes, array_t array)
       : axes_{static_cast<MathAxes>(std::move(axes))...},
         array_{std::move(array)},
@@ -203,7 +220,7 @@ class Grid {
     validate_construction();
   }
 
-  /// Constructor taking math axis types
+  /// Constructor taking math axis types.
   explicit Grid(MathAxes... axes, array_t array)
       : axes_{std::move(axes)...},
         array_{std::move(array)},
@@ -211,30 +228,30 @@ class Grid {
     validate_construction();
   }
 
-  /// Default constructor
+  /// Default constructor.
   Grid() = default;
 
-  /// Destructor
+  /// Destructor.
   virtual ~Grid() = default;
 
-  /// Copy/move semantics
+  /// Copy/move semantics.
   Grid(const Grid&) = default;
   Grid(Grid&&) noexcept = default;
   auto operator=(const Grid&) -> Grid& = default;
   auto operator=(Grid&&) noexcept -> Grid& = default;
 
-  /// Get axis at index I at compile time
-  /// @tparam I Index of the axis
-  /// @return Reference to the axis
+  /// Get axis at index I at compile time.
+  /// @tparam I Index of the axis.
+  /// @return Reference to the axis.
   template <size_t I>
     requires(I < kNDim)
   [[nodiscard]] constexpr auto axis() const noexcept -> const math_axis_t<I>& {
     return std::get<I>(axes_);
   }
 
-  /// Get pybind axis at index I at compile time
-  /// @tparam I Index of the axis
-  /// @return New pybind axis object
+  /// Get nanobind axis at index I at compile time.
+  /// @tparam I Index of the axis.
+  /// @return New nanobind axis object.
   template <size_t I>
     requires(I < kNDim)
   [[nodiscard]] constexpr auto pybind_axis() const noexcept
@@ -243,16 +260,16 @@ class Grid {
         this->template axis<I>());
   }
 
-  /// Get the underlying data array
-  /// @return Reference to the data array
+  /// Get the underlying data array.
+  /// @return Reference to the data array.
   [[nodiscard]] constexpr auto array() const noexcept -> const array_t& {
     return array_;
   }
 
-  /// Get the grid value at specified indices
-  /// @tparam Index Types of the indices
-  /// @param[in] indices Indices along each axis
-  /// @return Reference to the data value
+  /// Get the grid value at specified indices.
+  /// @tparam Index Types of the indices.
+  /// @param[in] indices Indices along each axis.
+  /// @return Reference to the data value.
   template <typename... Index>
     requires(sizeof...(Index) == kNDim)
   [[nodiscard]] auto value(Index&&... indices) const noexcept
@@ -260,10 +277,10 @@ class Grid {
     return ptr_(std::forward<Index>(indices)...);
   }
 
-  /// Check if a value is within bounds for axis I
-  /// @tparam I Index of the axis
-  /// @param[in] coordinate Value to check
-  /// @return True if the value is within bounds, false otherwise
+  /// Check if a value is within bounds for axis I.
+  /// @tparam I Index of the axis.
+  /// @param[in] coordinate Value to check.
+  /// @return True if the value is within bounds, false otherwise.
   template <size_t I>
   [[nodiscard]] auto is_within_bounds(
       const math_axis_value_t<I>& coordinate) const -> bool {
@@ -271,10 +288,10 @@ class Grid {
     return coordinate >= ax.min_value() && coordinate <= ax.max_value();
   }
 
-  /// Construct an error description for out-of-bounds access on axis I
-  /// @tparam I Index of the axis
-  /// @param[in] coordinate Value that is out of bounds
-  /// @return Error description string
+  /// Construct an error description for out-of-bounds access on axis I.
+  /// @tparam I Index of the axis.
+  /// @param[in] coordinate Value that is out of bounds.
+  /// @return Error description string.
   template <size_t I>
   [[nodiscard]] auto construct_bounds_error_description(
       const math_axis_value_t<I>& coordinate) const -> std::string {
@@ -286,9 +303,9 @@ class Grid {
                        ax.coordinate_repr(ax.max_value()));
   }
 
-  /// Throw an out-of-bounds error for axis I
-  /// @tparam I Index of the axis
-  /// @param[in] coordinate Value that is out of bounds
+  /// Throw an out-of-bounds error for axis I.
+  /// @tparam I Index of the axis.
+  /// @param[in] coordinate Value that is out of bounds.
   template <size_t I>
   [[noreturn]] auto throw_bounds_error(
       const math_axis_value_t<I>& coordinate) const -> void {
@@ -296,11 +313,11 @@ class Grid {
         construct_bounds_error_description<I>(coordinate));
   }
 
-  /// Find the indexes that surround a given coordinate along axis I
-  /// @tparam I Index of the axis
-  /// @param[in] coordinate Coordinate value
-  /// @param[in] bounds_error Whether to raise an error if out of bounds
-  /// @return Pair of surrounding indexes, or nullopt if out of bounds
+  /// Find the indexes that surround a given coordinate along axis I.
+  /// @tparam I Index of the axis.
+  /// @param[in] coordinate Coordinate value.
+  /// @param[in] bounds_error Whether to raise an error if out of bounds.
+  /// @return Pair of surrounding indexes, or `std::nullopt` if out of bounds.
   template <size_t I>
   [[nodiscard]] auto find_indexes(const math_axis_value_t<I>& coordinate,
                                   const bool bounds_error) const
@@ -313,15 +330,15 @@ class Grid {
     return indexes;
   }
 
-  /// Get the state for pickling
-  /// @return Tuple representing the state
+  /// Get the state for pickling.
+  /// @return Tuple representing the state.
   [[nodiscard]] virtual auto getstate() const -> nanobind::tuple {
     return getstate_impl(std::index_sequence_for<MathAxes...>{});
   }
 
-  /// Set the state from unpickling
-  /// @param[in] state Tuple representing the state
-  /// @return Reconstructed Grid object
+  /// Set the state from unpickling.
+  /// @param[in] state Tuple representing the state.
+  /// @return Reconstructed `Grid` object.
   [[nodiscard]] static auto setstate(const nanobind::tuple& state) -> Grid {
     if (state.size() != kNDim + 1) {
       throw std::runtime_error(
@@ -331,9 +348,9 @@ class Grid {
     return setstate_impl(state, std::index_sequence_for<MathAxes...>{});
   }
 
-  /// Convert the grid to a string representation
+  /// Convert the grid to a string representation.
   /// @return String representation of the grid showing dimensions, shape,
-  /// dtype, and memory size
+  /// dtype, and memory size.
   [[nodiscard]] explicit operator std::string() const {
     constexpr std::array<std::string_view, 4> dim_names{"1D", "2D", "3D", "4D"};
     std::string_view prefix = has_temporal_axis() ? "Temporal" : "";
@@ -350,13 +367,13 @@ class Grid {
   view_t ptr_;
 
  private:
-  /// Validate grid construction
+  /// Validate grid construction.
   auto validate_construction() -> void {
     validate_axes(std::index_sequence_for<MathAxes...>{});
     validate_shapes(std::index_sequence_for<MathAxes...>{});
   }
 
-  /// Validate that circular axes are only allowed on the first axis
+  /// Validate that circular axes are only allowed on the first axis.
   template <size_t... Is>
   auto validate_axes(std::index_sequence<Is...>) -> void {
     (
@@ -374,7 +391,7 @@ class Grid {
         ...);
   }
 
-  /// Validate that axis sizes match array shapes
+  /// Validate that axis sizes match array shapes.
   template <size_t... Is>
   auto validate_shapes(std::index_sequence<Is...>) -> void {
     (
@@ -391,7 +408,7 @@ class Grid {
         ...);
   }
 
-  /// Check if this grid has a temporal axis
+  /// Check if this grid has a temporal axis.
   template <size_t... Is>
   [[nodiscard]] constexpr auto has_temporal_axis_impl(
       std::index_sequence<Is...>) const -> bool {
@@ -402,7 +419,7 @@ class Grid {
     return has_temporal_axis_impl(std::index_sequence_for<MathAxes...>{});
   }
 
-  /// Serialize the grid state for pickling
+  /// Serialize the grid state for pickling.
   template <size_t... Is>
   [[nodiscard]] auto getstate_impl(std::index_sequence<Is...>) const
       -> nanobind::tuple {
@@ -410,7 +427,7 @@ class Grid {
         pybind_axis_t<Is>(std::get<Is>(axes_)).getstate()..., array_);
   }
 
-  /// Deserialize the grid state from unpickling
+  /// Deserialize the grid state from unpickling.
   template <size_t... Is>
   [[nodiscard]] static auto setstate_impl(const nanobind::tuple& state,
                                           std::index_sequence<Is...>) -> Grid {
@@ -420,53 +437,53 @@ class Grid {
   }
 };
 
-/// Spatial axis alias for clarity
+/// Spatial axis alias for clarity.
 template <typename T = double>
 using MathSpatialAxis = math::Axis<T>;
 
-/// Temporal axis alias for clarity
+/// Temporal axis alias for clarity.
 using MathTemporalAxis = math::TemporalAxis;
 
-/// One dimensional grid alias
-/// @tparam DataType Type of data stored in the grid
+/// One-dimensional grid alias.
+/// @tparam DataType Type of data stored in the grid.
 template <typename DataType>
 using Grid1D = Grid<DataType, MathSpatialAxis<>>;
 
-/// Two dimensional grid alias
-/// @tparam DataType Type of data stored in the grid
+/// Two-dimensional grid alias.
+/// @tparam DataType Type of data stored in the grid.
 template <typename DataType>
 using Grid2D = Grid<DataType, MathSpatialAxis<>, MathSpatialAxis<>>;
 
-/// Three dimensional grid alias
-/// @tparam DataType Type of data stored in the grid
+/// Three-dimensional grid alias.
+/// @tparam DataType Type of data stored in the grid.
 template <typename DataType>
 using Grid3D =
     Grid<DataType, MathSpatialAxis<>, MathSpatialAxis<>, MathSpatialAxis<>>;
 
-/// Four dimensional grid alias
-/// @tparam DataType Type of data stored in the grid
+/// Four-dimensional grid alias.
+/// @tparam DataType Type of data stored in the grid.
 template <typename DataType>
 using Grid4D = Grid<DataType, MathSpatialAxis<>, MathSpatialAxis<>,
                     MathSpatialAxis<>, MathSpatialAxis<>>;
 
-/// Temporal three dimensional grid alias
-/// @tparam DataType Type of data stored in the grid
+/// Temporal three-dimensional grid alias.
+/// @tparam DataType Type of data stored in the grid.
 template <typename DataType>
 using TemporalGrid3D =
     Grid<DataType, MathSpatialAxis<>, MathSpatialAxis<>, MathTemporalAxis>;
 
-/// Temporal four dimensional grid alias
-/// @tparam DataType Type of data stored in the grid
+/// Temporal four-dimensional grid alias.
+/// @tparam DataType Type of data stored in the grid.
 template <typename DataType>
 using TemporalGrid4D = Grid<DataType, MathSpatialAxis<>, MathSpatialAxis<>,
                             MathTemporalAxis, MathSpatialAxis<>>;
 
-/// Helper to bind a grid class to Python
-/// @tparam GridType The grid type to bind
-/// @param m Python module
-/// @param name Python class name
-/// @param docstring Class documentation
-/// @return The nanobind class object
+/// Helper to bind a grid class to Python.
+/// @tparam GridType The grid type to bind.
+/// @param m Nanobind module.
+/// @param name Python class name.
+/// @param docstring Class documentation.
+/// @return The `nanobind::class_` object for the bound class.
 template <typename GridType>
 auto bind_grid(nanobind::module_& m, std::string_view name,
                std::string_view docstring) -> nanobind::class_<GridType> {
@@ -591,10 +608,10 @@ auto bind_temporal_grid_4d(nanobind::module_& m, std::string_view name,
            nanobind::arg("u"), nanobind::arg("array"));
 }
 
-/// Bind all standard grid types for Python
-/// @tparam DataType The data type for the grids
-/// @param m Pybind11 module
-/// @param suffix Suffix for class names (e.g., "Float64")
+/// Bind all standard grid types for Python.
+/// @tparam DataType The data type for the grids.
+/// @param m Nanobind module.
+/// @param suffix Suffix for class names (e.g., "Float64").
 template <typename DataType>
 auto bind_grids(nanobind::module_& m, std::string_view suffix) -> void {
   bind_grid_1d<DataType>(m, std::format("Grid1D{}", suffix),
@@ -611,7 +628,7 @@ auto bind_grids(nanobind::module_& m, std::string_view suffix) -> void {
                                   "Temporal Cartesian Grid 4D");
 }
 
-/// Bind Grid classes to Python
+/// Bind Grid classes to Python.
 auto init_grids(nanobind::module_& m) -> void;
 
 }  // namespace pyinterp::pybind

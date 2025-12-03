@@ -13,8 +13,9 @@ namespace pyinterp::math {
 /// @tparam T Numeric type for values
 template <std::floating_point T>
 struct Accumulators {
+  /// @brief Type used for internal computations to reduce numerical errors
   using WorkT = std::conditional_t<std::is_same_v<T, float>, double, T>;
-  uint64_t count{0};                                /// Number of samples
+  uint64_t count{0};                                ///< Number of samples
   WorkT sum_of_weights{0};                          ///< Sum of weights
   WorkT mean{0};                                    ///< Mean value
   WorkT min{std::numeric_limits<WorkT>::max()};     ///< Minimum value

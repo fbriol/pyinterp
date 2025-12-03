@@ -75,19 +75,19 @@ class DType {
 
   /// @brief Clock resolution
   enum class Resolution : uint8_t {
-    kYear = 0,
-    kMonth = 1,
-    kWeek = 2,
-    kDay = 3,
-    kHour = 4,
-    kMinute = 5,
-    kSecond = 6,
-    kMillisecond = 7,
-    kMicrosecond = 8,
-    kNanosecond = 9,
-    kPicosecond = 10,
-    kFemtosecond = 11,
-    kAttosecond = 12,
+    kYear = 0,          /// Year resolution
+    kMonth = 1,         /// Month resolution
+    kWeek = 2,          /// Week resolution
+    kDay = 3,           /// Day resolution
+    kHour = 4,          /// Hour resolution
+    kMinute = 5,        /// Minute resolution
+    kSecond = 6,        /// Second resolution
+    kMillisecond = 7,   /// Millisecond resolution
+    kMicrosecond = 8,   /// Microsecond resolution
+    kNanosecond = 9,    /// Nanosecond resolution
+    kPicosecond = 10,   /// Picosecond resolution
+    kFemtosecond = 11,  /// Femtosecond resolution
+    kAttosecond = 12,   /// Attosecond resolution
   };
 
   /// @brief Constructor from numpy dtype string
@@ -370,24 +370,24 @@ class FractionalSeconds {
 
 /// @brief Represents a year, month, day in a calendar.
 struct Date {
-  int year;
-  unsigned month;
-  unsigned day;
+  int year;        ///< Year value
+  unsigned month;  ///< Month value
+  unsigned day;    ///< Day value
 };
 
 /// @brief Represents a local time in a day, independent of any particular day.
 struct Time {
-  unsigned hour;
-  unsigned minute;
-  unsigned second;
+  unsigned hour;    ///< Hour value
+  unsigned minute;  ///< Minute value
+  unsigned second;  ///< Second value
 };
 
 /// @brief Represents an ISO calendar date specified by year, week, and day of
 /// week.
 struct ISOCalendar {
-  int year;
-  unsigned week;
-  unsigned weekday;
+  int year;          ///< Year value
+  unsigned week;     ///< Week value
+  unsigned weekday;  ///< Weekday value
 };
 
 /// @brief Get the number of hours, minutes and seconds elapsed in the day

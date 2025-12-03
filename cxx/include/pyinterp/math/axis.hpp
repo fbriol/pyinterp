@@ -51,6 +51,7 @@ template <typename T>
   requires std::is_arithmetic_v<T>
 class Axis {
  public:
+  /// Type of values stored in this axis.
   using value_type = T;
 
   /// @brief Default constructor
