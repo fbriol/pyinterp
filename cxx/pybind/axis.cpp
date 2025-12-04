@@ -360,8 +360,8 @@ inline void init_temporal_axis(nb::module_ &m) {
           },
           nb::arg("coordinates"), kFindIndexesDoc)
 
-      .def("safe_cast", &TemporalAxis::safe_cast, nb::arg("array"),
-           kSafeCastDoc);
+      .def("cast_to_temporal_axis", &TemporalAxis::cast_to_temporal_axis,
+           nb::arg("array"), kSafeCastDoc);
 
   implement_axis<TemporalAxis>(temporal_axis, "TemporalAxis");
 }

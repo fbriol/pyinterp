@@ -270,8 +270,8 @@ def test_temporal_axis_period() -> None:
     assert axis_no_period.period is None
 
 
-def test_temporal_axis_safe_cast() -> None:
-    """Test safe_cast for resolution conversion."""
+def test_temporal_axis_cast_to_temporal_axis() -> None:
+    """Test cast_to_temporal_axis for resolution conversion."""
     start = datetime.datetime(2000, 1, 1)
     values = np.array(
         [start + datetime.timedelta(seconds=index) for index in range(86400)],
@@ -281,12 +281,12 @@ def test_temporal_axis_safe_cast() -> None:
 
     # Convert from hours to microseconds - should produce different values
     values_hours = values.astype('datetime64[h]')
-    converted = axis.safe_cast(values_hours)
+    converted = axis.cast_to_temporal_axis(values_hours)
     assert converted.dtype == np.dtype('datetime64[us]')
     assert not np.array_equal(values, converted)
 
     # Test with same resolution
-    converted_same = axis.safe_cast(values)
+    converted_same = axis.cast_to_temporal_axis(values)
     assert np.array_equal(values, converted_same)
 
 
@@ -351,19 +351,19 @@ def test_temporal_axis_validation() -> None:
                      dtype='datetime64[D]'))
 
 
-def test_temporal_axis_safe_cast_validation() -> None:
-    """Test safe_cast validation."""
+def test_temporal_axis_cast_to_temporal_axis_validation() -> None:
+    """Test cast_to_temporal_axis validation."""
     values = np.array(['2000-01-01', '2000-02-01'], dtype='datetime64[s]')
 
     axis = core.TemporalAxis(values)
 
     # Non-datetime64 array should raise ValueError
     with pytest.raises(ValueError):
-        axis.safe_cast(np.arange(2))
+        axis.cast_to_temporal_axis(np.arange(2))
 
     # Valid conversion from days to seconds
     values_days = np.array(['2000-01-01', '2000-02-01'], dtype='datetime64[D]')
-    converted = axis.safe_cast(values_days)
+    converted = axis.cast_to_temporal_axis(values_days)
     assert converted.dtype == np.dtype('datetime64[s]')
 
 

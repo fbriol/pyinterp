@@ -84,11 +84,31 @@ class TemporalAxis : public math::TemporalAxis {
   [[nodiscard]] auto find_indexes(const nanobind::object &coordinates) const
       -> Eigen::Matrix<int64_t, Eigen::Dynamic, 2, Eigen::RowMajor>;
 
-  /// @brief Convert input temporal array to internal resolution
+  /// @brief Convert the input coordinates to the resolution managed by this
+  /// instance.
+  ///
+  /// This function takes input coordinates, which may be in a different
+  /// resolution, and converts them to the resolution that this instance is
+  /// designed to handle. For instance, if this instance operates with
+  /// datetime64 values in microsecond resolution and the input coordinates are
+  /// provided in datetime64 hours, the output will be the input coordinates
+  /// converted to datetime64 in microseconds.
+  ///
   /// @param[in] coordinates Input datetime64 or timedelta64 array
-  /// @return Converted temporal array
-  [[nodiscard]] auto safe_cast(const nanobind::object &coordinates) const
-      -> nanobind::object;
+  /// @return Converted coordinates in the resolution managed by this instance.
+  [[nodiscard]] auto cast_to_temporal_axis(
+      const nanobind::object &coordinates) const -> nanobind::object;
+
+  /// @brief Convert the input coordinates to int64 representation.
+  ///
+  /// Like `cast_to_temporal_axis`, this function converts input coordinates to
+  /// the resolution managed by this instance. However, instead of returning
+  /// datetime64 or timedelta64 values, it returns their int64 representation,
+  /// which is often used for internal computations.
+  /// @param[in] coordinates Input datetime64 or timedelta64 array
+  /// @return Converted coordinates as int64 array
+  [[nodiscard]] auto cast_to_int64(const nanobind::object &coordinates) const
+      -> Vector<int64_t>;
 
   /// @brief Get a tuple that fully encodes the state of this instance.
   ///

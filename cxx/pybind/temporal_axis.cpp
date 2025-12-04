@@ -301,11 +301,15 @@ auto TemporalAxis::find_indexes(const nanobind::object &coordinates) const
   return result;
 }
 
-auto TemporalAxis::safe_cast(const nanobind::object &array) const
-    -> nanobind::object {
+auto TemporalAxis::cast_to_int64(const nanobind::object &array) const
+    -> Vector<int64_t> {
   const auto &dtype = math::TemporalAxis::dtype();
-  auto integer_array = cast_to_axis_resolution("array", array, dtype);
-  return vector_to_numpy(std::move(integer_array), dtype);
+  return cast_to_axis_resolution("array", array, dtype);
+}
+
+auto TemporalAxis::cast_to_temporal_axis(const nanobind::object &array) const
+    -> nanobind::object {
+  return vector_to_numpy(cast_to_int64(array), math::TemporalAxis::dtype());
 }
 
 auto TemporalAxis::getstate() const -> nb::tuple {
