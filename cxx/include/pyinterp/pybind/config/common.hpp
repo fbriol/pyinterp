@@ -59,7 +59,7 @@ struct AxisConfig {
 /// Common configuration shared across all dimensions
 struct Common {
   /// Whether to throw on out-of-bounds access.
-  bool bounds_error{true};
+  bool bounds_error{false};
   /// Number of threads to use (0 means use all available threads).
   size_t num_threads{0};
 
