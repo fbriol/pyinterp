@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
-#include <string_view>
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/eigen.hpp"
