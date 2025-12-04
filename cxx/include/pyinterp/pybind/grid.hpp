@@ -159,6 +159,19 @@ struct axis_pybind_wrapper<math::TemporalAxis> {
 template <typename MathAxisT>
 using axis_pybind_wrapper_t = typename axis_pybind_wrapper<MathAxisT>::type;
 
+/// Helper to build tuple of pybind axis types from math axis types.
+/// @tparam MathAxes Math axis types.
+template <typename... MathAxes>
+struct pybind_axes_tuple_builder {
+  using type = std::tuple<axis_pybind_wrapper_t<MathAxes>...>;
+};
+
+/// Helper alias to get the pybind axes tuple type.
+/// @tparam MathAxes Math axis types.
+template <typename... MathAxes>
+using pybind_axes_tuple_t =
+    typename pybind_axes_tuple_builder<MathAxes...>::type;
+
 }  // namespace detail
 
 /// Concept for a valid axis.
@@ -198,6 +211,9 @@ class Grid {
   template <size_t I>
   using pybind_axis_t = detail::axis_pybind_wrapper_t<math_axis_t<I>>;
 
+  /// Tuple of pybind axes (stored internally).
+  using pybind_axes_tuple_t = detail::pybind_axes_tuple_t<MathAxes...>;
+
   /// Extract the value type of the math axis at index I.
   /// @tparam I Index of the axis.
   template <size_t I>
@@ -214,19 +230,18 @@ class Grid {
   /// @param[in] axes Axes of the grid.
   /// @param[in] array N-dimensional data array.
   explicit Grid(detail::axis_pybind_wrapper_t<MathAxes>... axes, array_t array)
-      : axes_{static_cast<MathAxes>(std::move(axes))...},
+      : pybind_axes_{std::move(axes)...},
         array_{std::move(array)},
         ptr_{array_.template view<DataType>()} {
     validate_construction();
   }
 
   /// Constructor taking math axis types.
+  /// @param[in] axes Axes of the grid.
+  /// @param[in] array N-dimensional data array.
   explicit Grid(MathAxes... axes, array_t array)
-      : axes_{std::move(axes)...},
-        array_{std::move(array)},
-        ptr_{array_.template view<DataType>()} {
-    validate_construction();
-  }
+      : Grid(detail::axis_pybind_wrapper_t<MathAxes>(std::move(axes))...,
+             std::move(array)) {}
 
   /// Default constructor.
   Grid() = default;
@@ -246,18 +261,18 @@ class Grid {
   template <size_t I>
     requires(I < kNDim)
   [[nodiscard]] constexpr auto axis() const noexcept -> const math_axis_t<I>& {
-    return std::get<I>(axes_);
+    // Return the base class of the pybind axis (implicit conversion)
+    return static_cast<const math_axis_t<I>&>(std::get<I>(pybind_axes_));
   }
 
   /// Get nanobind axis at index I at compile time.
   /// @tparam I Index of the axis.
-  /// @return New nanobind axis object.
+  /// @return Reference to the stored pybind axis.
   template <size_t I>
     requires(I < kNDim)
   [[nodiscard]] constexpr auto pybind_axis() const noexcept
-      -> detail::axis_pybind_wrapper_t<math_axis_t<I>> {
-    return detail::axis_pybind_wrapper_t<math_axis_t<I>>(
-        this->template axis<I>());
+      -> const pybind_axis_t<I>& {
+    return std::get<I>(pybind_axes_);
   }
 
   /// Get the underlying data array.
@@ -284,7 +299,7 @@ class Grid {
   template <size_t I>
   [[nodiscard]] auto is_within_bounds(
       const math_axis_value_t<I>& coordinate) const -> bool {
-    const auto& ax = std::get<I>(axes_);
+    const auto& ax = axis<I>();
     return coordinate >= ax.min_value() && coordinate <= ax.max_value();
   }
 
@@ -295,7 +310,7 @@ class Grid {
   template <size_t I>
   [[nodiscard]] auto construct_bounds_error_description(
       const math_axis_value_t<I>& coordinate) const -> std::string {
-    const auto& ax = std::get<I>(axes_);
+    const auto& ax = axis<I>();
     constexpr std::array<std::string_view, 4> labels{"x", "y", "z", "u"};
     return std::format("{} is out of bounds for axis {} [{}, ..., {}]",
                        ax.coordinate_repr(coordinate), labels[I],
@@ -322,7 +337,7 @@ class Grid {
   [[nodiscard]] auto find_indexes(const math_axis_value_t<I>& coordinate,
                                   const bool bounds_error) const
       -> std::optional<std::pair<size_t, size_t>> {
-    const auto& ax = std::get<I>(axes_);
+    const auto& ax = axis<I>();
     auto indexes = ax.find_indexes(coordinate);
     if (!indexes.has_value() && bounds_error) {
       this->template throw_bounds_error<I>(coordinate);
@@ -362,7 +377,7 @@ class Grid {
   }
 
  protected:
-  math_axes_tuple_t axes_;
+  pybind_axes_tuple_t pybind_axes_;
   array_t array_;
   view_t ptr_;
 
@@ -379,7 +394,7 @@ class Grid {
     (
         [&] {
           if constexpr (Is > 0) {
-            const auto& ax = std::get<Is>(axes_);
+            const auto& ax = axis<Is>();
             if (ax.is_periodic()) {
               constexpr std::array<std::string_view, 4> labels{"x", "y", "z",
                                                                "u"};
@@ -396,7 +411,7 @@ class Grid {
   auto validate_shapes(std::index_sequence<Is...>) -> void {
     (
         [&] {
-          const auto& ax = std::get<Is>(axes_);
+          const auto& ax = axis<Is>();
           if (ax.size() != static_cast<size_t>(array_.shape(Is))) {
             constexpr std::array<std::string_view, 4> labels{"x", "y", "z",
                                                              "u"};
@@ -423,8 +438,7 @@ class Grid {
   template <size_t... Is>
   [[nodiscard]] auto getstate_impl(std::index_sequence<Is...>) const
       -> nanobind::tuple {
-    return nanobind::make_tuple(
-        pybind_axis_t<Is>(std::get<Is>(axes_)).getstate()..., array_);
+    return nanobind::make_tuple(pybind_axis<Is>().getstate()..., array_);
   }
 
   /// Deserialize the grid state from unpickling.
