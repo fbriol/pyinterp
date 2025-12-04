@@ -12,7 +12,7 @@ import pytest
 from pyinterp import core
 from pyinterp.core.config import geometric
 
-from .. import load_grid4d
+from ... import load_grid4d
 
 
 class TestQuadrivariateGeometric:

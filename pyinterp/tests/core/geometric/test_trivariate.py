@@ -11,7 +11,7 @@ import pytest
 from pyinterp import core
 from pyinterp.core.config import geometric
 
-from .. import load_grid3d
+from ... import load_grid3d
 
 
 class TestTrivariateGeometric:
