@@ -11,4 +11,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_grids(m);
   pyinterp::pybind::geometric::init_bivariate(m);
   pyinterp::pybind::geometric::init_trivariate(m);
+  pyinterp::pybind::geometric::init_quadrivariate(m);
 }
