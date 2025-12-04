@@ -19,7 +19,8 @@
 namespace pyinterp::pybind::geometric {
 namespace detail {
 
-/// Result type for single-point quadrivariate interpolation
+/// @brief Result type for single-point quadrivariate interpolation
+/// @tparam T Value type
 template <typename T>
 using QuadrivariateInterpolationResult =
     pyinterp::math::interpolate::InterpolationResult<T>;
