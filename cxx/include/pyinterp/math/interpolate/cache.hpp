@@ -34,6 +34,8 @@ struct DomainBounds {
 /// X and Y axes can have independent window sizes
 /// Additional axes (Z, U, etc.) always use window_size=2 (4 points, 2 on each
 /// side)
+/// @tparam DataType Data type loaded in the cache
+/// @tparam AxisTypes Types of each axis
 template <Numeric DataType, typename... AxisTypes>
 class InterpolationCache {
  public:
