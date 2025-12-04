@@ -376,6 +376,12 @@ class Grid {
         detail::format_bytes(array_.nbytes()));
   }
 
+  /// @brief Check if this grid has a temporal axis.
+  /// @return True if the grid has a temporal axis, false otherwise.
+  [[nodiscard]] constexpr auto has_temporal_axis() const -> bool {
+    return has_temporal_axis_impl(std::index_sequence_for<MathAxes...>{});
+  }
+
  protected:
   pybind_axes_tuple_t pybind_axes_;
   array_t array_;
@@ -428,10 +434,6 @@ class Grid {
   [[nodiscard]] constexpr auto has_temporal_axis_impl(
       std::index_sequence<Is...>) const -> bool {
     return ((std::is_same_v<math_axis_t<Is>, math::TemporalAxis>) || ...);
-  }
-
-  [[nodiscard]] constexpr auto has_temporal_axis() const -> bool {
-    return has_temporal_axis_impl(std::index_sequence_for<MathAxes...>{});
   }
 
   /// Serialize the grid state for pickling.

@@ -1,7 +1,8 @@
 import typing
 from typing import Any, overload
 
-from ..type_hints import NDArray1DFloat64
+from ..type_hints import (NDArray1DDateTime64, NDArray1DFloat32,
+                          NDArray1DFloat64, NDArray1DTimeDelta64)
 from .config import geometric
 
 @overload
@@ -11,7 +12,6 @@ def bivariate(
     y: NDArray1DFloat64,
     config: geometric.Bivariate,
 ) -> NDArray1DFloat64: ...
-
 @overload
 def bivariate(
     grid: Grid2DFloat32,
@@ -19,7 +19,6 @@ def bivariate(
     y: NDArray1DFloat64,
     config: geometric.Bivariate,
 ) -> NDArray1DFloat64: ...
-
 @overload
 def bivariate(
     grid: Grid2DInt8,
@@ -27,6 +26,54 @@ def bivariate(
     y: NDArray1DFloat64,
     config: geometric.Bivariate,
 ) -> NDArray1DFloat64: ...
+@overload
+def trivariate(
+    grid: Grid3DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    config: geometric.Trivariate,
+) -> NDArray1DFloat64: ...
+@overload
+def trivariate(
+    grid: Grid3DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    config: geometric.Trivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def trivariate(
+    grid: Grid3DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    config: geometric.Trivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def trivariate(
+    grid: TemporalGrid3DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    config: geometric.Trivariate,
+) -> NDArray1DFloat64: ...
+@overload
+def trivariate(
+    grid: TemporalGrid3DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    config: geometric.Trivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def trivariate(
+    grid: TemporalGrid3DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    config: geometric.Trivariate,
+) -> NDArray1DFloat32: ...
 
 class Axis:
     def __init__(

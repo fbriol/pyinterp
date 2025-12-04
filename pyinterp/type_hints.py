@@ -12,5 +12,7 @@ if TYPE_CHECKING:
     NDArray1D = np.ndarray[OneDim, np.dtype[Any]]
     NDArray1DBool = np.ndarray[OneDim, np.dtype[np.int8]]
     NDArray1DDateTime = np.ndarray[OneDim, np.dtype[np.datetime64]]
+    NDArray1DDateTime64 = np.ndarray[OneDim, np.dtype[np.datetime64]]
     NDArray1DFloat32 = np.ndarray[OneDim, np.dtype[np.float32]]
     NDArray1DFloat64 = np.ndarray[OneDim, np.dtype[np.float64]]
+    NDArray1DTimeDelta64 = np.ndarray[OneDim, np.dtype[np.timedelta64]]
