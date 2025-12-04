@@ -11,7 +11,7 @@ from ..type_hints import (
     NDArray1DTimeDelta64,
     NDArray2DInt64,
 )
-from .config import geometric
+from .config import geometric, windowed
 
 @overload
 def bivariate(
@@ -34,6 +34,27 @@ def bivariate(
     y: NDArray1DFloat64,
     config: geometric.Bivariate,
 ) -> NDArray1DFloat64: ...
+@overload
+def bivariate(
+    grid: Grid2DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    config: windowed.Bivariate,
+) -> NDArray1DFloat64: ...
+@overload
+def bivariate(
+    grid: Grid2DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    config: windowed.Bivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def bivariate(
+    grid: Grid2DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    config: windowed.Bivariate,
+) -> NDArray1DFloat32: ...
 @overload
 def quadrivariate(
     grid: Grid4DFloat64,
@@ -89,6 +110,60 @@ def quadrivariate(
     config: geometric.Quadrivariate,
 ) -> NDArray1DFloat32: ...
 @overload
+def quadrivariate(
+    grid: Grid4DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    u: NDArray1DFloat64,
+    config: windowed.Quadrivariate,
+) -> NDArray1DFloat64: ...
+@overload
+def quadrivariate(
+    grid: Grid4DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    u: NDArray1DFloat64,
+    config: windowed.Quadrivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def quadrivariate(
+    grid: Grid4DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    u: NDArray1DFloat64,
+    config: windowed.Quadrivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def quadrivariate(
+    grid: TemporalGrid4DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    u: NDArray1DFloat64,
+    config: windowed.Quadrivariate,
+) -> NDArray1DFloat64: ...
+@overload
+def quadrivariate(
+    grid: TemporalGrid4DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    u: NDArray1DFloat64,
+    config: windowed.Quadrivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def quadrivariate(
+    grid: TemporalGrid4DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    u: NDArray1DFloat64,
+    config: windowed.Quadrivariate,
+) -> NDArray1DFloat32: ...
+@overload
 def trivariate(
     grid: Grid3DFloat64,
     x: NDArray1DFloat64,
@@ -135,6 +210,54 @@ def trivariate(
     y: NDArray1DFloat64,
     z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
     config: geometric.Trivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def trivariate(
+    grid: Grid3DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    config: windowed.Trivariate,
+) -> NDArray1DFloat64: ...
+@overload
+def trivariate(
+    grid: Grid3DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    config: windowed.Trivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def trivariate(
+    grid: Grid3DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    config: windowed.Trivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def trivariate(
+    grid: TemporalGrid3DFloat64,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    config: windowed.Trivariate,
+) -> NDArray1DFloat64: ...
+@overload
+def trivariate(
+    grid: TemporalGrid3DFloat32,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    config: windowed.Trivariate,
+) -> NDArray1DFloat32: ...
+@overload
+def trivariate(
+    grid: TemporalGrid3DInt8,
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
+    config: windowed.Trivariate,
 ) -> NDArray1DFloat32: ...
 
 class Axis:
