@@ -338,7 +338,7 @@ def test_temporal_axis_validation() -> None:
     """Test TemporalAxis validation and error handling."""
     # Non-datetime64 array should raise ValueError
     with pytest.raises(ValueError):
-        core.TemporalAxis(np.arange(10))
+        core.TemporalAxis(np.arange(10))  # type: ignore[arg-type]
 
     # Empty array should raise ValueError
     with pytest.raises(ValueError):

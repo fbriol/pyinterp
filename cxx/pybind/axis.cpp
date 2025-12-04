@@ -191,10 +191,12 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
           },
           nb::arg("index"))
 
-      .def("__getitem__",
-           [](const Axis &self, const nb::slice &slice) {
-             return self.coordinate_values(slice);
-           })
+      .def(
+          "__getitem__",
+          [](const Axis &self, const nb::slice &axis_slice) {
+            return self.coordinate_values(axis_slice);
+          },
+          nb::arg("axis_slice"))
 
       .def(
           "__len__", [](const Axis &self) { return self.size(); },
@@ -314,10 +316,7 @@ void init_axis(nb::module_ &m) {
 }
 
 inline void init_temporal_axis(nb::module_ &m) {
-  nb::class_<math::TemporalAxis>(m, "TemporalAxisBase",
-                                 "Base class for temporal axes.");
-
-  auto temporal_axis = nb::class_<TemporalAxis, math::TemporalAxis>(
+  auto temporal_axis = nb::class_<TemporalAxis>(
       m, "TemporalAxis", "Temporal axis for datetime64 or timedelta64 values.");
 
   temporal_axis
