@@ -29,13 +29,14 @@ using TrivariateInterpolationResult =
 /// @tparam GridType Type of the grid.
 /// @tparam ResultType Type of the interpolation result.
 /// @tparam ZType Type of the third axis coordinate.
-/// @param grid The trivariate grid.
+/// @param[in] grid The trivariate grid.
 /// @param[in] x X coordinate of the query point.
 /// @param[in] y Y coordinate of the query point.
 /// @param[in] z Z coordinate of the query point.
-/// @param spatial_interpolator Spatial interpolator for the (X,Y) plane.
-/// @param z_axis_interpolator Interpolator for the Z axis.
-/// @param bounds_error Whether to raise an error if the point is out of bounds.
+/// @param[in] spatial_interpolator Spatial interpolator for the (X,Y) plane.
+/// @param[in] z_axis_interpolator Interpolator for the Z axis.
+/// @param[in] bounds_error Whether to raise an error if the point is out of
+/// bounds.
 /// @return The interpolation result.
 template <template <class> class Point, typename GridType, typename ResultType,
           typename ZType>
@@ -190,7 +191,7 @@ auto trivariate(const GridType& grid,
                 const config::geometric::Trivariate& config)
     -> Vector<ResultType> {
   if constexpr (grid.has_temporal_axis()) {
-    // Convert z to int64_t resolution for temporal axis
+    // Z is temporal axis, cast to int64_t
     auto z_as_int64 = grid.template pybind_axis<2>().cast_to_int64(z);
     {
       nanobind::gil_scoped_release release;
@@ -199,7 +200,7 @@ auto trivariate(const GridType& grid,
           grid, x, y, z_as_int64, config);
     }
   } else {
-    // For spatial Grid3D, cast z to the appropriate type
+    // Z is spatial axis, cast to its native type
     using ZType = typename GridType::template math_axis_value_t<2>;
     auto z_as_type = nanobind::cast<Eigen::Ref<const Vector<ZType>>>(z);
     {
@@ -242,8 +243,8 @@ auto bind_trivariate(nanobind::module_& m) -> void {
                                                                config);
       },
       nanobind::arg("grid"), nanobind::arg("x"), nanobind::arg("y"),
-      nanobind::arg("z"), nanobind::arg("config"), detail::kTrivariateDocstring,
-      nanobind::call_guard<nanobind::gil_scoped_release>());
+      nanobind::arg("z"), nanobind::arg("config"),
+      detail::kTrivariateDocstring);
 }
 
 }  // namespace pyinterp::pybind::geometric
