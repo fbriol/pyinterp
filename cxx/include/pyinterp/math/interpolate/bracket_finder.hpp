@@ -43,11 +43,11 @@ constexpr auto BracketFinder<T>::search(const Vector<T>& xa,
     return std::nullopt;
   }
   const bool is_ascending = xa.size() == 1 || xa[0] <= xa[xa.size() - 1];
-  const auto it = is_ascending 
-      ? std::lower_bound(begin, end, x)
-      : std::lower_bound(begin, end, x, std::greater<T>());
+  const auto it = is_ascending
+                      ? std::lower_bound(begin, end, x)
+                      : std::lower_bound(begin, end, x, std::greater<T>());
 
-  // Case 1: x is greater than the last sample, no bracket found
+  // Case 1: x is outside the coordinate range, no bracket found
   if (it == end) {
     return std::nullopt;
   }
@@ -63,9 +63,8 @@ constexpr auto BracketFinder<T>::search(const Vector<T>& xa,
   const auto i0 = idx - 1;
   const auto i1 = idx;
 
-  const bool is_bracketed = is_ascending 
-      ? (xa[i0] <= x && x <= xa[i1])
-      : (xa[i0] >= x && x >= xa[i1]);
+  const bool is_bracketed = is_ascending ? (xa[i0] <= x && x <= xa[i1])
+                                         : (xa[i0] >= x && x >= xa[i1]);
 
   if (is_bracketed) {
     return {{i0, i1}};
