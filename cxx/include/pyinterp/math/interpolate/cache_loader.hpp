@@ -5,6 +5,7 @@
 #include <tuple>
 #include <utility>
 
+#include "pyinterp/math.hpp"
 #include "pyinterp/math/axis.hpp"
 #include "pyinterp/math/interpolate/cache.hpp"
 
@@ -72,21 +73,25 @@ auto load_cache_generic(const GridType& grid,
     const auto& indices = grid_indices[I];
 
     // Handle Periodicity (Only X-axis/Index 0 is supported as periodic)
-    double period = 0.0;
-    double x_ref = 0.0;
+    std::pair<double, double> periodicity{0.0, 0.0};
 
     if constexpr (I == 0) {
       if (ax.is_periodic()) {
-        period = ax.period().value();
-        x_ref = ax(indices[0]);
+        // Use the query coordinate as reference to ensure cached coordinates
+        // are in the same period representation as the query coordinate
+        periodicity.first = ax.period().value();
+        periodicity.second = std::get<I>(query_coords);
       }
     }
 
     for (size_t k = 0; k < indices.size(); ++k) {
       auto raw_val = ax(indices[k]);
       if constexpr (I == 0) {
-        if (period != 0.0) {
-          raw_val = math::normalize_period(raw_val, x_ref, period);
+        if (periodicity.first != 0.0) {
+          // Normalize raw_val to be within [x_query - period/2, x_query +
+          // period/2)
+          raw_val = math::normalize_period_half(raw_val, periodicity.second,
+                                                periodicity.first);
         }
       }
       cache.template set_coord<I>(k, raw_val);

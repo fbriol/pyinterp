@@ -3,6 +3,7 @@
 #include <cmath>
 #include <concepts>
 #include <numbers>
+#include <type_traits>
 #include <utility>
 
 namespace pyinterp::math {
@@ -109,6 +110,35 @@ template <typename T>
 constexpr auto normalize_period(const T &x, const T &min,
                                 const T &period) noexcept -> T {
   return remainder(x - min, period) + min;
+}
+
+/// @brief Normalize a value to be within [min - period / 2, min + period / 2)
+/// @tparam T type of the value
+/// @param[in] x The value to normalize.
+/// @param[in] min Minimum value of the period
+/// @param[in] period Period value
+/// @return the value reduced to the range [min - period / 2, min + period / 2)
+template <typename T>
+constexpr auto normalize_period_half(const T &x, const T &min,
+                                     const T &period) noexcept -> T {
+  const T half_period = [&period]() constexpr {
+    if constexpr (std::is_floating_point_v<T>) {
+      // Use multiplication for better floating-point precision
+      return period * T{0.5};
+    } else {
+      // Use division for integer types
+      return period / T{2};
+    }
+  }();
+  const T lower_bound = min - half_period;
+  const T upper_bound = min + half_period;
+
+  // Early return if already in range [lower_bound, upper_bound)
+  if (x >= lower_bound && x < upper_bound) {
+    return x;
+  }
+
+  return normalize_period(x, lower_bound, period);
 }
 
 /// @brief Compare two integral values for equality within a given epsilon
