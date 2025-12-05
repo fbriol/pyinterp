@@ -150,11 +150,11 @@ auto load_cache_generic(const GridType& grid,
 /// @param[in] bounds_error Whether to raise an error on out-of-bounds access
 /// @return Result of the cache loading operation
 template <typename DataType, typename GridType, typename... AxisTypes>
-auto update_cache_if_needed(InterpolationCache<DataType, AxisTypes...>& cache,
-                            const GridType& grid,
-                            const std::tuple<AxisTypes...>& coords,
-                            axis::Boundary boundary = axis::Boundary::kUndef,
-                            bool bounds_error = false) -> CacheLoadResult {
+[[nodiscard]] auto update_cache_if_needed(
+    InterpolationCache<DataType, AxisTypes...>& cache, const GridType& grid,
+    const std::tuple<AxisTypes...>& coords,
+    axis::Boundary boundary = axis::Boundary::kUndef, bool bounds_error = false)
+    -> CacheLoadResult {
   // 1. Check if update is needed (Fast path)
   bool in_domain = std::apply(
       [&](const auto&... args) {

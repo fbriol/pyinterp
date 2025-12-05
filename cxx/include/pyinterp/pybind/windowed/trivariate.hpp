@@ -1,5 +1,5 @@
 #pragma once
-
+#include <iostream>
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 
@@ -46,9 +46,17 @@ template <typename GridType, typename ResultType, typename ZType>
     const config::windowed::Trivariate& cfg,
     math::interpolate::BivariateBase<double>* interpolator,
     InterpolationCache3D<ZType>& cache) -> InterpolationResult<ResultType> {
-  math::interpolate::update_cache_if_needed(
+  auto cache_load_result = math::interpolate::update_cache_if_needed(
       cache, grid, std::make_tuple(x, y, z), cfg.spatial.boundary_mode,
       cfg.common.bounds_error);
+  if (!cache_load_result.success) {
+    if (cfg.common.bounds_error) {
+      throw std::out_of_range(
+          cache_load_result.error_message.value_or(
+              "Point is out of the grid bounds."));
+    }
+    return {};
+  }
   if (!cache.is_valid()) {
     return {};
   }
@@ -60,6 +68,14 @@ template <typename GridType, typename ResultType, typename ZType>
   const auto f1 = (*interpolator)(cache.template coords_as_eigen<0>(),
                                   cache.template coords_as_eigen<1>(),
                                   cache.matrix(1), x, y);
+  std::cout << "X " << cache.template coords_as_eigen<0>().transpose() << std::endl;
+  std::cout << "Y " << cache.template coords_as_eigen<1>().transpose() << std::endl;
+  std::cout << "x, y, z " << x << ", " << y << ", " << z << std::endl;
+  std::cout << "F0 " << cache.matrix(0) << std::endl;
+  std::cout << "F1 " << cache.matrix(1) << std::endl;
+  std::cout << "z0: " << z0 << ", z1: " << z1 << ", f0: " << f0
+            << ", f1: " << f1 << std::endl;
+  std::cout << "*********************************" << std::endl;
   if (cfg.third_axis.method == config::AxisMethod::kLinear) {
     // Linear interpolation along Z axis
     return {math::interpolate::linear(z, z0, z1, f0, f1)};
