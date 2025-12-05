@@ -12,6 +12,9 @@ struct Grid {
   // Number of dimensions
   static constexpr size_t kNDim = 2;
 
+  // Out-of-bounds error message
+  static constexpr const char* kOutOfBoundsMessage = "@Out of bounds@";
+
   // Build a grid with two axes and a simple matrix of values.
   //
   // The longitude axis is periodic (0 to 359 degrees) and the latitude axis is
@@ -31,8 +34,7 @@ struct Grid {
   template <size_t I>
   [[nodiscard]] auto construct_bounds_error_description(
       const double& coordinate) const -> std::string {
-    // Mark this as an out-of-bounds error for identification purposes.
-    return "@Out of bounds@";
+    return kOutOfBoundsMessage;
   }
 
   // Return the axis at index I
@@ -93,7 +95,8 @@ TEST(CacheLoaderTest, LoadCacheGeneric) {
                                   axis::Boundary::kWrap, true);
   EXPECT_FALSE(cached.success);
   EXPECT_TRUE(cached.was_updated);
-  EXPECT_TRUE(cached.error_message.has_value());
+  ASSERT_TRUE(cached.error_message.has_value());
+  EXPECT_EQ(cached.error_message.value(), Grid::kOutOfBoundsMessage);
 
   // Fifth load with x coordinate within the periodic domain
   query_coords = std::make_tuple(-10.1, 0.1);
