@@ -48,9 +48,18 @@ template <typename GridType, typename ResultType, typename ZType>
     const double u, const config::windowed::Quadrivariate& cfg,
     math::interpolate::BivariateBase<double>* interpolator,
     InterpolationCache4D<ZType>& cache) -> InterpolationResult<ResultType> {
-  math::interpolate::update_cache_if_needed(
+  auto cache_load_result = math::interpolate::update_cache_if_needed(
       cache, grid, std::make_tuple(x, y, z, u), cfg.spatial.boundary_mode,
       cfg.common.bounds_error);
+  if (!cache_load_result.success) {
+    // Point is out of bounds. If bounds_error is enabled, the cache loader
+    // has recorded an error message that will be raised below.
+    if (cache_load_result.error_message.has_value()) {
+      throw std::out_of_range(cache_load_result.error_message.value());
+    }
+    return {};
+  }
+
   if (!cache.is_valid()) {
     return {};
   }
@@ -150,12 +159,14 @@ template <typename GridType, typename ResultType, typename ZType>
 /// @param cfg Configuration parameters for interpolation
 /// @return Vector of interpolated values
 template <typename GridType, typename ResultType>
-[[nodiscard]] auto quadrivariate(
-    const GridType& grid, const Eigen::Ref<const Vector<double>>& x,
-    const Eigen::Ref<const Vector<double>>& y, const nanobind::object& z,
-    const Eigen::Ref<const Vector<double>>& u,
-    const config::windowed::Quadrivariate& cfg) -> Vector<ResultType> {
-  if constexpr (grid.has_temporal_axis()) {
+[[nodiscard]] auto quadrivariate(const GridType& grid,
+                                 const Eigen::Ref<const Vector<double>>& x,
+                                 const Eigen::Ref<const Vector<double>>& y,
+                                 const nanobind::object& z,
+                                 const Eigen::Ref<const Vector<double>>& u,
+                                 const config::windowed::Quadrivariate& cfg)
+    -> Vector<ResultType> {
+  if constexpr (GridType::kHasTemporalAxis) {
     // Z is temporal axis, cast to int64_t
     auto z_as_int64 = grid.template pybind_axis<2>().cast_to_int64(z);
     {
