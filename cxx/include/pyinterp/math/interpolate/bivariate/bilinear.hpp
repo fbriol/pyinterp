@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <concepts>
 #include <cstdint>
 
@@ -54,31 +53,23 @@ constexpr auto Bilinear<T>::interpolate_(const Eigen::Ref<const Vector<T>>& xa,
 
   const auto [i0, i1] = *search_x;
   const auto [j0, j1] = *search_y;
-  std::cout << "i0: " << i0 << ", i1: " << i1
-            << ", j0: " << j0 << ", j1: " << j1 << std::endl;
 
   // Grid cell corners
   const T x0 = xa(i0);
   const T x1 = xa(i1);
   const T y0 = ya(j0);
   const T y1 = ya(j1);
-  std::cout << "x0: " << x0 << ", x1: " << x1
-            << ", y0: " << y0 << ", y1: " << y1 << std::endl;
 
   // Grid cell dimensions
   const T dx = x1 - x0;
   const T dy = y1 - y0;
-  std::cout << "dx: " << dx << ", dy: " << dy << std::endl;
 
   // Normalized coordinates within the cell [0, 1]
   const T t = (x - x0) / dx;
   const T u = (y - y0) / dy;
-  std::cout << "t: " << t << ", u: " << u << std::endl;
-
   // Complementary weights
   const T t_comp = T{1} - t;
   const T u_comp = T{1} - u;
-  std::cout << "t_comp: " << t_comp << ", u_comp: " << u_comp << std::endl;
 
   // Bilinear interpolation using the four corner values
   // z = (1-t)(1-u)*z00 + t(1-u)*z10 + (1-t)u*z01 + tu*z11
@@ -86,13 +77,10 @@ constexpr auto Bilinear<T>::interpolate_(const Eigen::Ref<const Vector<T>>& xa,
   const T z10 = za(i1, j0);
   const T z01 = za(i0, j1);
   const T z11 = za(i1, j1);
-  std::cout << "z00: " << z00 << ", z10: " << z10
-            << ", z01: " << z01 << ", z11: " << z11 << std::endl;
 
   // Compute weighted sum using FMA for better accuracy
   const T interp_bottom = std::fma(t, z10, t_comp * z00);
   const T interp_top = std::fma(t, z11, t_comp * z01);
-  std::cout << "interp_bottom: " << interp_bottom << ", interp_top: " << interp_top << std::endl;
 
   return std::fma(u, interp_top, u_comp * interp_bottom);
 }
