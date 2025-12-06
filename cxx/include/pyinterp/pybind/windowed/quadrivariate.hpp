@@ -61,6 +61,7 @@ template <typename GridType, typename ResultType, typename ZType>
   }
 
   if (!cache.is_valid()) {
+    // Cache contains only NaN values, interpolation cannot proceed
     return {};
   }
   const auto z0 = cache.template coord<2>(0);
