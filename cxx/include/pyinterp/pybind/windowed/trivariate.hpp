@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 
@@ -50,16 +50,19 @@ template <typename GridType, typename ResultType, typename ZType>
       cache, grid, std::make_tuple(x, y, z), cfg.spatial.boundary_mode,
       cfg.common.bounds_error);
   if (!cache_load_result.success) {
-    if (cfg.common.bounds_error) {
-      throw std::out_of_range(
-          cache_load_result.error_message.value_or(
-              "Point is out of the grid bounds."));
+    // Point is out of bounds. If bounds_error is enabled, the cache loader
+    // has recorded an error message that will be raised below.
+    if (cache_load_result.error_message.has_value()) {
+      throw std::out_of_range(cache_load_result.error_message.value());
     }
     return {};
   }
+
   if (!cache.is_valid()) {
+    // Cache contains only NaN values, interpolation cannot proceed
     return {};
   }
+
   const auto z0 = cache.template coord<2>(0);
   const auto z1 = cache.template coord<2>(1);
   const auto f0 = (*interpolator)(cache.template coords_as_eigen<0>(),
@@ -68,14 +71,7 @@ template <typename GridType, typename ResultType, typename ZType>
   const auto f1 = (*interpolator)(cache.template coords_as_eigen<0>(),
                                   cache.template coords_as_eigen<1>(),
                                   cache.matrix(1), x, y);
-  std::cout << "X " << cache.template coords_as_eigen<0>().transpose() << std::endl;
-  std::cout << "Y " << cache.template coords_as_eigen<1>().transpose() << std::endl;
-  std::cout << "x, y, z " << x << ", " << y << ", " << z << std::endl;
-  std::cout << "F0 " << cache.matrix(0) << std::endl;
-  std::cout << "F1 " << cache.matrix(1) << std::endl;
-  std::cout << "z0: " << z0 << ", z1: " << z1 << ", f0: " << f0
-            << ", f1: " << f1 << std::endl;
-  std::cout << "*********************************" << std::endl;
+
   if (cfg.third_axis.method == config::AxisMethod::kLinear) {
     // Linear interpolation along Z axis
     return {math::interpolate::linear(z, z0, z1, f0, f1)};
@@ -136,11 +132,13 @@ template <typename GridType, typename ResultType, typename ZType>
 /// @param cfg Configuration parameters for interpolation
 /// @return Vector of interpolated values
 template <typename GridType, typename ResultType>
-[[nodiscard]] auto trivariate(
-    const GridType& grid, const Eigen::Ref<const Eigen::VectorXd>& x,
-    const Eigen::Ref<const Eigen::VectorXd>& y, const nanobind::object& z,
-    const config::windowed::Trivariate& cfg) -> Vector<ResultType> {
-  if constexpr (grid.has_temporal_axis()) {
+[[nodiscard]] auto trivariate(const GridType& grid,
+                              const Eigen::Ref<const Eigen::VectorXd>& x,
+                              const Eigen::Ref<const Eigen::VectorXd>& y,
+                              const nanobind::object& z,
+                              const config::windowed::Trivariate& cfg)
+    -> Vector<ResultType> {
+  if constexpr (GridType::kHasTemporalAxis) {
     // Z is temporal axis, cast to int64_t
     auto z_as_int64 = grid.template pybind_axis<2>().cast_to_int64(z);
     {
