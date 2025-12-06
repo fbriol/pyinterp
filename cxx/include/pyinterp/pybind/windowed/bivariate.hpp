@@ -40,10 +40,19 @@ template <typename DataType, typename ResultType>
     const config::windowed::Bivariate& cfg,
     math::interpolate::BivariateBase<double>* interpolator,
     InterpolationCache& cache) -> InterpolationResult<ResultType> {
-  math::interpolate::update_cache_if_needed(cache, grid, std::make_tuple(x, y),
-                                            cfg.spatial.boundary_mode,
-                                            cfg.common.bounds_error);
+  auto cache_load_result = math::interpolate::update_cache_if_needed(
+      cache, grid, std::make_tuple(x, y), cfg.spatial.boundary_mode,
+      cfg.common.bounds_error);
+  if (!cache_load_result.success) {
+    // Point is out of bounds. If bounds_error is enabled, the cache loader
+    // has recorded an error message that will be raised below.
+    if (cache_load_result.error_message.has_value()) {
+      throw std::out_of_range(cache_load_result.error_message.value());
+    }
+    return {};
+  }
   if (!cache.is_valid()) {
+    // Cache contains only NaN values, interpolation cannot proceed
     return {};
   }
   auto result = (*interpolator)(cache.template coords_as_eigen<0>(),
@@ -79,8 +88,9 @@ template <typename DataType, typename ResultType>
         auto interpolator = cfg.spatial.factory<double>();
 
         for (int64_t ix = start; ix < end; ++ix) {
-          auto interpolated_value = detail::bivariate_single<DataType, ResultType>(
-              grid, x[ix], y[ix], cfg, interpolator.get(), cache);
+          auto interpolated_value =
+              detail::bivariate_single<DataType, ResultType>(
+                  grid, x[ix], y[ix], cfg, interpolator.get(), cache);
           if (interpolated_value.has_value()) {
             result[ix] = *interpolated_value.value;
           }

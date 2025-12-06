@@ -15,16 +15,7 @@ from ... import load_grid3d
 
 
 class TestTrivariateWindowed:
-    """Test suite for windowed trivariate interpolation.
-
-    This test suite covers:
-    - Basic interpolation with various methods (bilinear, bicubic, spline, etc.)
-    - Validation against analytical functions
-    - Edge cases (NaN values, out-of-bounds, mixed valid/invalid points)
-    - Configuration options (window sizes, boundary modes, third axis methods)
-    - Performance characteristics (threading, large arrays)
-    - Numerical properties (continuity, reproducibility, accuracy)
-    """
+    """Test suite for windowed trivariate interpolation."""
 
     @staticmethod
     def create_analytical_grid3d(
@@ -579,3 +570,134 @@ class TestTrivariateWindowed:
         # Results should be identical
         np.testing.assert_array_equal(result1, result2)
         np.testing.assert_array_equal(result2, result3)
+
+    @staticmethod
+    def create_analytical_temporal_grid3d(
+        dtype: type[np.float32 | np.float64]
+    ) -> core.TemporalGrid3DFloat64 | core.TemporalGrid3DFloat32:
+        """
+        Create a 3D grid with temporal Z-axis and analytical field.
+
+        f(x, y, t) = sin(x) * cos(y) * exp(-t_normalized/10)
+
+        where t is a datetime64 axis.
+        """
+        x_vals = np.linspace(0, 2 * np.pi, 15)
+        y_vals = np.linspace(0, np.pi, 12)
+        # Create a temporal axis with datetime64 values
+        time_vals: np.ndarray = np.arange(
+            np.datetime64('2020-01-01'),
+            np.datetime64('2020-01-11'),
+            np.timedelta64(1, 'D'),
+        )
+
+        x_axis = core.Axis(x_vals, period=None)
+        y_axis = core.Axis(y_vals)
+        z_axis = core.TemporalAxis(time_vals)
+
+        # Normalize time for analytical function (0 to 9 days)
+        time_normalized = np.arange(10)
+
+        x_grid, y_grid, t_grid = np.meshgrid(x_vals,
+                                             y_vals,
+                                             time_normalized,
+                                             indexing='ij')
+
+        # Create analytical field: f(x, y, t) = sin(x) * cos(y) * exp(-t/10)
+        data = (np.sin(x_grid) * np.cos(y_grid) *
+                np.exp(-t_grid / 10)).astype(dtype)
+        data = np.ascontiguousarray(data)
+
+        class_name = (core.TemporalGrid3DFloat32
+                      if dtype == np.float32 else core.TemporalGrid3DFloat64)
+        return class_name(x_axis, y_axis, z_axis, data)
+
+    def test_temporal_grid_basic_interpolation(self) -> None:
+        """Test windowed trivariate interpolation with temporal Z-axis."""
+        grid = self.create_analytical_temporal_grid3d(np.float64)
+
+        x = np.array([np.pi / 4])
+        y = np.array([np.pi / 4])
+        # Use a datetime64 value for z
+        z = np.array([np.datetime64('2020-01-03')])
+
+        config = self.make_config(windowed.Trivariate.bilinear)
+        result = core.trivariate(grid, x, y, z, config)
+
+        assert result.shape == (1, )
+        assert np.isfinite(result[0])
+
+        # Verify against expected value (day 2, normalized to t=2)
+        expected = np.sin(np.pi / 4) * np.cos(np.pi / 4) * np.exp(-2.0 / 10)
+        np.testing.assert_allclose(result[0], expected, rtol=0.15)
+
+    def test_temporal_grid_multiple_times(self) -> None:
+        """Test interpolation at multiple temporal points."""
+        grid = self.create_analytical_temporal_grid3d(np.float64)
+
+        x = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
+        y = np.array([np.pi / 4, np.pi / 3, np.pi / 2])
+        z = np.array([
+            np.datetime64('2020-01-01'),
+            np.datetime64('2020-01-05'),
+            np.datetime64('2020-01-09')
+        ])
+
+        config = self.make_config(windowed.Trivariate.bilinear)
+        result = core.trivariate(grid, x, y, z, config)
+
+        assert result.shape == (3, )
+        assert np.all(np.isfinite(result))
+
+        # All values should be reasonable (between -1 and 1 due to sin/cos)
+        assert np.all(np.abs(result) <= 1.5)
+
+    def test_temporal_grid_with_linear_time_axis(self) -> None:
+        """Test temporal grid with linear interpolation on time axis."""
+        grid = self.create_analytical_temporal_grid3d(np.float64)
+
+        x = np.array([np.pi / 2])
+        y = np.array([np.pi / 4])
+        # Datetime between grid points
+        z = np.array([np.datetime64('2020-01-03T12:00:00')])
+
+        # Use linear interpolation on time axis
+        config = self.make_config(windowed.Trivariate.bilinear,
+                                  third_axis=windowed.AxisConfig.linear())
+        result = core.trivariate(grid, x, y, z, config)
+
+        assert result.shape == (1, )
+        assert np.isfinite(result[0])
+
+        # Result should be between values at day 3 and day 4
+        z_day3 = np.array([np.datetime64('2020-01-03')])
+        z_day4 = np.array([np.datetime64('2020-01-04')])
+
+        config_nearest = self.make_config(
+            windowed.Trivariate.bilinear,
+            third_axis=windowed.AxisConfig.nearest())
+        result_day3 = core.trivariate(grid, x, y, z_day3, config_nearest)
+        result_day4 = core.trivariate(grid, x, y, z_day4, config_nearest)
+
+        # Linear interpolation result should be between the two days
+        assert (min(result_day3[0], result_day4[0]) <= result[0] <= max(
+            result_day3[0], result_day4[0]))
+
+    def test_temporal_grid_all_methods(self) -> None:
+        """Test all interpolation methods work with temporal grid."""
+        grid = self.create_analytical_temporal_grid3d(np.float64)
+
+        methods = [
+            'bilinear', 'bicubic', 'c_spline', 'linear', 'akima', 'steffen'
+        ]
+
+        x = np.array([np.pi / 2])
+        y = np.array([np.pi / 4])
+        z = np.array([np.datetime64('2020-01-05')])
+
+        for method in methods:
+            config = self.make_config(getattr(windowed.Trivariate, method))
+            result = core.trivariate(grid, x, y, z, config)
+
+            assert result.shape == (1, )
+            assert np.isfinite(result[0]), f"Method {method} produced NaN"
