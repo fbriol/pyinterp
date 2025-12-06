@@ -7,19 +7,15 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <boost/geometry.hpp>
-#include <boost/geometry/core/coordinate_dimension.hpp>
-#include <boost/geometry/core/coordinate_type.hpp>
+#include <boost/geometry/algorithms/convex_hull.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/multi_point.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/index/parameters.hpp>
 #include <boost/geometry/index/rtree.hpp>
-#include <boost/geometry/strategies/default_distance_result.hpp>
 #include <boost/geometry/strategies/default_strategy.hpp>
 #include <concepts>
-#include <cstddef>
-#include <cstdint>
 #include <limits>
-#include <memory>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -32,6 +28,18 @@
 #include "pyinterp/math/interpolate/window_function.hpp"
 
 namespace pyinterp::geometry {
+
+/// Defines how the validity of the neighborhood is checked.
+enum class BoundaryCheck : uint8_t {
+  /// No verification is performed.
+  kNone,
+  /// Checks if the point is within the Axis Aligned Bounding Box (AABB) of the
+  /// neighbors.
+  kEnvelope,
+  /// Checks if the point is within the Convex Hull of the neighbors (most
+  /// restrictive and geometrically accurate).
+  kConvexHull
+};
 
 /// Spatial index for point data with various interpolation methods.
 ///
@@ -48,6 +56,9 @@ class RTree {
   using coordinate_t =
       typename boost::geometry::traits::coordinate_type<Point>::type;
 
+  // Use the correct strategy type for distances
+  using default_strategy_t = typename boost::geometry::default_strategy;
+
   /// Type of distance function result
   using distance_t =
       typename boost::geometry::default_distance_result<Point, Point>::type;
@@ -58,7 +69,7 @@ class RTree {
   /// Value handled by this object (point, value)
   using value_t = std::pair<Point, Type>;
 
-  /// Spatial index type (R*-tree with fanout 16)
+  // R*-tree with fanout 16
   using rtree_t =
       boost::geometry::index::rtree<value_t, boost::geometry::index::rstar<16>>;
 
@@ -67,20 +78,18 @@ class RTree {
       decltype(std::declval<coordinate_t>() + std::declval<Type>());
 
   /// Default constructor
-  RTree() : tree_{std::make_shared<rtree_t>()} {}
+  RTree() = default;
 
-  /// Default destructor
+  /// Destructor
   virtual ~RTree() = default;
 
-  /// Default copy constructor
+  /// Copy constructor
   RTree(const RTree&) = default;
-
-  /// Default copy assignment operator
+  /// Copy assignment operator
   auto operator=(const RTree&) -> RTree& = default;
 
   /// Move constructor
   RTree(RTree&&) noexcept = default;
-
   /// Move assignment operator
   auto operator=(RTree&&) noexcept -> RTree& = default;
 
@@ -91,66 +100,78 @@ class RTree {
     if (empty()) [[unlikely]] {
       return std::nullopt;
     }
-    return tree_->bounds();
+    return tree_.bounds();
   }
 
   /// Returns the number of points in the tree
   [[nodiscard]] constexpr auto size() const noexcept -> size_t {
-    return tree_->size();
+    return tree_.size();
   }
 
   /// Query if the container is empty
   [[nodiscard]] constexpr auto empty() const noexcept -> bool {
-    return tree_->empty();
+    return tree_.empty();
   }
 
   /// Removes all values from the container
-  auto clear() -> void { tree_->clear(); }
+  auto clear() -> void { tree_.clear(); }
 
   /// Rebuild the tree using packing algorithm (erases old data)
   /// @param[in] points Vector of (point, value) pairs
   auto packing(const std::vector<value_t>& points) -> void {
-    *tree_ = rtree_t(points);
+    tree_ = rtree_t(points);
   }
 
   /// Insert new data into the search tree
   /// @param value (point, value) pair to insert
-  auto insert(const value_t& value) -> void { tree_->insert(value); }
+  auto insert(const value_t& value) -> void { tree_.insert(value); }
 
-  /// Search for the K nearest neighbors using the given strategy.
+  /// Search for the K nearest neighbors.
+  /// @tparam Strategy Strategy to calculate distances
   /// @param[in] point Point of interest
-  /// @param[in] strategy Strategy to calculate distances
   /// @param[in] k Number of nearest neighbors
+  /// @param[in] check Type of boundary verification to apply
+  /// @param[in] strategy Strategy to calculate distances
   /// @return Vector of (distance, value) pairs
-  template <typename Strategy>
-  [[nodiscard]] auto query(const Point& point, const Strategy& strategy,
-                           const uint32_t k) const -> std::vector<result_t> {
+  template <typename Strategy = default_strategy_t>
+  [[nodiscard]] auto query(const Point& point, const uint32_t k,
+                           const BoundaryCheck check = BoundaryCheck::kNone,
+                           const Strategy& strategy = Strategy()) const
+      -> std::vector<result_t> {
     std::vector<result_t> result;
     result.reserve(k);
 
-    auto query_range = tree_->qbegin(boost::geometry::index::nearest(point, k));
-    std::ranges::for_each(query_range, tree_->qend(), [&](const auto& item) {
+    // If we need to check boundaries, we must store the points to calculate
+    // the envelope or hull later.
+    boost::geometry::model::multi_point<Point> points;
+    if (check != BoundaryCheck::kNone) {
+      points.reserve(k);
+    }
+
+    auto query_range = tree_.qbegin(boost::geometry::index::nearest(point, k));
+    std::ranges::for_each(query_range, tree_.qend(), [&](const auto& item) {
+      if (check != BoundaryCheck::kNone) {
+        points.emplace_back(item.first);
+      }
       result.emplace_back(
           boost::geometry::distance(point, item.first, strategy), item.second);
     });
 
+    if (!is_boundary_valid(point, points, check)) {
+      return {};
+    }
     return result;
   }
 
-  /// Search for K nearest neighbors with default strategy
-  [[nodiscard]] auto query(const Point& point, const uint32_t k) const
-      -> std::vector<result_t> {
-    return query(point, boost::geometry::default_strategy(), k);
-  }
-
-  /// Search for neighbors within a radius using the given strategy.
+  /// Search for neighbors within a radius.
+  /// @tparam Strategy Strategy to calculate distances
   /// @param[in] point Point of interest
   /// @param[in] strategy Strategy to calculate distances
   /// @param[in] radius Maximum search distance
   /// @return Vector of (distance, value) pairs within radius
-  template <typename Strategy>
-  [[nodiscard]] auto query_ball(const Point& point, const Strategy& strategy,
-                                const coordinate_t radius) const
+  template <typename Strategy = default_strategy_t>
+  [[nodiscard]] auto query_ball(const Point& point, const coordinate_t radius,
+                                const Strategy& strategy = Strategy()) const
       -> std::vector<result_t> {
     std::vector<result_t> result;
 
@@ -159,9 +180,10 @@ class RTree {
     };
 
     auto query_range =
-        tree_->qbegin(boost::geometry::index::satisfies(satisfies_radius));
+        tree_.qbegin(boost::geometry::index::satisfies(satisfies_radius));
 
-    std::ranges::for_each(query_range, tree_->qend(), [&](const auto& item) {
+    std::ranges::for_each(query_range, tree_.qend(), [&](const auto& item) {
+      // Calculate exact distance using the provided strategy
       result.emplace_back(
           boost::geometry::distance(point, item.first, strategy), item.second);
     });
@@ -169,70 +191,27 @@ class RTree {
     return result;
   }
 
-  /// Search for neighbors within a radius with default strategy
-  [[nodiscard]] auto query_ball(const Point& point,
-                                const coordinate_t radius) const
-      -> std::vector<result_t> {
-    return query_ball(point, boost::geometry::default_strategy(), radius);
-  }
-
-  /// Search for K neighbors that surround the query point.
-  /// @param[in] point Point of interest
-  /// @param[in] strategy Strategy to calculate distances
-  /// @param[in] k Number of nearest neighbors
-  /// @return Vector of neighbors or empty if point not surrounded
-  template <typename Strategy>
-  [[nodiscard]] auto query_within(const Point& point, const Strategy& strategy,
-                                  const uint32_t k) const
-      -> std::vector<result_t> {
-    std::vector<result_t> result;
-    result.reserve(k);
-
-    boost::geometry::model::multi_point<Point> points;
-    points.reserve(k);
-
-    auto query_range = tree_->qbegin(boost::geometry::index::nearest(point, k));
-    std::ranges::for_each(query_range, tree_->qend(), [&](const auto& item) {
-      points.emplace_back(item.first);
-      result.emplace_back(
-          boost::geometry::distance(point, item.first, strategy), item.second);
-    });
-
-    // Check if point is covered by its neighbors
-    if (!boost::geometry::covered_by(
-            point, boost::geometry::return_envelope<
-                       boost::geometry::model::box<Point>>(points))) {
-      return {};
-    }
-    return result;
-  }
-
-  /// Search for K neighbors that surround the query point (default strategy)
-  [[nodiscard]] auto query_within(const Point& point, const uint32_t k) const
-      -> std::vector<result_t> {
-    return query_within(point, boost::geometry::default_strategy(), k);
-  }
-
-  /// Get K nearest neighbors, optionally filtered by radius and coverage.
+  /// Get K nearest neighbors, optionally filtered by radius and boundary check.
+  /// @tparam Strategy Strategy to calculate distances
   /// @param[in] point Point of interest
   /// @param[in] strategy Strategy to calculate distances
   /// @param[in] radius Optional maximum search distance
   /// @param[in] k Number of nearest neighbors
   /// @param[in] within If true, ensure point is surrounded by neighbors
   /// @return Vector of (point, value) pairs
-  template <typename Strategy>
-  [[nodiscard]] auto value(const Point& point, const Strategy& strategy,
+  template <typename Strategy = default_strategy_t>
+  [[nodiscard]] auto value(const Point& point,
                            const std::optional<coordinate_t>& radius,
-                           const uint32_t k, const bool within) const
+                           const uint32_t k, const BoundaryCheck check,
+                           const Strategy& strategy = Strategy()) const
       -> std::vector<value_t> {
     std::vector<value_t> result;
     result.reserve(k);
 
-    auto query_range = tree_->qbegin(boost::geometry::index::nearest(point, k));
-    std::ranges::for_each(query_range, tree_->qend(),
+    auto query_range = tree_.qbegin(boost::geometry::index::nearest(point, k));
+    std::ranges::for_each(query_range, tree_.qend(),
                           [&](const auto& item) { result.emplace_back(item); });
 
-    // Remove points outside the radius
     if (radius.has_value()) {
       std::erase_if(result, [&](const auto& item) {
         return boost::geometry::distance(item.first, point, strategy) >
@@ -240,37 +219,21 @@ class RTree {
       });
     }
 
-    // Check if point is surrounded by neighbors
-    if (within) {
+    if (check != BoundaryCheck::kNone) {
       boost::geometry::model::multi_point<Point> points;
       points.reserve(result.size());
-
       std::ranges::for_each(
           result, [&](const auto& item) { points.emplace_back(item.first); });
 
-      if (!boost::geometry::covered_by(
-              point, boost::geometry::return_envelope<
-                         boost::geometry::model::box<Point>>(points))) {
+      if (!is_boundary_valid(point, points, check)) {
         return {};
       }
     }
     return result;
   }
 
-  /// Get K nearest neighbors (default strategy)
-  /// @param[in] point Point of interest
-  /// @param[in] radius Optional maximum search distance
-  /// @param[in] k Number of nearest neighbors
-  /// @param[in] within If true, ensure point is surrounded by neighbors
-  /// @return Vector of (point, value) pairs
-  [[nodiscard]] auto value(const Point& point,
-                           const std::optional<coordinate_t>& radius,
-                           const uint32_t k, const bool within) const
-      -> std::vector<value_t> {
-    return value(point, boost::geometry::default_strategy(), radius, k, within);
-  }
-
   /// Inverse Distance Weighting interpolation.
+  /// @tparam Strategy Strategy to calculate distances
   /// @param[in] point Point of interest
   /// @param[in] strategy Strategy to calculate distances
   /// @param[in] radius Maximum search distance
@@ -278,21 +241,20 @@ class RTree {
   /// @param[in] p Power parameter
   /// @param[in] within If true, ensure point is surrounded
   /// @return Pair of (interpolated value, number of neighbors used)
-  template <typename Strategy>
+  template <typename Strategy = default_strategy_t>
   [[nodiscard]] auto inverse_distance_weighting(
-      const Point& point, const Strategy& strategy, const coordinate_t radius,
-      const uint32_t k, const uint32_t p, const bool within) const
+      const Point& point, const coordinate_t radius, const uint32_t k,
+      const uint32_t p, const BoundaryCheck check,
+      const Strategy& strategy = Strategy()) const
       -> std::pair<coordinate_t, uint32_t> {
     constexpr coordinate_t epsilon = coordinate_t{1e-6};
     coordinate_t result{0};
     coordinate_t total_weight{0};
 
-    const auto nearest =
-        within ? query_within(point, strategy, k) : query(point, strategy, k);
+    const auto nearest = query(point, k, check, strategy);
     uint32_t neighbors{0};
 
     for (const auto& [distance, value] : nearest) {
-      // If point coincides with a data point, return that value
       if (distance < epsilon) [[unlikely]] {
         return {static_cast<coordinate_t>(value), k};
       }
@@ -314,23 +276,6 @@ class RTree {
                            uint32_t{0}};
   }
 
-  /// Inverse Distance Weighting interpolation (default strategy)
-  /// @param[in] point Point of interest
-  /// @param[in] radius Maximum search distance
-  /// @param[in] k Number of nearest neighbors
-  /// @param[in] p Power parameter
-  /// @param[in] within If true, ensure point is surrounded
-  /// @return Pair of (interpolated value, number of neighbors used)
-  [[nodiscard]] auto inverse_distance_weighting(const Point& point,
-                                                const coordinate_t radius,
-                                                const uint32_t k,
-                                                const uint32_t p,
-                                                const bool within) const
-      -> std::pair<coordinate_t, uint32_t> {
-    return inverse_distance_weighting(
-        point, boost::geometry::default_strategy(), radius, k, p, within);
-  }
-
   /// Kriging interpolation.
   /// @param[in] point Point of interest
   /// @param[in] radius Maximum search distance
@@ -340,13 +285,11 @@ class RTree {
   /// @return Pair of (interpolated value, number of neighbors used)
   [[nodiscard]] auto kriging(
       const Point& point, const coordinate_t radius, const uint32_t k,
-      const bool within,
+      const BoundaryCheck check,
       const math::interpolate::Kriging<promotion_t>& model) const
       -> std::pair<coordinate_t, uint32_t> {
     const auto [coords, values] =
-        within ? nearest_within(point, boost::geometry::default_strategy(),
-                                radius, k)
-               : nearest(point, boost::geometry::default_strategy(), radius, k);
+        nearest(point, radius, k, check, boost::geometry::default_strategy());
 
     if (values.size() == 0) [[unlikely]] {
       return {std::numeric_limits<promotion_t>::quiet_NaN(), uint32_t{0}};
@@ -354,16 +297,12 @@ class RTree {
 
     // Kriging requires 3D coordinates
     if constexpr (dimension_t::value == 3) {
-      // 3D case: use coordinates directly, no copy needed
       const Eigen::Vector3<promotion_t> point_3d(
           boost::geometry::get<0>(point), boost::geometry::get<1>(point),
           boost::geometry::get<2>(point));
-
       return {model(coords, values, point_3d),
               static_cast<uint32_t>(coords.cols())};
-
-    } else if constexpr (dimension_t::value == 2) {
-      // 2D case: pad with zeros in z-coordinate
+    } else {
       Eigen::Matrix<promotion_t, 3, Eigen::Dynamic> coords_3d(3, coords.cols());
       coords_3d.template topRows<2>() = coords;
       coords_3d.row(2).setZero();
@@ -371,105 +310,13 @@ class RTree {
       const Eigen::Vector3<promotion_t> point_3d(boost::geometry::get<0>(point),
                                                  boost::geometry::get<1>(point),
                                                  promotion_t{0});
-
       return {model(coords_3d, values, point_3d),
               static_cast<uint32_t>(coords_3d.cols())};
     }
   }
 
-  /// Get K nearest neighbors with their coordinates and values.
-  /// @param[in] point Point of interest
-  /// @param[in] strategy Strategy to calculate distances
-  /// @param[in] radius Maximum search distance
-  /// @param[in] k Number of nearest neighbors
-  /// @return Tuple of (coordinate matrix, value vector)
-  template <typename Strategy>
-  [[nodiscard]] auto nearest(const Point& point, const Strategy& strategy,
-                             const coordinate_t radius, const uint32_t k) const
-      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
-    auto coordinates = Matrix<promotion_t>(dimension_t::value, k);
-    auto values = Vector<promotion_t>(k);
-    uint32_t count{0};
-
-    auto query_range = tree_->qbegin(boost::geometry::index::nearest(point, k));
-    std::ranges::for_each(query_range, tree_->qend(), [&](const auto& item) {
-      if (boost::geometry::distance(point, item.first, strategy) <= radius) {
-        for (size_t ix = 0; ix < dimension_t::value; ++ix) {
-          coordinates(ix, count) = geometry::point::get(item.first, ix);
-        }
-        values(count++) = item.second;
-      }
-    });
-
-    coordinates.conservativeResize(dimension_t::value, count);
-    values.conservativeResize(count);
-    return {coordinates, values};
-  }
-
-  /// Get K nearest neighbors (default strategy)
-  [[nodiscard]] auto nearest(const Point& point, const coordinate_t radius,
-                             const uint32_t k) const
-      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
-    return nearest(point, boost::geometry::default_strategy(), radius, k);
-  }
-
-  /// Get K nearest neighbors that surround the query point.
-  /// @param[in] point Point of interest
-  /// @param[in] strategy Strategy to calculate distances
-  /// @param[in] radius Maximum search distance
-  /// @param[in] k Number of nearest neighbors
-  /// @return Tuple of (coordinate matrix, value vector), empty if not
-  /// surrounded
-  template <typename Strategy>
-  [[nodiscard]] auto nearest_within(const Point& point,
-                                    const Strategy& strategy,
-                                    const coordinate_t radius,
-                                    const uint32_t k) const
-      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
-    boost::geometry::model::multi_point<Point> points;
-    points.reserve(k);
-
-    auto coordinates = Matrix<promotion_t>(dimension_t::value, k);
-    auto values = Vector<promotion_t>(k);
-    uint32_t count{0};
-
-    auto query_range = tree_->qbegin(boost::geometry::index::nearest(point, k));
-    std::ranges::for_each(query_range, tree_->qend(), [&](const auto& item) {
-      if (boost::geometry::distance(point, item.first, strategy) <= radius) {
-        points.emplace_back(item.first);
-        for (size_t ix = 0; ix < dimension_t::value; ++ix) {
-          coordinates(ix, count) = geometry::point::get(item.first, ix);
-        }
-        values(count++) = item.second;
-      }
-    });
-
-    // Check if point is surrounded by neighbors
-    if (!boost::geometry::covered_by(
-            point, boost::geometry::return_envelope<
-                       boost::geometry::model::box<Point>>(points))) {
-      count = 0;
-    }
-
-    coordinates.conservativeResize(dimension_t::value, count);
-    values.conservativeResize(count);
-    return {coordinates, values};
-  }
-
-  /// Get K nearest neighbors that surround the query point (default strategy)
-  ///
-  /// @param[in] point Point of interest
-  /// @param[in] radius Maximum search distance
-  /// @param[in] k Number of nearest neighbors
-  [[nodiscard]] auto nearest_within(const Point& point,
-                                    const coordinate_t radius,
-                                    const uint32_t k) const
-      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
-    return nearest_within(point, boost::geometry::default_strategy(), radius,
-                          k);
-  }
-
   /// Radial Basis Function interpolation.
+  /// @tparam Strategy Strategy to calculate distances
   /// @param[in] point Point of interest
   /// @param[in] strategy Strategy to calculate distances
   /// @param[in] rbf Radial basis function
@@ -477,15 +324,14 @@ class RTree {
   /// @param[in] k Number of nearest neighbors
   /// @param[in] within If true, ensure point is surrounded
   /// @return Pair of (interpolated value, number of neighbors used)
-  template <typename Strategy>
+  template <typename Strategy = default_strategy_t>
   [[nodiscard]] auto radial_basis_function(
-      const Point& point, const Strategy& strategy,
-      const math::interpolate::RBF<promotion_t>& rbf, const coordinate_t radius,
-      const uint32_t k, const bool within) const
+      const Point& point, const math::interpolate::RBF<promotion_t>& rbf,
+      const coordinate_t radius, const uint32_t k, const BoundaryCheck check,
+      const Strategy& strategy = Strategy()) const
       -> std::pair<promotion_t, uint32_t> {
     const auto [coordinates, values] =
-        within ? nearest_within(point, strategy, radius, k)
-               : nearest(point, strategy, radius, k);
+        nearest(point, radius, k, check, strategy);
 
     if (values.size() == 0) [[unlikely]] {
       return {std::numeric_limits<promotion_t>::quiet_NaN(), uint32_t{0}};
@@ -500,16 +346,8 @@ class RTree {
     return {interpolated(0), static_cast<uint32_t>(values.size())};
   }
 
-  /// Radial Basis Function interpolation (default strategy)
-  [[nodiscard]] auto radial_basis_function(
-      const Point& point, const math::interpolate::RBF<promotion_t>& rbf,
-      const coordinate_t radius, const uint32_t k, const bool within) const
-      -> std::pair<promotion_t, uint32_t> {
-    return radial_basis_function(point, boost::geometry::default_strategy(),
-                                 rbf, radius, k, within);
-  }
-
   /// Window Function interpolation.
+  /// @tparam Strategy Strategy to calculate distances
   /// @param[in] point Point of interest
   /// @param[in] strategy Strategy to calculate distances
   /// @param[in] wf Window function
@@ -518,20 +356,19 @@ class RTree {
   /// @param[in] k Number of nearest neighbors
   /// @param[in] within If true, ensure point is surrounded
   /// @return Pair of (interpolated value, number of neighbors used)
-  template <typename Strategy>
+  template <typename Strategy = default_strategy_t>
   [[nodiscard]] auto window_function(
-      const Point& point, const Strategy& strategy,
+      const Point& point,
       const math::interpolate::WindowFunction<coordinate_t>& wf,
       const coordinate_t arg, const coordinate_t radius, const uint32_t k,
-      const bool within) const -> std::pair<coordinate_t, uint32_t> {
+      const BoundaryCheck check, const Strategy& strategy = Strategy()) const
+      -> std::pair<coordinate_t, uint32_t> {
     coordinate_t result{0};
     coordinate_t total_weight{0};
 
-    const auto nearest =
-        within ? query_within(point, strategy, k) : query(point, strategy, k);
+    const auto nearest = query(point, k, check, strategy);
     uint32_t neighbors{0};
 
-    // Get distance of furthest neighbor if radius not specified
     const coordinate_t furthest_neighbor =
         radius == std::numeric_limits<coordinate_t>::max()
             ? (nearest.empty()
@@ -543,7 +380,6 @@ class RTree {
       if (distance > radius) {
         break;
       }
-
       const auto weight =
           wf(static_cast<coordinate_t>(distance), furthest_neighbor, arg);
       total_weight += weight;
@@ -558,26 +394,96 @@ class RTree {
                            uint32_t{0}};
   }
 
-  /// Window Function interpolation (default strategy)
+  /// Get K nearest neighbors with their coordinates and values.
+  /// @tparam Strategy Strategy to calculate distances
   /// @param[in] point Point of interest
-  /// @param[in] wf Window function
-  /// @param[in] arg Window function argument
-  /// @param[in] radius Maximum search distance
+  /// @param[in] strategy Strategy to calculate distances
+  /// @param[in] radius Optional maximum search distance
   /// @param[in] k Number of nearest neighbors
-  /// @param[in] within If true, ensure point is surrounded
-  /// @return Pair of (interpolated value, number of neighbors used)
-  [[nodiscard]] auto window_function(
-      const Point& point,
-      const math::interpolate::WindowFunction<coordinate_t>& wf,
-      const coordinate_t arg, const coordinate_t radius, const uint32_t k,
-      const bool within) const -> std::pair<coordinate_t, uint32_t> {
-    return window_function(point, boost::geometry::default_strategy(), wf, arg,
-                           radius, k, within);
+  /// @param[in] check Type of boundary verification to apply
+  /// @return Pair of (coordinates matrix, values vector)
+  template <typename Strategy = default_strategy_t>
+  [[nodiscard]] auto nearest(const Point& point, const coordinate_t radius,
+                             const uint32_t k, const BoundaryCheck check,
+                             const Strategy& strategy = Strategy()) const
+      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
+    return nearest_internal(point, radius, k, check, strategy);
   }
 
  protected:
-  /// Spatial index (R*-tree)
-  std::shared_ptr<rtree_t> tree_;
+  rtree_t tree_;
+
+ private:
+  /// Verifies if the point satisfies the requested boundary condition.
+  [[nodiscard]] auto is_boundary_valid(
+      const Point& point,
+      const boost::geometry::model::multi_point<Point>& points,
+      const BoundaryCheck check) const -> bool {
+    if (check == BoundaryCheck::kNone) {
+      return true;
+    }
+
+    if (points.empty()) {
+      return false;
+    }
+
+    if (check == BoundaryCheck::kEnvelope) {
+      // Fast: Axis Aligned Bounding Box
+      auto box =
+          boost::geometry::return_envelope<boost::geometry::model::box<Point>>(
+              points);
+      return boost::geometry::covered_by(point, box);
+
+    } else if (check == BoundaryCheck::kConvexHull) {
+      // Slow but accurate: Convex Hull
+      boost::geometry::model::polygon<Point> hull;
+      boost::geometry::convex_hull(points, hull);
+      return boost::geometry::covered_by(point, hull);
+    }
+
+    return true;
+  }
+
+  /// Internal implementation for neighbor retrieval
+  template <typename Strategy>
+  [[nodiscard]] auto nearest_internal(const Point& point,
+                                      const coordinate_t radius,
+                                      const uint32_t k,
+                                      const BoundaryCheck check,
+                                      const Strategy& strategy) const
+      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
+    boost::geometry::model::multi_point<Point> points;
+    if (check != BoundaryCheck::kNone) {
+      points.reserve(k);
+    }
+
+    auto coordinates = Matrix<promotion_t>(dimension_t::value, k);
+    auto values = Vector<promotion_t>(k);
+    uint32_t count{0};
+
+    auto query_range = tree_.qbegin(boost::geometry::index::nearest(point, k));
+    std::ranges::for_each(query_range, tree_.qend(), [&](const auto& item) {
+      if (boost::geometry::distance(point, item.first, strategy) <= radius) {
+        if (check != BoundaryCheck::kNone) {
+          points.emplace_back(item.first);
+        }
+
+        for (size_t ix = 0; ix < dimension_t::value; ++ix) {
+          coordinates(ix, count) = geometry::point::get(item.first, ix);
+        }
+        values(count++) = item.second;
+      }
+    });
+
+    if (check != BoundaryCheck::kNone &&
+        !is_boundary_valid(point, points, check)) {
+      count = 0;
+    }
+
+    coordinates.conservativeResize(dimension_t::value, count);
+    values.conservativeResize(count);
+    return {coordinates, values};
+  }
 };
 
 }  // namespace pyinterp::geometry
