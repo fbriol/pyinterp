@@ -190,7 +190,7 @@ auto trivariate(const GridType& grid,
                 const nanobind::object& z,
                 const config::geometric::Trivariate& config)
     -> Vector<ResultType> {
-  if constexpr (grid.has_temporal_axis()) {
+  if constexpr (GridType::kHasTemporalAxis) {
     // Z is temporal axis, cast to int64_t
     auto z_as_int64 = grid.template pybind_axis<2>().cast_to_int64(z);
     {
