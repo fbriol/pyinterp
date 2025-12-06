@@ -378,8 +378,14 @@ class Grid {
 
   /// @brief Check if this grid has a temporal axis.
   /// @return True if the grid has a temporal axis, false otherwise.
+  static constexpr bool kHasTemporalAxis =
+      (std::is_same_v<MathAxes, math::TemporalAxis> || ...);
+
+  /// @brief Check if this grid has a temporal axis (instance method for
+  /// convenience).
+  /// @return True if the grid has a temporal axis, false otherwise.
   [[nodiscard]] constexpr auto has_temporal_axis() const -> bool {
-    return has_temporal_axis_impl(std::index_sequence_for<MathAxes...>{});
+    return kHasTemporalAxis;
   }
 
  protected:
@@ -427,13 +433,6 @@ class Grid {
           }
         }(),
         ...);
-  }
-
-  /// Check if this grid has a temporal axis.
-  template <size_t... Is>
-  [[nodiscard]] constexpr auto has_temporal_axis_impl(
-      std::index_sequence<Is...>) const -> bool {
-    return ((std::is_same_v<math_axis_t<Is>, math::TemporalAxis>) || ...);
   }
 
   /// Serialize the grid state for pickling.
