@@ -3,14 +3,9 @@ from typing import Any, Generic, TypeVar, overload
 
 import numpy as np
 
-from ..type_hints import (
-    NDArray1DDateTime64,
-    NDArray1DFloat32,
-    NDArray1DFloat64,
-    NDArray1DInt64,
-    NDArray1DTimeDelta64,
-    NDArray2DInt64,
-)
+from ..type_hints import (NDArray1DDateTime64, NDArray1DFloat32,
+                          NDArray1DFloat64, NDArray1DInt64,
+                          NDArray1DTimeDelta64, NDArray2DInt64)
 from .config import geometric, windowed
 
 @overload
@@ -414,8 +409,10 @@ class Grid4DInt8:
     @property
     def z(self) -> Axis: ...
 
-TemporalScalar = TypeVar("TemporalScalar", np.datetime64, np.timedelta64)
-TemporalArray = TypeVar("TemporalArray", NDArray1DDateTime64, NDArray1DTimeDelta64)
+TemporalScalar = TypeVar('TemporalScalar', np.datetime64, np.timedelta64)
+TemporalArray = TypeVar(
+    'TemporalArray', NDArray1DDateTime64, NDArray1DTimeDelta64
+)
 
 class TemporalAxis(Generic[TemporalScalar, TemporalArray]):
     @overload

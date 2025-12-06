@@ -65,13 +65,17 @@ def load_grid4d() -> xr.Dataset:
     with path.open('r') as stream:
         data = json.load(stream)
     ds = xr.Dataset.from_dict(data)
-    ds['time'] = xr.DataArray(_decode_datetime64(ds['time'].values),
-                              dims=['time'],
-                              attrs={'long_name': 'time'})
-    ds = ds.assign_coords({
-        'longitude': ds['longitude'].astype('float32'),
-        'latitude': ds['latitude'].astype('float32')
-    })
+    ds['time'] = xr.DataArray(
+        _decode_datetime64(ds['time'].values),
+        dims=['time'],
+        attrs={'long_name': 'time'},
+    )
+    ds = ds.assign_coords(
+        {
+            'longitude': ds['longitude'].astype('float32'),
+            'latitude': ds['latitude'].astype('float32'),
+        }
+    )
 
     ds['pressure'] = ds['pressure'].astype('float32')
     ds['temperature'] = ds['temperature'].astype('float32')

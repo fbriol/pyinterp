@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-
     import numpy as np
 
     OneDim = tuple[int]

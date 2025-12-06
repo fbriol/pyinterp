@@ -3,6 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """Unit tests for configuration objects."""
+
 from __future__ import annotations
 
 from pyinterp.core.config import geometric, windowed
@@ -291,10 +292,14 @@ class TestWindowed:
 
     def test_method_chaining(self) -> None:
         """Test that methods can be chained."""
-        config = (windowed.Bivariate.bicubic().with_num_threads(
-            4).with_bounds_error(True).with_boundary_mode(
-                windowed.Boundary.WRAP).with_window_size_x(
-                    10).with_window_size_y(8))
+        config = (
+            windowed.Bivariate.bicubic()
+            .with_num_threads(4)
+            .with_bounds_error(True)
+            .with_boundary_mode(windowed.Boundary.WRAP)
+            .with_window_size_x(10)
+            .with_window_size_y(8)
+        )
         assert isinstance(config, windowed.Bivariate)
 
     def test_equality(self) -> None:

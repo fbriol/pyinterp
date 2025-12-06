@@ -20,7 +20,7 @@ class TestQuadrivariateGeometric:
 
     @staticmethod
     def create_analytical_grid4d(
-        dtype: type[np.float32] | type[np.float64],
+        dtype: type[np.float32 | np.float64],
     ) -> core.Grid4DFloat64 | core.Grid4DFloat32:
         """
         Create a 4D grid with an analytical field.
@@ -39,19 +39,23 @@ class TestQuadrivariateGeometric:
         z_axis = core.Axis(z_vals)
         u_axis = core.Axis(u_vals)
 
-        x_grid, y_grid, z_grid, u_grid = np.meshgrid(x_vals,
-                                                     y_vals,
-                                                     z_vals,
-                                                     u_vals,
-                                                     indexing='ij')
+        x_grid, y_grid, z_grid, u_grid = np.meshgrid(
+            x_vals, y_vals, z_vals, u_vals, indexing='ij'
+        )
 
         # Create analytical field: f(x, y, z, u) = sin(x) * cos(y) * exp(-z/5) * sin(u)
-        data = (np.sin(x_grid) * np.cos(y_grid) * np.exp(-z_grid / 5) *
-                np.sin(u_grid)).astype(dtype)
+        data = (
+            np.sin(x_grid)
+            * np.cos(y_grid)
+            * np.exp(-z_grid / 5)
+            * np.sin(u_grid)
+        ).astype(dtype)
         # Ensure C-contiguous for grid creation
         data = np.ascontiguousarray(data)
 
-        class_name = core.Grid4DFloat32 if dtype == np.float32 else core.Grid4DFloat64
+        class_name = (
+            core.Grid4DFloat32 if dtype == np.float32 else core.Grid4DFloat64
+        )
         return class_name(x_axis, y_axis, z_axis, u_axis, data)
 
     def test_single_point_bilinear(self) -> None:
@@ -68,7 +72,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
         # Should be close to 0 (within interpolation error)
         assert np.abs(result[0]) < 0.01
@@ -86,7 +90,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
 
     def test_nearest_method(self) -> None:
@@ -102,7 +106,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.nearest()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_idw_method(self) -> None:
@@ -117,7 +121,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.idw()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_bounds_error(self) -> None:
@@ -134,7 +138,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
         # With bounds_error=True, should raise an error
@@ -155,7 +159,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
     def test_bounds_error_u_axis(self) -> None:
@@ -171,7 +175,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
     def test_with_real_data(self) -> None:
@@ -188,27 +192,39 @@ class TestQuadrivariateGeometric:
         # Test points within bounds - use actual grid bounds
         lon_vals = grid_data.longitude.values
         lat_vals = grid_data.latitude.values
-        x = np.array([
-            lon_vals[0] + 5, (lon_vals[0] + lon_vals[-1]) / 2, lon_vals[-1] - 5
-        ])
-        y = np.array([
-            lat_vals[0] + 2, (lat_vals[0] + lat_vals[-1]) / 2, lat_vals[-1] - 2
-        ])
-        z = np.array([
-            grid_data.time.values[0].astype('float64'),
-            grid_data.time.values[1].astype('float64'),
-            grid_data.time.values[-1].astype('float64'),
-        ])
-        u = np.array([
-            grid_data.level.values[0],
-            grid_data.level.values[1],
-            grid_data.level.values[-1],
-        ])
+        x = np.array(
+            [
+                lon_vals[0] + 5,
+                (lon_vals[0] + lon_vals[-1]) / 2,
+                lon_vals[-1] - 5,
+            ]
+        )
+        y = np.array(
+            [
+                lat_vals[0] + 2,
+                (lat_vals[0] + lat_vals[-1]) / 2,
+                lat_vals[-1] - 2,
+            ]
+        )
+        z = np.array(
+            [
+                grid_data.time.values[0].astype('float64'),
+                grid_data.time.values[1].astype('float64'),
+                grid_data.time.values[-1].astype('float64'),
+            ]
+        )
+        u = np.array(
+            [
+                grid_data.level.values[0],
+                grid_data.level.values[1],
+                grid_data.level.values[-1],
+            ]
+        )
 
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         # At least some values should be finite (not all NaNs)
         assert np.any(np.isfinite(result))
 
@@ -311,7 +327,8 @@ class TestQuadrivariateGeometric:
 
         # Compare with analytical values
         expected = np.array(
-            [analytical_func(x[i], y[i], z[i], u[i]) for i in range(len(x))])
+            [analytical_func(x[i], y[i], z[i], u[i]) for i in range(len(x))]
+        )
 
         # Allow some tolerance for interpolation error (relaxed tolerance for coarser grid)
         np.testing.assert_allclose(result, expected, rtol=0.15)
@@ -330,7 +347,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (n_points, )
+        assert result.shape == (n_points,)
         # Most values should be finite
         assert np.sum(np.isfinite(result)) > n_points * 0.99
 
@@ -347,7 +364,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
         # Values should decay with increasing z due to exp(-z/5) term
         assert np.abs(result[0]) > np.abs(result[2])
@@ -360,13 +377,14 @@ class TestQuadrivariateGeometric:
         x = np.array([np.pi / 2, np.pi / 2])
         y = np.array([np.pi / 4, np.pi / 4])
         z = np.array([1.0, 1.0])
-        u = np.array([0.1,
-                      np.pi / 2])  # Use 0.1 instead of 0.0 to avoid boundary
+        u = np.array(
+            [0.1, np.pi / 2]
+        )  # Use 0.1 instead of 0.0 to avoid boundary
 
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (2, )
+        assert result.shape == (2,)
         assert np.all(np.isfinite(result))
         # At u=π/2, sin(π/2)=1, so result should be larger than at u=0.1
         assert np.abs(result[1]) > np.abs(result[0])
@@ -414,7 +432,7 @@ class TestQuadrivariateGeometric:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (2, )
+        assert result.shape == (2,)
         assert np.all(np.isfinite(result))
 
 
@@ -423,7 +441,7 @@ class TestQuadrivariateGeometricTemporalAxis:
 
     @staticmethod
     def create_analytical_temporal_grid4d(
-        dtype: type[np.float32] | type[np.float64],
+        dtype: type[np.float32 | np.float64],
     ) -> core.TemporalGrid4DFloat64 | core.TemporalGrid4DFloat32:
         """
         Create a 4D grid with temporal Z-axis and analytical field.
@@ -450,19 +468,24 @@ class TestQuadrivariateGeometricTemporalAxis:
         # Normalize time for analytical function (0 to 4 days)
         time_normalized = np.arange(5)
 
-        x_grid, y_grid, t_grid, u_grid = np.meshgrid(x_vals,
-                                                     y_vals,
-                                                     time_normalized,
-                                                     u_vals,
-                                                     indexing='ij')
+        x_grid, y_grid, t_grid, u_grid = np.meshgrid(
+            x_vals, y_vals, time_normalized, u_vals, indexing='ij'
+        )
 
         # Create analytical field: f(x, y, t, u) = sin(x) * cos(y) * exp(-t/5) * sin(u)
-        data = (np.sin(x_grid) * np.cos(y_grid) * np.exp(-t_grid / 5) *
-                np.sin(u_grid)).astype(dtype)
+        data = (
+            np.sin(x_grid)
+            * np.cos(y_grid)
+            * np.exp(-t_grid / 5)
+            * np.sin(u_grid)
+        ).astype(dtype)
         data = np.ascontiguousarray(data)
 
-        class_name = (core.TemporalGrid4DFloat32
-                      if dtype == np.float32 else core.TemporalGrid4DFloat64)
+        class_name = (
+            core.TemporalGrid4DFloat32
+            if dtype == np.float32
+            else core.TemporalGrid4DFloat64
+        )
         return class_name(x_axis, y_axis, z_axis, u_axis, data)
 
     def test_grid_basic_interpolation(self) -> None:
@@ -477,7 +500,7 @@ class TestQuadrivariateGeometricTemporalAxis:
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_grid_multiple_times(self) -> None:
@@ -486,17 +509,19 @@ class TestQuadrivariateGeometricTemporalAxis:
 
         x = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
         y = np.array([np.pi / 6, np.pi / 3, np.pi / 2])
-        z = np.array([
-            np.datetime64('2020-01-01'),
-            np.datetime64('2020-01-03'),
-            np.datetime64('2020-01-05'),
-        ])
+        z = np.array(
+            [
+                np.datetime64('2020-01-01'),
+                np.datetime64('2020-01-03'),
+                np.datetime64('2020-01-05'),
+            ]
+        )
         u = np.array([np.pi / 6, np.pi / 3, np.pi / 2])
 
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
 
     def test_grid_with_real_data(self) -> None:
@@ -508,8 +533,9 @@ class TestQuadrivariateGeometricTemporalAxis:
         u_axis = core.Axis(grid_data.level.values)
 
         matrix = np.ascontiguousarray(grid_data.temperature.values.transpose())
-        grid = core.TemporalGrid4DFloat32(x_axis, y_axis, z_axis, u_axis,
-                                          matrix)
+        grid = core.TemporalGrid4DFloat32(
+            x_axis, y_axis, z_axis, u_axis, matrix
+        )
 
         # Test points within bounds
         lon_vals = grid_data.longitude.values
@@ -517,21 +543,31 @@ class TestQuadrivariateGeometricTemporalAxis:
         time_vals = grid_data.time.values
         level_vals = grid_data.level.values
 
-        x = np.array([
-            lon_vals[0] + 5, (lon_vals[0] + lon_vals[-1]) / 2, lon_vals[-1] - 5
-        ])
-        y = np.array([
-            lat_vals[0] + 2, (lat_vals[0] + lat_vals[-1]) / 2, lat_vals[-1] - 2
-        ])
+        x = np.array(
+            [
+                lon_vals[0] + 5,
+                (lon_vals[0] + lon_vals[-1]) / 2,
+                lon_vals[-1] - 5,
+            ]
+        )
+        y = np.array(
+            [
+                lat_vals[0] + 2,
+                (lat_vals[0] + lat_vals[-1]) / 2,
+                lat_vals[-1] - 2,
+            ]
+        )
         z = np.array(
-            [time_vals[0], time_vals[len(time_vals) // 2], time_vals[-1]])
+            [time_vals[0], time_vals[len(time_vals) // 2], time_vals[-1]]
+        )
         u = np.array(
-            [level_vals[0], level_vals[len(level_vals) // 2], level_vals[-1]])
+            [level_vals[0], level_vals[len(level_vals) // 2], level_vals[-1]]
+        )
 
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.any(np.isfinite(result))
 
     def test_grid_nearest_method(self) -> None:
@@ -546,7 +582,7 @@ class TestQuadrivariateGeometricTemporalAxis:
         config = geometric.Quadrivariate.nearest()
         result = core.quadrivariate(grid, x, y, z, u, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_grid_continuity(self) -> None:

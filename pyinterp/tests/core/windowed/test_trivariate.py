@@ -3,6 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """Unit tests for windowed trivariate interpolation."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -19,7 +20,7 @@ class TestTrivariateWindowed:
 
     @staticmethod
     def create_analytical_grid3d(
-        dtype: type[np.float32 | np.float64]
+        dtype: type[np.float32 | np.float64],
     ) -> core.Grid3DFloat64 | core.Grid3DFloat32:
         """
         Create a 3D grid with an analytical field.
@@ -36,19 +37,20 @@ class TestTrivariateWindowed:
         y_axis = core.Axis(y_vals)
         z_axis = core.Axis(z_vals)
 
-        x_grid, y_grid, z_grid = np.meshgrid(x_vals,
-                                             y_vals,
-                                             z_vals,
-                                             indexing='ij')
+        x_grid, y_grid, z_grid = np.meshgrid(
+            x_vals, y_vals, z_vals, indexing='ij'
+        )
 
         # Create analytical field: f(x, y, z) = sin(x) * cos(y) * exp(-z/10)
-        data = (np.sin(x_grid) * np.cos(y_grid) *
-                np.exp(-z_grid / 10)).astype(dtype)
+        data = (np.sin(x_grid) * np.cos(y_grid) * np.exp(-z_grid / 10)).astype(
+            dtype
+        )
         # Ensure C-contiguous for grid creation
         data = np.ascontiguousarray(data)
 
-        class_name = (core.Grid3DFloat32
-                      if dtype == np.float32 else core.Grid3DFloat64)
+        class_name = (
+            core.Grid3DFloat32 if dtype == np.float32 else core.Grid3DFloat64
+        )
         return class_name(x_axis, y_axis, z_axis, data)
 
     @staticmethod
@@ -90,7 +92,7 @@ class TestTrivariateWindowed:
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
         # Bilinear should have reasonable accuracy for smooth functions
         np.testing.assert_allclose(result[0], expected, rtol=0.05)
@@ -106,15 +108,17 @@ class TestTrivariateWindowed:
         z = np.array([0.0, 5.0, 10.0])
 
         # Calculate expected values using the analytical function
-        expected = np.array([
-            np.sin(x[i]) * np.cos(y[i]) * np.exp(-z[i] / 10)
-            for i in range(len(x))
-        ])
+        expected = np.array(
+            [
+                np.sin(x[i]) * np.cos(y[i]) * np.exp(-z[i] / 10)
+                for i in range(len(x))
+            ]
+        )
 
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
         # Validate against analytical values (windowed interpolation may have
         # slightly larger errors)
@@ -133,13 +137,15 @@ class TestTrivariateWindowed:
         # Linear interpolation along third axis
         config_linear = self.make_config(
             windowed.Trivariate.bilinear,
-            third_axis=windowed.AxisConfig.linear())
+            third_axis=windowed.AxisConfig.linear(),
+        )
         result_linear = core.trivariate(grid, x, y, z, config_linear)
 
         # Nearest neighbor along third axis
         config_nearest = self.make_config(
             windowed.Trivariate.bilinear,
-            third_axis=windowed.AxisConfig.nearest())
+            third_axis=windowed.AxisConfig.nearest(),
+        )
         result_nearest = core.trivariate(grid, x, y, z, config_nearest)
 
         # Results should be different when between grid points
@@ -169,13 +175,14 @@ class TestTrivariateWindowed:
         for name, method in methods.items():
             config = self.make_config(method)
             result = core.trivariate(grid, x, y, z, config)
-            assert np.isfinite(result[0]), f"Method {name} produced NaN"
+            assert np.isfinite(result[0]), f'Method {name} produced NaN'
             results[name] = result[0]
 
         # All should be reasonably close
         for name, value in results.items():
-            assert np.abs(value - expected) < 0.1, \
-                f"Method {name} error too large: {value} vs {expected}"
+            assert np.abs(value - expected) < 0.1, (
+                f'Method {name} error too large: {value} vs {expected}'
+            )
 
     def test_bounds_error(self) -> None:
         """Test bounds_error parameter with windowed."""
@@ -190,12 +197,13 @@ class TestTrivariateWindowed:
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
         # With bounds_error=True, should raise an error
-        config = self.make_config(
-            windowed.Trivariate.bilinear).bounds_error(True)
+        config = self.make_config(windowed.Trivariate.bilinear).bounds_error(
+            True
+        )
         with pytest.raises((ValueError, IndexError), match='out of bounds'):
             core.trivariate(grid, x, y, z, config)
 
@@ -210,19 +218,19 @@ class TestTrivariateWindowed:
         expected = np.sin(x[0]) * np.cos(y[0]) * np.exp(-z[0] / 10)
 
         # Test with small window
-        config_small = self.make_config(windowed.Trivariate.bilinear,
-                                        window_size_x=3,
-                                        window_size_y=3)
+        config_small = self.make_config(
+            windowed.Trivariate.bilinear, window_size_x=3, window_size_y=3
+        )
         result_small = core.trivariate(grid, x, y, z, config_small)
 
         # Test with larger window
-        config_large = self.make_config(windowed.Trivariate.bilinear,
-                                        window_size_x=7,
-                                        window_size_y=7)
+        config_large = self.make_config(
+            windowed.Trivariate.bilinear, window_size_x=7, window_size_y=7
+        )
         result_large = core.trivariate(grid, x, y, z, config_large)
 
-        assert result_small.shape == (1, )
-        assert result_large.shape == (1, )
+        assert result_small.shape == (1,)
+        assert result_large.shape == (1,)
         assert np.isfinite(result_small[0])
         assert np.isfinite(result_large[0])
 
@@ -253,10 +261,11 @@ class TestTrivariateWindowed:
 
         results = []
         for boundary in boundary_modes:
-            config = self.make_config(windowed.Trivariate.bilinear,
-                                      boundary=boundary)
+            config = self.make_config(
+                windowed.Trivariate.bilinear, boundary=boundary
+            )
             result = core.trivariate(grid, x, y, z, config)
-            assert result.shape == (1, )
+            assert result.shape == (1,)
             assert np.isfinite(result[0])
             results.append(result[0])
 
@@ -279,7 +288,7 @@ class TestTrivariateWindowed:
         result = core.trivariate(grid, x, y, z, config)
 
         # Should return NaN when interpolating over NaN values
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
     def test_single_point_grid(self) -> None:
@@ -293,10 +302,9 @@ class TestTrivariateWindowed:
         y_axis = core.Axis(y_vals)
         z_axis = core.Axis(z_vals)
 
-        x_grid, y_grid, z_grid = np.meshgrid(x_vals,
-                                             y_vals,
-                                             z_vals,
-                                             indexing='ij')
+        x_grid, y_grid, z_grid = np.meshgrid(
+            x_vals, y_vals, z_vals, indexing='ij'
+        )
         data = (x_grid + y_grid + z_grid).astype(np.float64)
         data = np.ascontiguousarray(data)
 
@@ -307,12 +315,12 @@ class TestTrivariateWindowed:
         y = np.array([1.0])
         z = np.array([0.5])
 
-        config = self.make_config(windowed.Trivariate.bilinear,
-                                  window_size_x=3,
-                                  window_size_y=3)
+        config = self.make_config(
+            windowed.Trivariate.bilinear, window_size_x=3, window_size_y=3
+        )
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_mixed_valid_invalid_points(self) -> None:
@@ -327,7 +335,7 @@ class TestTrivariateWindowed:
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         # First and third should be finite
         assert np.isfinite(result[0])
         assert np.isfinite(result[2])
@@ -347,16 +355,18 @@ class TestTrivariateWindowed:
         # Test points within bounds
         x = np.array([10.0, 20.0, 30.0])
         y = np.array([-10.0, 0.0, 10.0])
-        z = np.array([
-            grid_data.time.values[0].astype('float64'),
-            grid_data.time.values[1].astype('float64'),
-            grid_data.time.values[-1].astype('float64')
-        ])
+        z = np.array(
+            [
+                grid_data.time.values[0].astype('float64'),
+                grid_data.time.values[1].astype('float64'),
+                grid_data.time.values[-1].astype('float64'),
+            ]
+        )
 
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         # At least some values should be finite (not all NaNs)
         assert np.any(np.isfinite(result))
 
@@ -385,12 +395,14 @@ class TestTrivariateWindowed:
 
         # Test with 1 thread
         config_single = self.make_config(
-            windowed.Trivariate.bilinear).num_threads(1)
+            windowed.Trivariate.bilinear
+        ).num_threads(1)
         result_single = core.trivariate(grid, x, y, z, config_single)
 
         # Test with multiple threads
         config_multi = self.make_config(
-            windowed.Trivariate.bilinear).num_threads(4)
+            windowed.Trivariate.bilinear
+        ).num_threads(4)
         result_multi = core.trivariate(grid, x, y, z, config_multi)
 
         # Results should be identical or very close
@@ -416,8 +428,9 @@ class TestTrivariateWindowed:
         # For smooth analytical function, consecutive interpolations should be
         # close Windowed interpolation may have slightly larger steps due to
         # window changes
-        assert max_diff < 0.1, ('Interpolation not continuous, '
-                                f"max diff: {max_diff}")
+        assert max_diff < 0.1, (
+            f'Interpolation not continuous, max diff: {max_diff}'
+        )
         assert np.all(np.isfinite(results))
 
     def test_corner_point(self) -> None:
@@ -467,7 +480,8 @@ class TestTrivariateWindowed:
 
         # Compare with analytical values
         expected = np.array(
-            [analytical_func(x[i], y[i], z[i]) for i in range(len(x))])
+            [analytical_func(x[i], y[i], z[i]) for i in range(len(x))]
+        )
 
         # Bilinear should have reasonable accuracy (windowed has larger error
         # than regular)
@@ -475,7 +489,8 @@ class TestTrivariateWindowed:
             result_bilinear,
             expected,
             rtol=0.15,
-            err_msg='Bilinear interpolation accuracy too low')
+            err_msg='Bilinear interpolation accuracy too low',
+        )
 
         # Bicubic should be at least as accurate
         bicubic_errors = np.abs(result_bicubic - expected)
@@ -498,16 +513,20 @@ class TestTrivariateWindowed:
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (n_points, )
+        assert result.shape == (n_points,)
         # Most values should be finite
         assert np.sum(np.isfinite(result)) > n_points * 0.99
 
     def test_method_chaining(self) -> None:
         """Test that windowed methods can be chained."""
-        config = (windowed.Trivariate.bicubic().with_num_threads(
-            4).with_bounds_error(True).with_boundary_mode(
-                windowed.Boundary.WRAP).with_window_size_x(
-                    10).with_window_size_y(8))
+        config = (
+            windowed.Trivariate.bicubic()
+            .with_num_threads(4)
+            .with_bounds_error(True)
+            .with_boundary_mode(windowed.Boundary.WRAP)
+            .with_window_size_x(10)
+            .with_window_size_y(8)
+        )
 
         assert isinstance(config, windowed.Trivariate)
 
@@ -536,8 +555,8 @@ class TestTrivariateWindowed:
             config = self.make_config(getattr(windowed.Trivariate, method))
             result = core.trivariate(grid, x, y, z, config)
 
-            assert result.shape == (1, )
-            assert np.isfinite(result[0]), f"Method {method} produced NaN"
+            assert result.shape == (1,)
+            assert np.isfinite(result[0]), f'Method {method} produced NaN'
 
     def test_error_on_mismatched_array_sizes(self) -> None:
         """Test that mismatched input array sizes raise appropriate errors."""
@@ -573,7 +592,7 @@ class TestTrivariateWindowed:
 
     @staticmethod
     def create_analytical_temporal_grid3d(
-        dtype: type[np.float32 | np.float64]
+        dtype: type[np.float32 | np.float64],
     ) -> core.TemporalGrid3DFloat64 | core.TemporalGrid3DFloat32:
         """
         Create a 3D grid with temporal Z-axis and analytical field.
@@ -598,18 +617,21 @@ class TestTrivariateWindowed:
         # Normalize time for analytical function (0 to 9 days)
         time_normalized = np.arange(10)
 
-        x_grid, y_grid, t_grid = np.meshgrid(x_vals,
-                                             y_vals,
-                                             time_normalized,
-                                             indexing='ij')
+        x_grid, y_grid, t_grid = np.meshgrid(
+            x_vals, y_vals, time_normalized, indexing='ij'
+        )
 
         # Create analytical field: f(x, y, t) = sin(x) * cos(y) * exp(-t/10)
-        data = (np.sin(x_grid) * np.cos(y_grid) *
-                np.exp(-t_grid / 10)).astype(dtype)
+        data = (np.sin(x_grid) * np.cos(y_grid) * np.exp(-t_grid / 10)).astype(
+            dtype
+        )
         data = np.ascontiguousarray(data)
 
-        class_name = (core.TemporalGrid3DFloat32
-                      if dtype == np.float32 else core.TemporalGrid3DFloat64)
+        class_name = (
+            core.TemporalGrid3DFloat32
+            if dtype == np.float32
+            else core.TemporalGrid3DFloat64
+        )
         return class_name(x_axis, y_axis, z_axis, data)
 
     def test_temporal_grid_basic_interpolation(self) -> None:
@@ -624,7 +646,7 @@ class TestTrivariateWindowed:
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
         # Verify against expected value (day 2, normalized to t=2)
@@ -637,16 +659,18 @@ class TestTrivariateWindowed:
 
         x = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
         y = np.array([np.pi / 4, np.pi / 3, np.pi / 2])
-        z = np.array([
-            np.datetime64('2020-01-01'),
-            np.datetime64('2020-01-05'),
-            np.datetime64('2020-01-09')
-        ])
+        z = np.array(
+            [
+                np.datetime64('2020-01-01'),
+                np.datetime64('2020-01-05'),
+                np.datetime64('2020-01-09'),
+            ]
+        )
 
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
 
         # All values should be reasonable (between -1 and 1 due to sin/cos)
@@ -662,11 +686,13 @@ class TestTrivariateWindowed:
         z = np.array([np.datetime64('2020-01-03T12:00:00')])
 
         # Use linear interpolation on time axis
-        config = self.make_config(windowed.Trivariate.bilinear,
-                                  third_axis=windowed.AxisConfig.linear())
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            third_axis=windowed.AxisConfig.linear(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
         # Result should be between values at day 3 and day 4
@@ -675,20 +701,29 @@ class TestTrivariateWindowed:
 
         config_nearest = self.make_config(
             windowed.Trivariate.bilinear,
-            third_axis=windowed.AxisConfig.nearest())
+            third_axis=windowed.AxisConfig.nearest(),
+        )
         result_day3 = core.trivariate(grid, x, y, z_day3, config_nearest)
         result_day4 = core.trivariate(grid, x, y, z_day4, config_nearest)
 
         # Linear interpolation result should be between the two days
-        assert (min(result_day3[0], result_day4[0]) <= result[0] <= max(
-            result_day3[0], result_day4[0]))
+        assert (
+            min(result_day3[0], result_day4[0])
+            <= result[0]
+            <= max(result_day3[0], result_day4[0])
+        )
 
     def test_temporal_grid_all_methods(self) -> None:
         """Test all interpolation methods work with temporal grid."""
         grid = self.create_analytical_temporal_grid3d(np.float64)
 
         methods = [
-            'bilinear', 'bicubic', 'c_spline', 'linear', 'akima', 'steffen'
+            'bilinear',
+            'bicubic',
+            'c_spline',
+            'linear',
+            'akima',
+            'steffen',
         ]
 
         x = np.array([np.pi / 2])
@@ -699,5 +734,5 @@ class TestTrivariateWindowed:
             config = self.make_config(getattr(windowed.Trivariate, method))
             result = core.trivariate(grid, x, y, z, config)
 
-            assert result.shape == (1, )
-            assert np.isfinite(result[0]), f"Method {method} produced NaN"
+            assert result.shape == (1,)
+            assert np.isfinite(result[0]), f'Method {method} produced NaN'

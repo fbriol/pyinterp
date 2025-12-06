@@ -39,8 +39,7 @@ file(GLOB_RECURSE statistics_src
 add_testcase(statistics "${statistics_src}")
 
 # parallel_for
-add_testcase(parallel_for
-             "${CMAKE_CURRENT_SOURCE_DIR}/parallel_for.cpp")
+add_testcase(parallel_for "${CMAKE_CURRENT_SOURCE_DIR}/parallel_for.cpp")
 
 # # test_math file(GLOB_RECURSE math_src
 # "${CMAKE_CURRENT_SOURCE_DIR}/math/*.cpp") add_testcase(math "${math_src}"

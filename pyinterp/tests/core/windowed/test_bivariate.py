@@ -42,8 +42,9 @@ class TestBivariateWindowed:
         # Ensure C-contiguous for grid creation
         data = np.ascontiguousarray(data)
 
-        class_name = (core.Grid2DFloat32
-                      if dtype == np.float32 else core.Grid2DFloat64)
+        class_name = (
+            core.Grid2DFloat32 if dtype == np.float32 else core.Grid2DFloat64
+        )
         return class_name(x_axis, y_axis, data)
 
     @staticmethod
@@ -81,7 +82,7 @@ class TestBivariateWindowed:
         config = self.make_config(windowed.Bivariate.bilinear)
         result = core.bivariate(grid, x, y, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
         # Bilinear should have good accuracy for smooth functions
         np.testing.assert_allclose(result[0], expected, rtol=0.02)
@@ -97,12 +98,13 @@ class TestBivariateWindowed:
 
         # Calculate expected values using the analytical function
         expected = np.array(
-            [np.sin(x[i]) * np.cos(y[i]) for i in range(len(x))])
+            [np.sin(x[i]) * np.cos(y[i]) for i in range(len(x))]
+        )
 
         config = self.make_config(windowed.Bivariate.bilinear)
         result = core.bivariate(grid, x, y, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
         # Validate against analytical values
         np.testing.assert_allclose(result, expected, rtol=0.05)
@@ -142,7 +144,8 @@ class TestBivariateWindowed:
         # All should be reasonably close to expected
         for name, value in results.items():
             assert np.abs(value - expected) < 0.1, (
-                f'Method {name} error too large: {value} vs {expected}')
+                f'Method {name} error too large: {value} vs {expected}'
+            )
 
     def test_bounds_error(self) -> None:
         """Test bounds_error parameter with windowed."""
@@ -156,12 +159,13 @@ class TestBivariateWindowed:
         config = self.make_config(windowed.Bivariate.bilinear)
         result = core.bivariate(grid, x, y, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
         # With bounds_error=True, should raise an error
         config = self.make_config(
-            windowed.Bivariate.bilinear, ).bounds_error(True)
+            windowed.Bivariate.bilinear,
+        ).bounds_error(True)
         with pytest.raises((ValueError, IndexError), match='out of bounds'):
             core.bivariate(grid, x, y, config)
 
@@ -175,19 +179,19 @@ class TestBivariateWindowed:
         expected = np.sin(x[0]) * np.cos(y[0])
 
         # Test with small window
-        config_small = self.make_config(windowed.Bivariate.bilinear,
-                                        window_size_x=3,
-                                        window_size_y=3)
+        config_small = self.make_config(
+            windowed.Bivariate.bilinear, window_size_x=3, window_size_y=3
+        )
         result_small = core.bivariate(grid, x, y, config_small)
 
         # Test with larger window
-        config_large = self.make_config(windowed.Bivariate.bilinear,
-                                        window_size_x=9,
-                                        window_size_y=9)
+        config_large = self.make_config(
+            windowed.Bivariate.bilinear, window_size_x=9, window_size_y=9
+        )
         result_large = core.bivariate(grid, x, y, config_large)
 
-        assert result_small.shape == (1, )
-        assert result_large.shape == (1, )
+        assert result_small.shape == (1,)
+        assert result_large.shape == (1,)
         assert np.isfinite(result_small[0])
         assert np.isfinite(result_large[0])
 
@@ -212,10 +216,11 @@ class TestBivariateWindowed:
 
         results = []
         for boundary in boundary_modes:
-            config = self.make_config(windowed.Bivariate.bilinear,
-                                      boundary=boundary)
+            config = self.make_config(
+                windowed.Bivariate.bilinear, boundary=boundary
+            )
             result = core.bivariate(grid, x, y, config)
-            assert result.shape == (1, )
+            assert result.shape == (1,)
             assert np.isfinite(result[0])
             results.append(result[0])
 
@@ -237,7 +242,7 @@ class TestBivariateWindowed:
         result = core.bivariate(grid, x, y, config)
 
         # Should return NaN when interpolating over NaN values
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
     def test_mixed_valid_invalid_points(self) -> None:
@@ -251,7 +256,7 @@ class TestBivariateWindowed:
         config = self.make_config(windowed.Bivariate.bilinear)
         result = core.bivariate(grid, x, y, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         # First and third should be finite
         assert np.isfinite(result[0])
         assert np.isfinite(result[2])
@@ -270,21 +275,25 @@ class TestBivariateWindowed:
         # Test points within bounds - use actual grid bounds
         lon_vals = grid_data.lon.values
         lat_vals = grid_data.lat.values
-        x = np.array([
-            lon_vals[0] + 5,
-            (lon_vals[0] + lon_vals[-1]) / 2,
-            lon_vals[-1] - 5,
-        ])
-        y = np.array([
-            lat_vals[0] + 2,
-            (lat_vals[0] + lat_vals[-1]) / 2,
-            lat_vals[-1] - 2,
-        ])
+        x = np.array(
+            [
+                lon_vals[0] + 5,
+                (lon_vals[0] + lon_vals[-1]) / 2,
+                lon_vals[-1] - 5,
+            ]
+        )
+        y = np.array(
+            [
+                lat_vals[0] + 2,
+                (lat_vals[0] + lat_vals[-1]) / 2,
+                lat_vals[-1] - 2,
+            ]
+        )
 
         config = self.make_config(windowed.Bivariate.bilinear)
         result = core.bivariate(grid, x, y, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         # At least some values should be finite (not all NaNs)
         assert np.any(np.isfinite(result))
 
@@ -311,12 +320,14 @@ class TestBivariateWindowed:
 
         # Test with 1 thread
         config_single = self.make_config(
-            windowed.Bivariate.bilinear).num_threads(1)
+            windowed.Bivariate.bilinear
+        ).num_threads(1)
         result_single = core.bivariate(grid, x, y, config_single)
 
         # Test with multiple threads
         config_multi = self.make_config(
-            windowed.Bivariate.bilinear).num_threads(4)
+            windowed.Bivariate.bilinear
+        ).num_threads(4)
         result_multi = core.bivariate(grid, x, y, config_multi)
 
         # Results should be identical or very close
@@ -342,7 +353,8 @@ class TestBivariateWindowed:
         # close. Windowed interpolation may have slightly larger steps due to
         # window changes
         assert max_diff < 0.08, (
-            f'Interpolation not continuous, max diff: {max_diff}')
+            f'Interpolation not continuous, max diff: {max_diff}'
+        )
         assert np.all(np.isfinite(results))
 
     def test_analytical_accuracy(self) -> None:
@@ -368,7 +380,8 @@ class TestBivariateWindowed:
 
         # Compare with analytical values
         expected = np.array(
-            [analytical_func(x[i], y[i]) for i in range(len(x))])
+            [analytical_func(x[i], y[i]) for i in range(len(x))]
+        )
 
         # Bilinear should have good accuracy
         np.testing.assert_allclose(
@@ -386,8 +399,10 @@ class TestBivariateWindowed:
         # Compare mean errors on finite values only
         finite_mask = np.isfinite(result_bicubic)
         if np.any(finite_mask):
-            assert (np.mean(bicubic_errors[finite_mask])
-                    <= np.mean(bilinear_errors[finite_mask]) * 1.5)
+            assert (
+                np.mean(bicubic_errors[finite_mask])
+                <= np.mean(bilinear_errors[finite_mask]) * 1.5
+            )
 
     def test_large_array(self) -> None:
         """Test windowed bivariate interpolation with large arrays."""
@@ -402,16 +417,20 @@ class TestBivariateWindowed:
         config = self.make_config(windowed.Bivariate.bilinear)
         result = core.bivariate(grid, x, y, config)
 
-        assert result.shape == (n_points, )
+        assert result.shape == (n_points,)
         # Most values should be finite
         assert np.sum(np.isfinite(result)) > n_points * 0.99
 
     def test_method_chaining(self) -> None:
         """Test that windowed methods can be chained."""
-        config = (windowed.Bivariate.bicubic().with_num_threads(
-            4).with_bounds_error(True).with_boundary_mode(
-                windowed.Boundary.WRAP).with_window_size_x(
-                    10).with_window_size_y(8))
+        config = (
+            windowed.Bivariate.bicubic()
+            .with_num_threads(4)
+            .with_bounds_error(True)
+            .with_boundary_mode(windowed.Boundary.WRAP)
+            .with_window_size_x(10)
+            .with_window_size_y(8)
+        )
 
         assert isinstance(config, windowed.Bivariate)
 
@@ -456,7 +475,7 @@ class TestBivariateWindowed:
         config = self.make_config(windowed.Bivariate.bilinear)
         result = core.bivariate(grid, x, y, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_grid_edge_interpolation(self) -> None:
@@ -471,14 +490,15 @@ class TestBivariateWindowed:
         y_edge = np.array([y_axis_vals[4], y_axis_vals[-5]])
 
         for boundary in [
-                windowed.Boundary.EXPAND,
-                windowed.Boundary.SYM,
-                windowed.Boundary.WRAP,
+            windowed.Boundary.EXPAND,
+            windowed.Boundary.SYM,
+            windowed.Boundary.WRAP,
         ]:
-            config = self.make_config(windowed.Bivariate.bilinear,
-                                      boundary=boundary)
+            config = self.make_config(
+                windowed.Bivariate.bilinear, boundary=boundary
+            )
             result = core.bivariate(grid, x_edge, y_edge, config)
 
-            assert result.shape == (2, )
+            assert result.shape == (2,)
             # At least most values should be finite
             assert np.sum(np.isfinite(result)) >= 1

@@ -1,4 +1,3 @@
-
 class Bivariate:
     @classmethod
     def bilinear(cls) -> Bivariate: ...

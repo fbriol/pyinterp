@@ -18,9 +18,9 @@ def _get_suffix(dtype: DType) -> str:
     suffix_map: dict[DType, str] = {
         np.int8: 'Int8',
         np.float32: 'Float32',
-        np.float64: 'Float64'
+        np.float64: 'Float64',
     }
-    return suffix_map.get(dtype, f"Unsupported dtype: {dtype}")
+    return suffix_map.get(dtype, f'Unsupported dtype: {dtype}')
 
 
 @pytest.mark.parametrize(
@@ -38,11 +38,10 @@ def test_grid2d_load(dtype: DType) -> None:
     y_axis = core.Axis(grid.lat.values)
     matrix = np.ascontiguousarray(grid.mss.values.transpose())
     if np.issubdtype(dtype, np.integer):
-        matrix[np.isnan(matrix)] = np.iinfo(
-            dtype).min  # type: ignore[type-var]
+        matrix[np.isnan(matrix)] = np.iinfo(dtype).min  # type: ignore[type-var]
     matrix = matrix.astype(dtype)
 
-    grid = getattr(core, f"Grid2D{_get_suffix(dtype)}")(x_axis, y_axis, matrix)
+    grid = getattr(core, f'Grid2D{_get_suffix(dtype)}')(x_axis, y_axis, matrix)
     assert len(grid.x) == matrix.shape[0]
     assert len(grid.y) == matrix.shape[1]
     assert np.shares_memory(grid.array, matrix)
@@ -64,16 +63,19 @@ def test_grid3d_load(dtype: DType, temporal_axis: bool) -> None:
     grid = load_grid3d()
     x_axis = core.Axis(grid.longitude.values, period=360.0)
     y_axis = core.Axis(grid.latitude.values)
-    z_axis = (core.TemporalAxis(grid.time.values) if temporal_axis else
-              core.Axis(grid.time.values.astype('float64')))
+    z_axis = (
+        core.TemporalAxis(grid.time.values)
+        if temporal_axis
+        else core.Axis(grid.time.values.astype('float64'))
+    )
     matrix = np.ascontiguousarray(grid.tcw.values.transpose())
     if np.issubdtype(dtype, np.integer):
-        matrix[np.isnan(matrix)] = np.iinfo(
-            dtype).min  # type: ignore[type-var]
+        matrix[np.isnan(matrix)] = np.iinfo(dtype).min  # type: ignore[type-var]
     matrix = matrix.astype(dtype)
     class_name = 'TemporalGrid3D' if temporal_axis else 'Grid3D'
-    grid = getattr(core, f"{class_name}{_get_suffix(dtype)}")(x_axis, y_axis,
-                                                              z_axis, matrix)
+    grid = getattr(core, f'{class_name}{_get_suffix(dtype)}')(
+        x_axis, y_axis, z_axis, matrix
+    )
     assert len(grid.x) == matrix.shape[0]
     assert len(grid.y) == matrix.shape[1]
     assert len(grid.z) == matrix.shape[2]
@@ -96,18 +98,20 @@ def test_grid4d_load(dtype: DType, temporal_axis: bool) -> None:
     grid = load_grid4d()
     x_axis = core.Axis(grid.longitude.values, period=360.0)
     y_axis = core.Axis(grid.latitude.values)
-    z_axis = (core.TemporalAxis(grid.time.values) if temporal_axis else
-              core.Axis(grid.time.values.astype('float64')))
+    z_axis = (
+        core.TemporalAxis(grid.time.values)
+        if temporal_axis
+        else core.Axis(grid.time.values.astype('float64'))
+    )
     u_axis = core.Axis(grid.level.values)
     matrix = np.ascontiguousarray(grid.temperature.values.transpose())
     if np.issubdtype(dtype, np.integer):
-        matrix[np.isnan(matrix)] = np.iinfo(
-            dtype).min  # type: ignore[type-var]
+        matrix[np.isnan(matrix)] = np.iinfo(dtype).min  # type: ignore[type-var]
     matrix = matrix.astype(dtype)
     class_name = 'TemporalGrid4D' if temporal_axis else 'Grid4D'
-    grid = getattr(core,
-                   f"{class_name}{_get_suffix(dtype)}")(x_axis, y_axis, z_axis,
-                                                        u_axis, matrix)
+    grid = getattr(core, f'{class_name}{_get_suffix(dtype)}')(
+        x_axis, y_axis, z_axis, u_axis, matrix
+    )
     assert len(grid.x) == matrix.shape[0]
     assert len(grid.y) == matrix.shape[1]
     assert len(grid.z) == matrix.shape[2]

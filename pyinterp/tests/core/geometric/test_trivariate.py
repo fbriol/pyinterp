@@ -3,6 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """Unit tests for trivariate interpolation."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -19,7 +20,7 @@ class TestTrivariateGeometric:
 
     @staticmethod
     def create_analytical_grid3d(
-        dtype: type[np.float32] | type[np.float64]
+        dtype: type[np.float32 | np.float64],
     ) -> core.Grid3DFloat64 | core.Grid3DFloat32:
         """
         Create a 3D grid with an analytical field.
@@ -36,19 +37,20 @@ class TestTrivariateGeometric:
         y_axis = core.Axis(y_vals)
         z_axis = core.Axis(z_vals)
 
-        x_grid, y_grid, z_grid = np.meshgrid(x_vals,
-                                             y_vals,
-                                             z_vals,
-                                             indexing='ij')
+        x_grid, y_grid, z_grid = np.meshgrid(
+            x_vals, y_vals, z_vals, indexing='ij'
+        )
 
         # Create analytical field: f(x, y, z) = sin(x) * cos(y) * exp(-z/10)
-        data = (np.sin(x_grid) * np.cos(y_grid) *
-                np.exp(-z_grid / 10)).astype(dtype)
+        data = (np.sin(x_grid) * np.cos(y_grid) * np.exp(-z_grid / 10)).astype(
+            dtype
+        )
         # Ensure C-contiguous for grid creation
         data = np.ascontiguousarray(data)
 
-        class_name = (core.Grid3DFloat32
-                      if dtype == np.float32 else core.Grid3DFloat64)
+        class_name = (
+            core.Grid3DFloat32 if dtype == np.float32 else core.Grid3DFloat64
+        )
         return class_name(x_axis, y_axis, z_axis, data)
 
     def test_single_point_bilinear(self) -> None:
@@ -64,7 +66,7 @@ class TestTrivariateGeometric:
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         # Should be close to 0 (within interpolation error)
         assert np.abs(result[0]) < 0.01
 
@@ -80,7 +82,7 @@ class TestTrivariateGeometric:
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
 
     def test_nearest_method(self) -> None:
@@ -95,7 +97,7 @@ class TestTrivariateGeometric:
         config = geometric.Trivariate.nearest()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         # At (0,0,0): sin(0) * cos(0) * exp(0) = 0 * 1 * 1 = 0
         assert np.isfinite(result[0])
 
@@ -110,7 +112,7 @@ class TestTrivariateGeometric:
         config = geometric.Trivariate.idw()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_bounds_error(self) -> None:
@@ -131,7 +133,7 @@ class TestTrivariateGeometric:
         with pytest.raises(ValueError, match='out of bounds'):
             core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isnan(result[0])
 
     def test_with_real_data(self) -> None:
@@ -147,16 +149,18 @@ class TestTrivariateGeometric:
         # Test points within bounds
         x = np.array([10.0, 20.0, 30.0])
         y = np.array([-10.0, 0.0, 10.0])
-        z = np.array([
-            grid_data.time.values[0].astype('float64'),
-            grid_data.time.values[1].astype('float64'),
-            grid_data.time.values[-1].astype('float64')
-        ])
+        z = np.array(
+            [
+                grid_data.time.values[0].astype('float64'),
+                grid_data.time.values[1].astype('float64'),
+                grid_data.time.values[-1].astype('float64'),
+            ]
+        )
 
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         # At least some values should be finite (not all NaNs)
         assert np.any(np.isfinite(result))
 
@@ -252,7 +256,8 @@ class TestTrivariateGeometric:
 
         # Compare with analytical values
         expected = np.array(
-            [analytical_func(x[i], y[i], z[i]) for i in range(len(x))])
+            [analytical_func(x[i], y[i], z[i]) for i in range(len(x))]
+        )
 
         # Allow some tolerance for interpolation error
         np.testing.assert_allclose(result, expected, rtol=0.05)
@@ -270,7 +275,7 @@ class TestTrivariateGeometric:
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (n_points, )
+        assert result.shape == (n_points,)
         # Most values should be finite
         assert np.sum(np.isfinite(result)) > n_points * 0.99
 
@@ -280,7 +285,7 @@ class TestTrivariateGeometricTemporalAxis:
 
     @staticmethod
     def create_analytical_temporal_grid3d(
-        dtype: type[np.float32] | type[np.float64]
+        dtype: type[np.float32 | np.float64],
     ) -> core.TemporalGrid3DFloat64 | core.TemporalGrid3DFloat32:
         """
         Create a 3D grid with temporal Z-axis and analytical field.
@@ -305,18 +310,21 @@ class TestTrivariateGeometricTemporalAxis:
         # Normalize time for analytical function (0 to 7 days)
         time_normalized = np.arange(8)
 
-        x_grid, y_grid, t_grid = np.meshgrid(x_vals,
-                                             y_vals,
-                                             time_normalized,
-                                             indexing='ij')
+        x_grid, y_grid, t_grid = np.meshgrid(
+            x_vals, y_vals, time_normalized, indexing='ij'
+        )
 
         # Create analytical field: f(x, y, t) = sin(x) * cos(y) * exp(-t/10)
-        data = (np.sin(x_grid) * np.cos(y_grid) *
-                np.exp(-t_grid / 10)).astype(dtype)
+        data = (np.sin(x_grid) * np.cos(y_grid) * np.exp(-t_grid / 10)).astype(
+            dtype
+        )
         data = np.ascontiguousarray(data)
 
-        class_name = (core.TemporalGrid3DFloat32
-                      if dtype == np.float32 else core.TemporalGrid3DFloat64)
+        class_name = (
+            core.TemporalGrid3DFloat32
+            if dtype == np.float32
+            else core.TemporalGrid3DFloat64
+        )
         return class_name(x_axis, y_axis, z_axis, data)
 
     def test_temporal_grid_basic_interpolation(self) -> None:
@@ -331,7 +339,7 @@ class TestTrivariateGeometricTemporalAxis:
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_temporal_grid_multiple_times(self) -> None:
@@ -340,16 +348,18 @@ class TestTrivariateGeometricTemporalAxis:
 
         x = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
         y = np.array([np.pi / 6, np.pi / 3, np.pi / 2])
-        z = np.array([
-            np.datetime64('2020-01-01'),
-            np.datetime64('2020-01-04'),
-            np.datetime64('2020-01-08')
-        ])
+        z = np.array(
+            [
+                np.datetime64('2020-01-01'),
+                np.datetime64('2020-01-04'),
+                np.datetime64('2020-01-08'),
+            ]
+        )
 
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.all(np.isfinite(result))
 
     def test_temporal_grid_with_real_data(self) -> None:
@@ -367,19 +377,28 @@ class TestTrivariateGeometricTemporalAxis:
         lat_vals = grid_data.latitude.values
         time_vals = grid_data.time.values
 
-        x = np.array([
-            lon_vals[0] + 5, (lon_vals[0] + lon_vals[-1]) / 2, lon_vals[-1] - 5
-        ])
-        y = np.array([
-            lat_vals[0] + 2, (lat_vals[0] + lat_vals[-1]) / 2, lat_vals[-1] - 2
-        ])
+        x = np.array(
+            [
+                lon_vals[0] + 5,
+                (lon_vals[0] + lon_vals[-1]) / 2,
+                lon_vals[-1] - 5,
+            ]
+        )
+        y = np.array(
+            [
+                lat_vals[0] + 2,
+                (lat_vals[0] + lat_vals[-1]) / 2,
+                lat_vals[-1] - 2,
+            ]
+        )
         z = np.array(
-            [time_vals[0], time_vals[len(time_vals) // 2], time_vals[-1]])
+            [time_vals[0], time_vals[len(time_vals) // 2], time_vals[-1]]
+        )
 
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (3, )
+        assert result.shape == (3,)
         assert np.any(np.isfinite(result))
 
     def test_temporal_grid_nearest_method(self) -> None:
@@ -393,7 +412,7 @@ class TestTrivariateGeometricTemporalAxis:
         config = geometric.Trivariate.nearest()
         result = core.trivariate(grid, x, y, z, config)
 
-        assert result.shape == (1, )
+        assert result.shape == (1,)
         assert np.isfinite(result[0])
 
     def test_temporal_grid_continuity(self) -> None:
