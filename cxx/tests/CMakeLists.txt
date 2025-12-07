@@ -44,3 +44,7 @@ add_testcase(parallel_for "${CMAKE_CURRENT_SOURCE_DIR}/parallel_for.cpp")
 # geometry
 file(GLOB_RECURSE geometry_src "${CMAKE_CURRENT_SOURCE_DIR}/geometry/*.cpp")
 add_testcase(geometry "${geometry_src}" BLAS::BLAS)
+
+# geodetic
+file(GLOB_RECURSE geodetic_src "${CMAKE_CURRENT_SOURCE_DIR}/geodetic/*.cpp")
+add_testcase(geodetic "${geodetic_src}")
