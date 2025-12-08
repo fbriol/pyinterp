@@ -86,25 +86,38 @@ using SpatialMethod = std::variant<Spline, Bicubic>;
 }
 
 /// @brief Configuration for 2D spatial interpolation.
-struct Spatial {
-  /// @brief Interpolation method
-  SpatialMethod method{Bicubic::kBicubic};
-
-  /// @brief Boundary mode
-  BoundaryMode boundary_mode{BoundaryMode::kUndef};
-
-  /// Window size in x direction
-  int window_size_x{3};
-
-  /// Window size in y direction
-  int window_size_y{3};
-
+class Spatial {
+ public:
   /// @brief Default constructor
   constexpr Spatial() = default;
 
   /// @brief Constructor with an explicit interpolation method
   /// @param[in] method Interpolation method to use
-  constexpr explicit Spatial(SpatialMethod method) : method(method) {}
+  constexpr explicit Spatial(SpatialMethod method) : method_(method) {}
+
+  /// @brief Get the interpolation method.
+  /// @return Interpolation method
+  [[nodiscard]] constexpr auto method() const -> const SpatialMethod& {
+    return method_;
+  }
+
+  /// @brief Get the boundary mode.
+  /// @return Boundary mode
+  [[nodiscard]] constexpr auto boundary_mode() const -> BoundaryMode {
+    return boundary_mode_;
+  }
+
+  /// @brief Get the window size in x direction.
+  /// @return Window size in x direction
+  [[nodiscard]] constexpr auto window_size_x() const -> int {
+    return window_size_x_;
+  }
+
+  /// @brief Get the window size in y direction.
+  /// @return Window size in y direction
+  [[nodiscard]] constexpr auto window_size_y() const -> int {
+    return window_size_y_;
+  }
 
   /// @brief Create the interpolator instance.
   /// @tparam T Data type handled by the interpolator.
@@ -112,10 +125,10 @@ struct Spatial {
   template <typename T>
   [[nodiscard]] auto factory() const
       -> std::unique_ptr<math::interpolate::BivariateBase<T>> {
-    if (std::holds_alternative<Bicubic>(method)) {
-      return math::interpolate::factory<T>(std::get<Bicubic>(method));
+    if (std::holds_alternative<Bicubic>(method_)) {
+      return math::interpolate::factory<T>(std::get<Bicubic>(method_));
     }
-    return math::interpolate::factory<T>(std::get<Spline>(method));
+    return math::interpolate::factory<T>(std::get<Spline>(method_));
   }
 
   /// @brief Create a configuration for bilinear interpolation.
@@ -183,7 +196,7 @@ struct Spatial {
   [[nodiscard]] constexpr auto with_boundary_mode(BoundaryMode mode) const
       -> Spatial {
     auto copy = *this;
-    copy.boundary_mode = mode;
+    copy.boundary_mode_ = mode;
     return copy;
   }
 
@@ -192,7 +205,7 @@ struct Spatial {
   /// @return Updated `Spatial` instance with the new window size.
   [[nodiscard]] constexpr auto with_window_size_x(int size) const -> Spatial {
     auto copy = *this;
-    copy.window_size_x = size;
+    copy.window_size_x_ = size;
     return copy;
   }
 
@@ -201,15 +214,28 @@ struct Spatial {
   /// @return Updated `Spatial` instance with the new window size.
   [[nodiscard]] constexpr auto with_window_size_y(int size) const -> Spatial {
     auto copy = *this;
-    copy.window_size_y = size;
+    copy.window_size_y_ = size;
     return copy;
   }
+
+ private:
+  /// Interpolation method
+  SpatialMethod method_{Bicubic::kBicubic};
+
+  /// Boundary mode
+  BoundaryMode boundary_mode_{BoundaryMode::kUndef};
+
+  /// Window size in x direction
+  int window_size_x_{3};
+
+  /// Window size in y direction
+  int window_size_y_{3};
 };
 
 // Forward declarations
-struct Bivariate;
-struct Trivariate;
-struct Quadrivariate;
+class Bivariate;
+class Trivariate;
+class Quadrivariate;
 
 }  // namespace windowed
 
@@ -240,7 +266,8 @@ namespace windowed {
 /// configurations using the Curiously Recurring Template Pattern (CRTP).
 /// @tparam Derived The derived configuration class.
 template <typename Derived>
-struct WindowBase : public Base<Spatial, Derived> {
+class WindowBase : public Base<Spatial, Derived> {
+ public:
   /// @brief Create a configuration for akima spline interpolation
   /// @return Configuration with akima spline interpolation method
   [[nodiscard]] static constexpr auto akima() -> Derived {
@@ -325,13 +352,14 @@ struct WindowBase : public Base<Spatial, Derived> {
 /// configurations.
 /// @tparam Derived The derived configuration class.
 template <typename Derived>
-struct WindowSpatialModifiers {
+class WindowSpatialModifiers {
+ public:
   /// @brief Update window size in the x direction on the derived config.
   /// @param[in] size New window size in x direction.
   /// @return Updated derived configuration instance.
   [[nodiscard]] constexpr auto with_window_size_x(int size) const -> Derived {
     Derived result = static_cast<const Derived&>(*this);
-    result.spatial = result.spatial.with_window_size_x(size);
+    result.set_spatial(result.spatial().with_window_size_x(size));
     return result;
   }
 
@@ -340,7 +368,7 @@ struct WindowSpatialModifiers {
   /// @return Updated derived configuration instance.
   [[nodiscard]] constexpr auto with_window_size_y(int size) const -> Derived {
     Derived result = static_cast<const Derived&>(*this);
-    result.spatial = result.spatial.with_window_size_y(size);
+    result.set_spatial(result.spatial().with_window_size_y(size));
     return result;
   }
 
@@ -350,16 +378,15 @@ struct WindowSpatialModifiers {
   [[nodiscard]] constexpr auto with_boundary_mode(BoundaryMode mode) const
       -> Derived {
     Derived result = static_cast<const Derived&>(*this);
-    result.spatial = result.spatial.with_boundary_mode(mode);
+    result.set_spatial(result.spatial().with_boundary_mode(mode));
     return result;
   }
 };
 
 /// @brief Window interpolation configuration (2D only)
-struct Bivariate : WindowBase<Bivariate>, WindowSpatialModifiers<Bivariate> {
-  Spatial spatial;  /// Spatial interpolation configuration
-  Common common;    /// Common interpolation configuration
-
+class Bivariate : public WindowBase<Bivariate>,
+                  public WindowSpatialModifiers<Bivariate> {
+ public:
   /// @brief Default constructor
   constexpr Bivariate() = default;
 
@@ -368,15 +395,37 @@ struct Bivariate : WindowBase<Bivariate>, WindowSpatialModifiers<Bivariate> {
   /// @param[in] common Common interpolation configuration
   constexpr explicit Bivariate(const Spatial& spatial,
                                const Common& common = {})
-      : spatial(spatial), common(common) {}
+      : spatial_(spatial), common_(common) {}
+
+  /// @brief Get the spatial interpolation configuration.
+  /// @return Spatial interpolation configuration
+  [[nodiscard]] constexpr auto spatial() const -> const Spatial& {
+    return spatial_;
+  }
+
+  /// @brief Get the common interpolation configuration.
+  /// @return Common interpolation configuration
+  [[nodiscard]] constexpr auto common() const -> const Common& {
+    return common_;
+  }
+
+  /// @brief Set the spatial interpolation configuration (for internal use).
+  constexpr void set_spatial(const Spatial& spatial) { spatial_ = spatial; }
+
+  // Allow Base class to access members
+  friend class Base<Spatial, Bivariate>;
+
+ private:
+  /// Spatial interpolation configuration
+  Spatial spatial_;
+  /// Common interpolation configuration
+  Common common_;
 };
 
 /// @brief Windows interpolation configuration (3D only)
-struct Trivariate : WindowBase<Trivariate>, WindowSpatialModifiers<Trivariate> {
-  Spatial spatial;        /// Spatial interpolation configuration
-  AxisConfig third_axis;  /// Third axis interpolation configuration
-  Common common;          /// Common interpolation configuration
-
+class Trivariate : public WindowBase<Trivariate>,
+                   public WindowSpatialModifiers<Trivariate> {
+ public:
   /// @brief Default constructor
   constexpr Trivariate() = default;
 
@@ -386,7 +435,28 @@ struct Trivariate : WindowBase<Trivariate>, WindowSpatialModifiers<Trivariate> {
   /// @param[in] common Common interpolation configuration
   constexpr Trivariate(const Spatial& spatial, const AxisConfig& third_axis,
                        const Common& common = {})
-      : spatial(spatial), third_axis(third_axis), common(common) {}
+      : spatial_(spatial), third_axis_(third_axis), common_(common) {}
+
+  /// @brief Get the spatial interpolation configuration.
+  /// @return Spatial interpolation configuration
+  [[nodiscard]] constexpr auto spatial() const -> const Spatial& {
+    return spatial_;
+  }
+
+  /// @brief Get the third axis interpolation configuration.
+  /// @return Third axis interpolation configuration
+  [[nodiscard]] constexpr auto third_axis() const -> const AxisConfig& {
+    return third_axis_;
+  }
+
+  /// @brief Get the common interpolation configuration.
+  /// @return Common interpolation configuration
+  [[nodiscard]] constexpr auto common() const -> const Common& {
+    return common_;
+  }
+
+  /// @brief Set the spatial interpolation configuration (for internal use).
+  constexpr void set_spatial(const Spatial& spatial) { spatial_ = spatial; }
 
   /// @brief Update third axis configuration
   /// @param[in] config New third axis configuration
@@ -394,19 +464,26 @@ struct Trivariate : WindowBase<Trivariate>, WindowSpatialModifiers<Trivariate> {
   [[nodiscard]] constexpr auto with_third_axis(const AxisConfig& config) const
       -> Trivariate {
     auto copy = *this;
-    copy.third_axis = config;
+    copy.third_axis_ = config;
     return copy;
   }
+
+  // Allow Base class to access members
+  friend class Base<Spatial, Trivariate>;
+
+ private:
+  /// Spatial interpolation configuration
+  Spatial spatial_;
+  /// Third axis interpolation configuration
+  AxisConfig third_axis_;
+  /// Common interpolation configuration
+  Common common_;
 };
 
 /// @brief Windows interpolation configuration (4D only)
-struct Quadrivariate : WindowBase<Quadrivariate>,
-                       WindowSpatialModifiers<Quadrivariate> {
-  Spatial spatial;         /// Spatial interpolation configuration
-  AxisConfig third_axis;   /// Third axis interpolation configuration
-  AxisConfig fourth_axis;  /// Fourth axis interpolation configuration
-  Common common;           /// Common interpolation configuration
-
+class Quadrivariate : public WindowBase<Quadrivariate>,
+                      public WindowSpatialModifiers<Quadrivariate> {
+ public:
   /// @brief Default constructor
   constexpr Quadrivariate() = default;
 
@@ -419,10 +496,37 @@ struct Quadrivariate : WindowBase<Quadrivariate>,
   constexpr Quadrivariate(const Spatial& spatial, const AxisConfig& third_axis,
                           const AxisConfig& fourth_axis,
                           const Common& common = {})
-      : spatial(spatial),
-        third_axis(third_axis),
-        fourth_axis(fourth_axis),
-        common(common) {}
+      : spatial_(spatial),
+        third_axis_(third_axis),
+        fourth_axis_(fourth_axis),
+        common_(common) {}
+
+  /// @brief Get the spatial interpolation configuration.
+  /// @return Spatial interpolation configuration
+  [[nodiscard]] constexpr auto spatial() const -> const Spatial& {
+    return spatial_;
+  }
+
+  /// @brief Get the third axis interpolation configuration.
+  /// @return Third axis interpolation configuration
+  [[nodiscard]] constexpr auto third_axis() const -> const AxisConfig& {
+    return third_axis_;
+  }
+
+  /// @brief Get the fourth axis interpolation configuration.
+  /// @return Fourth axis interpolation configuration
+  [[nodiscard]] constexpr auto fourth_axis() const -> const AxisConfig& {
+    return fourth_axis_;
+  }
+
+  /// @brief Get the common interpolation configuration.
+  /// @return Common interpolation configuration
+  [[nodiscard]] constexpr auto common() const -> const Common& {
+    return common_;
+  }
+
+  /// @brief Set the spatial interpolation configuration (for internal use).
+  constexpr void set_spatial(const Spatial& spatial) { spatial_ = spatial; }
 
   /// @brief Update third axis configuration
   /// @param[in] config New third axis configuration
@@ -430,7 +534,7 @@ struct Quadrivariate : WindowBase<Quadrivariate>,
   [[nodiscard]] constexpr auto with_third_axis(const AxisConfig& config) const
       -> Quadrivariate {
     auto copy = *this;
-    copy.third_axis = config;
+    copy.third_axis_ = config;
     return copy;
   }
 
@@ -440,9 +544,22 @@ struct Quadrivariate : WindowBase<Quadrivariate>,
   [[nodiscard]] constexpr auto with_fourth_axis(const AxisConfig& config) const
       -> Quadrivariate {
     auto copy = *this;
-    copy.fourth_axis = config;
+    copy.fourth_axis_ = config;
     return copy;
   }
+
+  // Allow Base class to access members
+  friend class Base<Spatial, Quadrivariate>;
+
+ private:
+  /// Spatial interpolation configuration
+  Spatial spatial_;
+  /// Third axis interpolation configuration
+  AxisConfig third_axis_;
+  /// Fourth axis interpolation configuration
+  AxisConfig fourth_axis_;
+  /// Common interpolation configuration
+  Common common_;
 };
 
 }  // namespace windowed

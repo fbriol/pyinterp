@@ -229,7 +229,7 @@ template <std::floating_point T>
 /// the interval: all that is left is the part where they overlap, the "view
 /// through the window"
 template <std::floating_point T>
-class WindowFunction {
+class InterpolationWindow {
  public:
   /// Pointer to window function
   using WindowFunctionPtr = T (*)(T, T, T) noexcept;
@@ -238,7 +238,7 @@ class WindowFunction {
   /// @param[in] wf The window function type to use
   /// @param[in] arg Optional argument for the window function. Defaults to 0.
   /// Its meaning depends on the window function selected.
-  explicit WindowFunction(const window::Function wf, const T arg = T{0})
+  explicit InterpolationWindow(const window::Function wf, const T arg = T{0})
       : arg_(arg) {
     switch (wf) {
       case window::Function::kBlackman:

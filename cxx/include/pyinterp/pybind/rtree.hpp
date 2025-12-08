@@ -458,14 +458,14 @@ auto RTree3D<T>::kriging(
   auto resolved_radius = radius.has_value()
                              ? radius.value()
                              : std::numeric_limits<coordinate_t>::max();
-    auto model = math::interpolate::Kriging<promotion_t>(
-        sigma, lambda, nugget, covariance_model, drift_function);
+  auto model = math::interpolate::Kriging<promotion_t>(
+      sigma, lambda, nugget, covariance_model, drift_function);
   return batch_interpolate(
-        coordinates, num_threads,
-        [this, &model, &resolved_radius, k,
-         check](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-          return base_t::kriging(pt, resolved_radius, k, check, model);
-        });
+      coordinates, num_threads,
+      [this, &model, &resolved_radius, k,
+       check](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+        return base_t::kriging(pt, resolved_radius, k, check, model);
+      });
 }
 
 // //////////////////////////////////////////////////////////////////////////
@@ -505,7 +505,7 @@ auto RTree3D<T>::window_function(
   auto resolved_arg = arg.has_value() ? arg.value() : 0.0;
   auto resolved_radius =
       radius.has_value() ? radius.value() : std::numeric_limits<T>::max();
-  auto model = math::interpolate::WindowFunction<coordinate_t>(wf);
+  auto model = math::interpolate::InterpolationWindow<coordinate_t>(wf);
   return batch_interpolate(
       coordinates, num_threads,
       [this, &model, &resolved_radius, resolved_arg, k,

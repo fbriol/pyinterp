@@ -121,7 +121,7 @@ template <template <class> class Point, typename DataType, typename ResultType>
   // Create interpolator once (outside parallel region)
   auto interpolator =
       math::interpolate::geometric::make_interpolator<Point, ResultType>(
-          config.spatial.method, config.spatial.exponent);
+          config.spatial().method(), config.spatial().exponent());
   const auto* interpolator_ptr = interpolator.get();
 
   Vector<ResultType> result(x.size());
@@ -134,14 +134,14 @@ template <template <class> class Point, typename DataType, typename ResultType>
           auto interpolated_value =
               detail::bivariate_single<Point, DataType, ResultType>(
                   grid, x[ix], y[ix], interpolator_ptr,
-                  config.common.bounds_error);
+                  config.common().bounds_error());
 
           if (interpolated_value.has_value()) {
             result[ix] = *interpolated_value.value;
           }
         }
       },
-      config.common.num_threads);
+      config.common().num_threads());
 
   return result;
 }

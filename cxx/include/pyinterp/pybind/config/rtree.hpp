@@ -6,51 +6,39 @@
 #include <string>
 #include <string_view>
 
+#include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
 #include "pyinterp/pybind/config/common.hpp"
 
-namespace pyinterp::pybind::config {
-namespace rtree {
+namespace pyinterp::pybind::config::rtree {
 
-/// Configuration for inverse distance weighting interpolation
-struct InverseDistanceWeighting : Common {
-  /// Number of neighbors to consider
-  uint32_t k{8};
+/// @brief Base class for RTree interpolation configurations using CRTP.
+/// @tparam Derived The derived configuration class.
+/// @details Provides common functionality for all RTree-based interpolation
+/// methods, including neighbor count (k), search radius, and thread settings.
+template <typename Derived>
+class RTreeBase : public ThreadConfig {
+ public:
+  /// @brief Default constructor
+  constexpr RTreeBase() = default;
 
-  /// Power parameter (exponent)
-  uint32_t p{2};
+  /// @brief Get the number of neighbors.
+  /// @return Number of neighbors to consider
+  [[nodiscard]] constexpr auto k() const -> uint32_t { return k_; }
 
-  /// Optional search radius in meters (nullopt = unlimited)
-  std::optional<double> radius;
-
-  /// Default constructor
-  constexpr InverseDistanceWeighting() = default;
-
-  /// Constructor with k parameter
-  constexpr explicit InverseDistanceWeighting(uint32_t k) : k(k) {}
-
-  /// Constructor with k and p parameters
-  constexpr InverseDistanceWeighting(uint32_t k, uint32_t p)
-      : k(k), p(p) {}
+  /// @brief Get the search radius.
+  /// @return Optional search radius in meters (nullopt = unlimited)
+  [[nodiscard]] constexpr auto radius() const -> const std::optional<double>& {
+    return radius_;
+  }
 
   /// @brief Set the number of neighbors
   /// @param[in] value Number of neighbors
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_k(uint32_t value) const
-      -> InverseDistanceWeighting {
-    auto copy = *this;
-    copy.k = value;
-    return copy;
-  }
-
-  /// @brief Set the power parameter
-  /// @param[in] value Power parameter
-  /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_p(uint32_t value) const
-      -> InverseDistanceWeighting {
-    auto copy = *this;
-    copy.p = value;
+  [[nodiscard]] constexpr auto with_k(uint32_t value) const -> Derived {
+    auto copy = static_cast<const Derived&>(*this);
+    copy.k_ = value;
     return copy;
   }
 
@@ -58,60 +46,77 @@ struct InverseDistanceWeighting : Common {
   /// @param[in] value Search radius (nullopt for unlimited)
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_radius(std::optional<double> value) const
-      -> InverseDistanceWeighting {
-    auto copy = *this;
-    copy.radius = value;
+      -> Derived {
+    auto copy = static_cast<const Derived&>(*this);
+    copy.radius_ = value;
     return copy;
   }
 
-  /// @brief Create a default IDW configuration
-  /// @param[in] k Number of neighbors
-  /// @return IDW configuration with default parameters
-  [[nodiscard]] static constexpr auto create(uint32_t k = 8)
+ protected:
+  /// Number of neighbors to consider
+  uint32_t k_{8};
+
+  /// Optional search radius in meters (nullopt = unlimited)
+  std::optional<double> radius_;
+};
+
+/// Configuration for inverse distance weighting interpolation
+class InverseDistanceWeighting : public RTreeBase<InverseDistanceWeighting> {
+ public:
+  /// @brief Default constructor
+  constexpr InverseDistanceWeighting() = default;
+
+  /// @brief Get the power parameter.
+  /// @return Power parameter (exponent)
+  [[nodiscard]] constexpr auto p() const -> uint32_t { return p_; }
+
+  /// @brief Set the power parameter
+  /// @param[in] value Power parameter
+  /// @return Updated configuration
+  [[nodiscard]] constexpr auto with_p(uint32_t value) const
       -> InverseDistanceWeighting {
-    return InverseDistanceWeighting{k};
+    auto copy = *this;
+    copy.p_ = value;
+    return copy;
   }
+
+ private:
+  /// Power parameter (exponent)
+  uint32_t p_{2};
 };
 
 // ////////////////////////////////////////////////////////////////////////////
 
 /// Configuration for kriging interpolation
-struct Kriging : Common {
-  /// Number of neighbors to consider
-  uint32_t k{8};
-
-  /// Sill parameter (variance at infinity)
-  double sigma{1.0};
-
-  /// Range parameter (distance scale)
-  double lambda{1.0};
-
-  /// Nugget effect parameter (micro-scale variance)
-  double nugget{0.0};
-
-  /// Covariance function type
-  math::interpolate::CovarianceFunction covariance_model{
-      math::interpolate::CovarianceFunction::kSpherical};
-
-  /// Optional drift function
-  std::optional<math::interpolate::DriftFunction> drift_function;
-
-  /// Optional search radius in meters (nullopt = unlimited)
-  std::optional<double> radius;
-
-  /// Default constructor
+class Kriging : public RTreeBase<Kriging> {
+ public:
+  /// @brief Default constructor
   constexpr Kriging() = default;
 
-  /// Constructor with k parameter
-  constexpr explicit Kriging(uint32_t k) : k(k) {}
+  /// @brief Get the sill parameter.
+  /// @return Sill parameter (variance at infinity)
+  [[nodiscard]] constexpr auto sigma() const -> double { return sigma_; }
 
-  /// @brief Set the number of neighbors
-  /// @param[in] value Number of neighbors
-  /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_k(uint32_t value) const -> Kriging {
-    auto copy = *this;
-    copy.k = value;
-    return copy;
+  /// @brief Get the range parameter.
+  /// @return Range parameter (distance scale)
+  [[nodiscard]] constexpr auto lambda() const -> double { return lambda_; }
+
+  /// @brief Get the nugget effect parameter.
+  /// @return Nugget effect parameter (micro-scale variance)
+  [[nodiscard]] constexpr auto nugget() const -> double { return nugget_; }
+
+  /// @brief Get the covariance function type.
+  /// @return Covariance function type
+  [[nodiscard]] constexpr auto covariance_model() const
+      -> math::interpolate::CovarianceFunction {
+    return covariance_model_;
+  }
+
+  /// @brief Get the drift function.
+  /// @return Optional drift function
+  [[nodiscard]] constexpr auto drift_function() const
+      -> const std::optional<math::interpolate::DriftFunction>& {
+    return drift_function_;
   }
 
   /// @brief Set the sill parameter
@@ -119,7 +124,7 @@ struct Kriging : Common {
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_sigma(double value) const -> Kriging {
     auto copy = *this;
-    copy.sigma = value;
+    copy.sigma_ = value;
     return copy;
   }
 
@@ -128,7 +133,7 @@ struct Kriging : Common {
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_lambda(double value) const -> Kriging {
     auto copy = *this;
-    copy.lambda = value;
+    copy.lambda_ = value;
     return copy;
   }
 
@@ -137,7 +142,7 @@ struct Kriging : Common {
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_nugget(double value) const -> Kriging {
     auto copy = *this;
-    copy.nugget = value;
+    copy.nugget_ = value;
     return copy;
   }
 
@@ -147,7 +152,7 @@ struct Kriging : Common {
   [[nodiscard]] constexpr auto with_covariance_model(
       math::interpolate::CovarianceFunction value) const -> Kriging {
     auto copy = *this;
-    copy.covariance_model = value;
+    copy.covariance_model_ = value;
     return copy;
   }
 
@@ -157,63 +162,52 @@ struct Kriging : Common {
   [[nodiscard]] auto with_drift_function(
       std::optional<math::interpolate::DriftFunction> value) const -> Kriging {
     auto copy = *this;
-    copy.drift_function = value;
+    copy.drift_function_ = value;
     return copy;
   }
 
-  /// @brief Set the search radius in meters
-  /// @param[in] value Search radius (nullopt for unlimited)
-  /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_radius(std::optional<double> value) const
-      -> Kriging {
-    auto copy = *this;
-    copy.radius = value;
-    return copy;
-  }
+ private:
+  /// Sill parameter (variance at infinity)
+  double sigma_{1.0};
 
-  /// @brief Create a default kriging configuration
-  /// @param[in] k Number of neighbors
-  /// @return Kriging configuration with default parameters
-  [[nodiscard]] static constexpr auto create(uint32_t k = 8) -> Kriging {
-    return Kriging{k};
-  }
+  /// Range parameter (distance scale)
+  double lambda_{1.0};
+
+  /// Nugget effect parameter (micro-scale variance)
+  double nugget_{0.0};
+
+  /// Covariance function type
+  math::interpolate::CovarianceFunction covariance_model_{
+      math::interpolate::CovarianceFunction::kSpherical};
+
+  /// Optional drift function
+  std::optional<math::interpolate::DriftFunction> drift_function_;
 };
 
 // ////////////////////////////////////////////////////////////////////////////
 
 /// Configuration for radial basis function interpolation
-struct RadialBasisFunction : Common {
-  /// Number of neighbors to consider
-  uint32_t k{8};
-
-  /// Radial basis function type
-  math::interpolate::RadialBasisFunction rbf{
-      math::interpolate::RadialBasisFunction::kMultiquadric};
-
-  /// Optional shape parameter (epsilon)
-  std::optional<double> epsilon;
-
-  /// Smoothing parameter
-  double smooth{0.0};
-
-  /// Optional search radius in meters (nullopt = unlimited)
-  std::optional<double> radius;
-
-  /// Default constructor
+class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
+ public:
+  /// @brief Default constructor
   constexpr RadialBasisFunction() = default;
 
-  /// Constructor with k parameter
-  constexpr explicit RadialBasisFunction(uint32_t k) : k(k) {}
-
-  /// @brief Set the number of neighbors
-  /// @param[in] value Number of neighbors
-  /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_k(uint32_t value) const
-      -> RadialBasisFunction {
-    auto copy = *this;
-    copy.k = value;
-    return copy;
+  /// @brief Get the radial basis function type.
+  /// @return Radial basis function type
+  [[nodiscard]] constexpr auto rbf() const
+      -> math::interpolate::RadialBasisFunction {
+    return rbf_;
   }
+
+  /// @brief Get the shape parameter (epsilon).
+  /// @return Optional shape parameter (epsilon)
+  [[nodiscard]] constexpr auto epsilon() const -> const std::optional<double>& {
+    return epsilon_;
+  }
+
+  /// @brief Get the smoothing parameter.
+  /// @return Smoothing parameter
+  [[nodiscard]] constexpr auto smooth() const -> double { return smooth_; }
 
   /// @brief Set the RBF type
   /// @param[in] value Radial basis function type
@@ -222,7 +216,7 @@ struct RadialBasisFunction : Common {
       math::interpolate::RadialBasisFunction value) const
       -> RadialBasisFunction {
     auto copy = *this;
-    copy.rbf = value;
+    copy.rbf_ = value;
     return copy;
   }
 
@@ -232,7 +226,7 @@ struct RadialBasisFunction : Common {
   [[nodiscard]] constexpr auto with_epsilon(std::optional<double> value) const
       -> RadialBasisFunction {
     auto copy = *this;
-    copy.epsilon = value;
+    copy.epsilon_ = value;
     return copy;
   }
 
@@ -242,69 +236,50 @@ struct RadialBasisFunction : Common {
   [[nodiscard]] constexpr auto with_smooth(double value) const
       -> RadialBasisFunction {
     auto copy = *this;
-    copy.smooth = value;
+    copy.smooth_ = value;
     return copy;
   }
 
-  /// @brief Set the search radius in meters
-  /// @param[in] value Search radius (nullopt for unlimited)
-  /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_radius(std::optional<double> value) const
-      -> RadialBasisFunction {
-    auto copy = *this;
-    copy.radius = value;
-    return copy;
-  }
+ private:
+  /// Radial basis function type
+  math::interpolate::RadialBasisFunction rbf_{
+      math::interpolate::RadialBasisFunction::kMultiquadric};
 
-  /// @brief Create a default RBF configuration
-  /// @param[in] k Number of neighbors
-  /// @return RBF configuration with default parameters
-  [[nodiscard]] static constexpr auto create(uint32_t k = 8)
-      -> RadialBasisFunction {
-    return RadialBasisFunction{k};
-  }
+  /// Optional shape parameter (epsilon)
+  std::optional<double> epsilon_;
+
+  /// Smoothing parameter
+  double smooth_{0.0};
 };
 
 // ////////////////////////////////////////////////////////////////////////////
 
 /// Configuration for window function interpolation
-struct WindowFunction : Common {
-  /// Number of neighbors to consider
-  uint32_t k{8};
+class InterpolationWindow : public RTreeBase<InterpolationWindow> {
+ public:
+  /// @brief Default constructor
+  constexpr InterpolationWindow() = default;
 
-  /// Window function type
-  math::interpolate::window::Function wf{
-      math::interpolate::window::Function::kTriangle};
+  /// @brief Get the window function type.
+  /// @return Window function type
+  [[nodiscard]] constexpr auto wf() const
+      -> math::interpolate::window::Function {
+    return wf_;
+  }
 
-  /// Optional window function argument
-  std::optional<double> arg;
-
-  /// Optional search radius in meters (nullopt = unlimited)
-  std::optional<double> radius;
-
-  /// Default constructor
-  constexpr WindowFunction() = default;
-
-  /// Constructor with k parameter
-  constexpr explicit WindowFunction(uint32_t k) : k(k) {}
-
-  /// @brief Set the number of neighbors
-  /// @param[in] value Number of neighbors
-  /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_k(uint32_t value) const
-      -> WindowFunction {
-    auto copy = *this;
-    copy.k = value;
-    return copy;
+  /// @brief Get the window function argument.
+  /// @return Optional window function argument
+  [[nodiscard]] constexpr auto arg() const -> const std::optional<double>& {
+    return arg_;
   }
 
   /// @brief Set the window function type
   /// @param[in] value Window function type
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_wf(
-      math::interpolate::window::Function value) const -> WindowFunction {
+      math::interpolate::window::Function value) const -> InterpolationWindow {
     auto copy = *this;
-    copy.wf = value;
+    copy.wf_ = value;
     return copy;
   }
 
@@ -312,30 +287,19 @@ struct WindowFunction : Common {
   /// @param[in] value Window function argument
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_arg(std::optional<double> value) const
-      -> WindowFunction {
+      -> InterpolationWindow {
     auto copy = *this;
-    copy.arg = value;
+    copy.arg_ = value;
     return copy;
   }
 
-  /// @brief Set the search radius in meters
-  /// @param[in] value Search radius (nullopt for unlimited)
-  /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_radius(std::optional<double> value) const
-      -> WindowFunction {
-    auto copy = *this;
-    copy.radius = value;
-    return copy;
-  }
+ private:
+  /// Window function type
+  math::interpolate::window::Function wf_{
+      math::interpolate::window::Function::kGaussian};
 
-  /// @brief Create a default window function configuration
-  /// @param[in] k Number of neighbors
-  /// @return Window function configuration with default parameters
-  [[nodiscard]] static constexpr auto create(uint32_t k = 8)
-      -> WindowFunction {
-    return WindowFunction{k};
-  }
+  /// Optional window function argument
+  std::optional<double> arg_;
 };
 
-}  // namespace rtree
-}  // namespace pyinterp::pybind::config
+}  // namespace pyinterp::pybind::config::rtree

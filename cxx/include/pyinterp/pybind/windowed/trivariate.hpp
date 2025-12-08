@@ -47,8 +47,8 @@ template <typename GridType, typename ResultType, typename ZType>
     math::interpolate::BivariateBase<double>* interpolator,
     InterpolationCache3D<ZType>& cache) -> InterpolationResult<ResultType> {
   auto cache_load_result = math::interpolate::update_cache_if_needed(
-      cache, grid, std::make_tuple(x, y, z), cfg.spatial.boundary_mode,
-      cfg.common.bounds_error);
+      cache, grid, std::make_tuple(x, y, z), cfg.spatial().boundary_mode(),
+      cfg.common().bounds_error());
   if (!cache_load_result.success) {
     // Point is out of bounds. If bounds_error is enabled, the cache loader
     // has recorded an error message that will be raised below.
@@ -72,7 +72,7 @@ template <typename GridType, typename ResultType, typename ZType>
                                   cache.template coords_as_eigen<1>(),
                                   cache.matrix(1), x, y);
 
-  if (cfg.third_axis.method == config::AxisMethod::kLinear) {
+  if (cfg.third_axis().method() == config::AxisMethod::kLinear) {
     // Linear interpolation along Z axis
     return {math::interpolate::linear(z, z0, z1, f0, f1)};
   }
@@ -104,9 +104,9 @@ template <typename GridType, typename ResultType, typename ZType>
       x.size(),
       [&](const int64_t start, const int64_t end) {
         // Create cache and interpolator for this thread
-        auto cache = InterpolationCache3D<ZType>(cfg.spatial.window_size_x,
-                                                 cfg.spatial.window_size_y);
-        auto interpolator = cfg.spatial.factory<double>();
+        auto cache = InterpolationCache3D<ZType>(cfg.spatial().window_size_x(),
+                                                 cfg.spatial().window_size_y());
+        auto interpolator = cfg.spatial().factory<double>();
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
@@ -117,7 +117,7 @@ template <typename GridType, typename ResultType, typename ZType>
           }
         }
       },
-      cfg.common.num_threads);
+      cfg.common().num_threads());
 
   return result;
 }

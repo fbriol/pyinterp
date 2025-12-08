@@ -144,7 +144,7 @@ TEST(RTree2D, WindowFunctionInstantiation) {
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point2D(i, 0), static_cast<double>(i)});
   }
-  math::interpolate::WindowFunction<double> model(
+  math::interpolate::InterpolationWindow<double> model(
       math::interpolate::window::Function::kHamming, 0.5);
   auto [val, n] = tree.window_function(
       model, Point2D(1, 0), 2.0, 3, pyinterp::geometry::BoundaryCheck::kNone);
@@ -273,7 +273,7 @@ TEST(RTree3D, WindowFunctionInstantiation) {
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point3D(i, 0, 0), static_cast<double>(i)});
   }
-  math::interpolate::WindowFunction<double> model(
+  math::interpolate::InterpolationWindow<double> model(
       math::interpolate::window::Function::kHamming, 0.5);
   auto [val, n] =
       tree.window_function(model, Point3D(1, 0, 0), 2.0, 3,

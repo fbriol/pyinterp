@@ -165,12 +165,12 @@ template <template <class> class Point, typename GridType, typename ResultType,
   // Create spatial interpolator once (outside parallel region)
   auto spatial_interpolator =
       math::interpolate::geometric::make_interpolator<Point, ResultType>(
-          config.spatial.method, config.spatial.exponent);
+          config.spatial().method(), config.spatial().exponent());
   const auto* spatial_interpolator_ptr = spatial_interpolator.get();
 
   // Create z-axis interpolator
   const auto z_axis_method =
-      config.third_axis.method == config::AxisMethod::kLinear
+      config.third_axis().method() == config::AxisMethod::kLinear
           ? math::interpolate::geometric::AxisMethod::kLinear
           : math::interpolate::geometric::AxisMethod::kNearest;
   const auto z_axis_interpolator =
@@ -179,7 +179,7 @@ template <template <class> class Point, typename GridType, typename ResultType,
 
   // Create u-axis interpolator
   const auto u_axis_method =
-      config.fourth_axis.method == config::AxisMethod::kLinear
+      config.fourth_axis().method() == config::AxisMethod::kLinear
           ? math::interpolate::geometric::AxisMethod::kLinear
           : math::interpolate::geometric::AxisMethod::kNearest;
   const auto u_axis_interpolator =
@@ -197,14 +197,14 @@ template <template <class> class Point, typename GridType, typename ResultType,
               detail::quadrivariate_single<Point, GridType, ResultType, ZType>(
                   grid, x[ix], y[ix], z[ix], u[ix], spatial_interpolator_ptr,
                   z_axis_interpolator, u_axis_interpolator,
-                  config.common.bounds_error);
+                  config.common().bounds_error());
 
           if (interpolated_value.has_value()) {
             result[ix] = *interpolated_value.value;
           }
         }
       },
-      config.common.num_threads);
+      config.common().num_threads());
 
   return result;
 }

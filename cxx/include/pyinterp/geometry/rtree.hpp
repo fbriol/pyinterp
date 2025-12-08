@@ -223,7 +223,7 @@ class RTree {
   /// @return Pair of (interpolated value, number of neighbors used)
   template <typename Strategy = default_strategy_t>
   [[nodiscard]] auto window_function(
-      const math::interpolate::WindowFunction<coordinate_t>& model,
+      const math::interpolate::InterpolationWindow<coordinate_t>& model,
       const Point& point, const coordinate_t& radius, const uint32_t k,
       const BoundaryCheck check, const Strategy& strategy = Strategy()) const
       -> std::pair<coordinate_t, uint32_t>;
@@ -443,7 +443,7 @@ auto RTree<Point, Type>::radial_basis_function(
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
 auto RTree<Point, Type>::window_function(
-    const math::interpolate::WindowFunction<coordinate_t>& model,
+    const math::interpolate::InterpolationWindow<coordinate_t>& model,
     const Point& point, const coordinate_t& radius, const uint32_t k,
     const BoundaryCheck check, const Strategy& strategy) const
     -> std::pair<coordinate_t, uint32_t> {

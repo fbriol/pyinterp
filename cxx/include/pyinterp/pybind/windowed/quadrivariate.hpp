@@ -49,8 +49,8 @@ template <typename GridType, typename ResultType, typename ZType>
     math::interpolate::BivariateBase<double>* interpolator,
     InterpolationCache4D<ZType>& cache) -> InterpolationResult<ResultType> {
   auto cache_load_result = math::interpolate::update_cache_if_needed(
-      cache, grid, std::make_tuple(x, y, z, u), cfg.spatial.boundary_mode,
-      cfg.common.bounds_error);
+      cache, grid, std::make_tuple(x, y, z, u), cfg.spatial().boundary_mode(),
+      cfg.common().bounds_error());
   if (!cache_load_result.success) {
     // Point is out of bounds. If bounds_error is enabled, the cache loader
     // has recorded an error message that will be raised below.
@@ -84,7 +84,7 @@ template <typename GridType, typename ResultType, typename ZType>
   ResultType f0;
   ResultType f1;
 
-  if (cfg.third_axis.method == config::AxisMethod::kLinear) {
+  if (cfg.third_axis().method() == config::AxisMethod::kLinear) {
     // Linear interpolation along Z axis
     f0 = math::interpolate::linear(z, z0, z1, f00, f10);
     f1 = math::interpolate::linear(z, z0, z1, f01, f11);
@@ -94,7 +94,7 @@ template <typename GridType, typename ResultType, typename ZType>
     f1 = math::interpolate::nearest(z, z0, z1, f01, f11);
   }
 
-  if (cfg.fourth_axis.method == config::AxisMethod::kLinear) {
+  if (cfg.fourth_axis().method() == config::AxisMethod::kLinear) {
     // Linear interpolation along U axis
     return {
         static_cast<ResultType>(math::interpolate::linear(u, u0, u1, f0, f1))};
@@ -129,9 +129,9 @@ template <typename GridType, typename ResultType, typename ZType>
       x.size(),
       [&](const int64_t start, const int64_t end) {
         // Create cache and interpolator for this thread
-        auto cache = InterpolationCache4D<ZType>(cfg.spatial.window_size_x,
-                                                 cfg.spatial.window_size_y);
-        auto interpolator = cfg.spatial.factory<double>();
+        auto cache = InterpolationCache4D<ZType>(cfg.spatial().window_size_x(),
+                                                 cfg.spatial().window_size_y());
+        auto interpolator = cfg.spatial().factory<double>();
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
@@ -143,7 +143,7 @@ template <typename GridType, typename ResultType, typename ZType>
           }
         }
       },
-      cfg.common.num_threads);
+      cfg.common().num_threads());
 
   return result;
 }

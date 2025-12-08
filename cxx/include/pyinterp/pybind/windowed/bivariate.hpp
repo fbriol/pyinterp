@@ -41,8 +41,8 @@ template <typename DataType, typename ResultType>
     math::interpolate::BivariateBase<double>* interpolator,
     InterpolationCache& cache) -> InterpolationResult<ResultType> {
   auto cache_load_result = math::interpolate::update_cache_if_needed(
-      cache, grid, std::make_tuple(x, y), cfg.spatial.boundary_mode,
-      cfg.common.bounds_error);
+      cache, grid, std::make_tuple(x, y), cfg.spatial().boundary_mode(),
+      cfg.common().bounds_error());
   if (!cache_load_result.success) {
     // Point is out of bounds. If bounds_error is enabled, the cache loader
     // has recorded an error message that will be raised below.
@@ -83,9 +83,9 @@ template <typename DataType, typename ResultType>
       x.size(),
       [&](const int64_t start, const int64_t end) {
         // Create cache and interpolator for this thread
-        auto cache = InterpolationCache(cfg.spatial.window_size_x,
-                                        cfg.spatial.window_size_y);
-        auto interpolator = cfg.spatial.factory<double>();
+        auto cache = InterpolationCache(cfg.spatial().window_size_x(),
+                                        cfg.spatial().window_size_y());
+        auto interpolator = cfg.spatial().factory<double>();
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
@@ -96,7 +96,7 @@ template <typename DataType, typename ResultType>
           }
         }
       },
-      cfg.common.num_threads);
+      cfg.common().num_threads());
 
   return result;
 }
