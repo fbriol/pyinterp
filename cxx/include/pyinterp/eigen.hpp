@@ -18,4 +18,10 @@ using Vector = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template <typename T>
 using Matrix = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
+/// @brief Row major dynamic matrix of type T
+/// @tparam T The data type of the matrix elements.
+template <typename T>
+using RowMajorMatrix =
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
 }  // namespace pyinterp
