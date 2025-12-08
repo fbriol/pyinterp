@@ -118,15 +118,15 @@ TEST(RTree2D, KrigingInstantiation) {
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point2D(i, 0), static_cast<double>(i)});
   }
-  auto [val, n] = tree.kriging(Point2D(1, 0), 2.0, 3,
-                               pyinterp::geometry::BoundaryCheck::kNone, model);
+  auto [val, n] = tree.kriging(model, Point2D(1, 0), 2.0, 3,
+                               pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_TRUE(std::isfinite(val) || std::isnan(val));
   EXPECT_LE(n, 3);
 }
 
 TEST(RTree2D, RBFInstantiation) {
   using promotion_t = decltype(std::declval<double>() + std::declval<double>());
-  math::interpolate::RBF<promotion_t> rbf(
+  math::interpolate::RBF<promotion_t> model(
       std::numeric_limits<double>::quiet_NaN(), 0,
       math::interpolate::RadialBasisFunction::kMultiquadric);
   RTree2D tree;
@@ -134,7 +134,7 @@ TEST(RTree2D, RBFInstantiation) {
     tree.insert({Point2D(i, 0), static_cast<double>(i)});
   }
   auto [val, n] = tree.radial_basis_function(
-      Point2D(1, 0), rbf, 2.0, 3, pyinterp::geometry::BoundaryCheck::kNone);
+      model, Point2D(1, 0), 2.0, 3, pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_TRUE(std::isfinite(val) || std::isnan(val));
   EXPECT_LE(n, 3);
 }
@@ -144,10 +144,10 @@ TEST(RTree2D, WindowFunctionInstantiation) {
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point2D(i, 0), static_cast<double>(i)});
   }
-  math::interpolate::WindowFunction<double> wf(
-      math::interpolate::window::Function::kHamming);
+  math::interpolate::WindowFunction<double> model(
+      math::interpolate::window::Function::kHamming, 0.5);
   auto [val, n] = tree.window_function(
-      Point2D(1, 0), wf, 0.5, 2.0, 3, pyinterp::geometry::BoundaryCheck::kNone);
+      model, Point2D(1, 0), 2.0, 3, pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_TRUE(std::isfinite(val) || std::isnan(val));
   EXPECT_LE(n, 3);
 }
@@ -246,23 +246,24 @@ TEST(RTree3D, KrigingInstantiation) {
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point3D(i, 0, 0), static_cast<double>(i)});
   }
-  auto [val, n] = tree.kriging(Point3D(1, 0, 0), 2.0, 3,
-                               pyinterp::geometry::BoundaryCheck::kNone, model);
+  auto [val, n] = tree.kriging(model, Point3D(1, 0, 0), 2.0, 3,
+                               pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_TRUE(std::isfinite(val) || std::isnan(val));
   EXPECT_LE(n, 3);
 }
 
 TEST(RTree3D, RBFInstantiation) {
   using promotion_t = decltype(std::declval<double>() + std::declval<double>());
-  math::interpolate::RBF<promotion_t> rbf(
+  math::interpolate::RBF<promotion_t> model(
       std::numeric_limits<double>::quiet_NaN(), 0,
       math::interpolate::RadialBasisFunction::kMultiquadric);
   RTree3D tree;
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point3D(i, 0, 0), static_cast<double>(i)});
   }
-  auto [val, n] = tree.radial_basis_function(
-      Point3D(1, 0, 0), rbf, 2.0, 3, pyinterp::geometry::BoundaryCheck::kNone);
+  auto [val, n] =
+      tree.radial_basis_function(model, Point3D(1, 0, 0), 2.0, 3,
+                                 pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_TRUE(std::isfinite(val) || std::isnan(val));
   EXPECT_LE(n, 3);
 }
@@ -272,10 +273,10 @@ TEST(RTree3D, WindowFunctionInstantiation) {
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point3D(i, 0, 0), static_cast<double>(i)});
   }
-  math::interpolate::WindowFunction<double> wf(
-      math::interpolate::window::Function::kHamming);
+  math::interpolate::WindowFunction<double> model(
+      math::interpolate::window::Function::kHamming, 0.5);
   auto [val, n] =
-      tree.window_function(Point3D(1, 0, 0), wf, 0.5, 2.0, 3,
+      tree.window_function(model, Point3D(1, 0, 0), 2.0, 3,
                            pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_TRUE(std::isfinite(val) || std::isnan(val));
   EXPECT_LE(n, 3);
