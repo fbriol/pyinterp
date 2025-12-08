@@ -7,6 +7,7 @@
 #include <boost/geometry/geometries/point.hpp>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -55,7 +56,8 @@ TEST(RTree2D, KNNQuery) {
   for (int i = 0; i < 10; ++i) {
     tree.insert({Point2D(i, i), static_cast<double>(i)});
   }
-  auto result = tree.query(Point2D(5.1, 5.1), 3);
+  auto result =
+      tree.query(Point2D(5.1, 5.1), 3, std::numeric_limits<double>::max());
   ASSERT_EQ(result.size(), 3);
   EXPECT_NEAR(result[0].second, 5.0, 1e-12);
 }
@@ -81,7 +83,7 @@ TEST(RTree2D, QueryWithin) {
   for (int i = 0; i < 10; ++i) {
     tree.insert({Point2D(i, 0), static_cast<double>(i)});
   }
-  auto result = tree.query(Point2D(5, 0), 3,
+  auto result = tree.query(Point2D(5, 0), 3, std::numeric_limits<double>::max(),
                            pyinterp::geometry::BoundaryCheck::kEnvelope);
   // May be empty if not surrounded, but should not crash
   EXPECT_LE(result.size(), 3);
@@ -181,7 +183,8 @@ TEST(RTree3D, KNNQuery) {
   for (int i = 0; i < 10; ++i) {
     tree.insert({Point3D(i, i, i), static_cast<double>(i)});
   }
-  auto result = tree.query(Point3D(5.1, 5.1, 5.1), 3);
+  auto result =
+      tree.query(Point3D(5.1, 5.1, 5.1), 3, std::numeric_limits<double>::max());
   ASSERT_EQ(result.size(), 3);
   EXPECT_NEAR(result[0].second, 5.0, 1e-12);
 }
@@ -207,8 +210,9 @@ TEST(RTree3D, QueryWithin) {
   for (int i = 0; i < 10; ++i) {
     tree.insert({Point3D(i, 0, 0), static_cast<double>(i)});
   }
-  auto result = tree.query(Point3D(5, 0, 0), 3,
-                           pyinterp::geometry::BoundaryCheck::kEnvelope);
+  auto result =
+      tree.query(Point3D(5, 0, 0), 3, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kEnvelope);
   // May be empty if not surrounded, but should not crash
   EXPECT_LE(result.size(), 3);
 }
@@ -288,8 +292,9 @@ TEST(RTree2D, QueryWithBoundaryCheckNone) {
   }
 
   // Query at center point with no boundary check
-  auto result = tree.query(Point2D(2.0, 2.0), 4,
-                           pyinterp::geometry::BoundaryCheck::kNone);
+  auto result =
+      tree.query(Point2D(2.0, 2.0), 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_EQ(result.size(), 4);
 }
 
@@ -303,13 +308,15 @@ TEST(RTree2D, QueryWithBoundaryCheckEnvelope) {
   }
 
   // Query at center - should find neighbors within envelope
-  auto result_center = tree.query(Point2D(2.0, 2.0), 4,
-                                  pyinterp::geometry::BoundaryCheck::kEnvelope);
+  auto result_center =
+      tree.query(Point2D(2.0, 2.0), 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kEnvelope);
   EXPECT_LE(result_center.size(), 4);
 
   // Query at edge - may return empty if point is not surrounded
-  auto result_edge = tree.query(Point2D(0.5, 0.5), 4,
-                                pyinterp::geometry::BoundaryCheck::kEnvelope);
+  auto result_edge =
+      tree.query(Point2D(0.5, 0.5), 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kEnvelope);
   EXPECT_LE(result_edge.size(), 4);
 }
 
@@ -323,13 +330,15 @@ TEST(RTree2D, QueryWithBoundaryCheckConvexHull) {
   }
 
   // Query at center with convex hull check
-  auto result_center = tree.query(
-      Point2D(2.0, 2.0), 4, pyinterp::geometry::BoundaryCheck::kConvexHull);
+  auto result_center =
+      tree.query(Point2D(2.0, 2.0), 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kConvexHull);
   EXPECT_LE(result_center.size(), 4);
 
   // Query at edge with convex hull check
-  auto result_edge = tree.query(Point2D(0.5, 0.5), 4,
-                                pyinterp::geometry::BoundaryCheck::kConvexHull);
+  auto result_edge =
+      tree.query(Point2D(0.5, 0.5), 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kConvexHull);
   EXPECT_LE(result_edge.size(), 4);
 }
 
@@ -345,11 +354,14 @@ TEST(RTree2D, QueryBoundaryCheckComparison) {
   Point2D query_inside(1.0, 0.5);
 
   auto result_none =
-      tree.query(query_inside, 4, pyinterp::geometry::BoundaryCheck::kNone);
+      tree.query(query_inside, 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kNone);
   auto result_envelope =
-      tree.query(query_inside, 4, pyinterp::geometry::BoundaryCheck::kEnvelope);
-  auto result_hull = tree.query(query_inside, 4,
-                                pyinterp::geometry::BoundaryCheck::kConvexHull);
+      tree.query(query_inside, 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kEnvelope);
+  auto result_hull =
+      tree.query(query_inside, 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kConvexHull);
 
   // No boundary check should return most results
   EXPECT_GE(result_none.size(), result_envelope.size());
@@ -375,8 +387,9 @@ TEST(RTree3D, QueryWithBoundaryCheckNone) {
   }
 
   // Query at center point with no boundary check
-  auto result = tree.query(Point3D(1.5, 1.5, 1.5), 8,
-                           pyinterp::geometry::BoundaryCheck::kNone);
+  auto result =
+      tree.query(Point3D(1.5, 1.5, 1.5), 8, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_EQ(result.size(), 8);
 }
 
@@ -393,13 +406,15 @@ TEST(RTree3D, QueryWithBoundaryCheckEnvelope) {
   }
 
   // Query at center - should find neighbors within envelope
-  auto result_center = tree.query(Point3D(1.5, 1.5, 1.5), 8,
-                                  pyinterp::geometry::BoundaryCheck::kEnvelope);
+  auto result_center =
+      tree.query(Point3D(1.5, 1.5, 1.5), 8, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kEnvelope);
   EXPECT_LE(result_center.size(), 8);
 
   // Query at edge
-  auto result_edge = tree.query(Point3D(0.5, 0.5, 0.5), 8,
-                                pyinterp::geometry::BoundaryCheck::kEnvelope);
+  auto result_edge =
+      tree.query(Point3D(0.5, 0.5, 0.5), 8, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kEnvelope);
   EXPECT_LE(result_edge.size(), 8);
 }
 
@@ -414,8 +429,9 @@ TEST(RTree3D, QueryWithBoundaryCheckConvexHull) {
   // Query at center of tetrahedron
   Point3D query_center(1.0, 1.0, 0.5);
 
-  auto result_hull = tree.query(query_center, 4,
-                                pyinterp::geometry::BoundaryCheck::kConvexHull);
+  auto result_hull =
+      tree.query(query_center, 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kConvexHull);
 
   // Should have at most 4 results
   EXPECT_LE(result_hull.size(), 4);
@@ -433,11 +449,14 @@ TEST(RTree3D, QueryBoundaryCheckComparison) {
   Point3D query_inside(0.5, 0.5, 0.3);
 
   auto result_none =
-      tree.query(query_inside, 4, pyinterp::geometry::BoundaryCheck::kNone);
+      tree.query(query_inside, 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kNone);
   auto result_envelope =
-      tree.query(query_inside, 4, pyinterp::geometry::BoundaryCheck::kEnvelope);
-  auto result_hull = tree.query(query_inside, 4,
-                                pyinterp::geometry::BoundaryCheck::kConvexHull);
+      tree.query(query_inside, 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kEnvelope);
+  auto result_hull =
+      tree.query(query_inside, 4, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kConvexHull);
 
   // No boundary check should return most or equal results
   EXPECT_GE(result_none.size(), result_envelope.size());
@@ -457,8 +476,9 @@ TEST(RTree2D, QueryEmptyResultWithBoundaryCheck) {
   }
 
   // Query from a point far away with strict boundary check
-  auto result = tree.query(Point2D(10.0, 10.0), 3,
-                           pyinterp::geometry::BoundaryCheck::kConvexHull);
+  auto result =
+      tree.query(Point2D(10.0, 10.0), 3, std::numeric_limits<double>::max(),
+                 pyinterp::geometry::BoundaryCheck::kConvexHull);
 
   // Should return empty or very few results
   EXPECT_LE(result.size(), 3);
@@ -473,6 +493,7 @@ TEST(RTree3D, QueryEmptyResultWithBoundaryCheck) {
 
   // Query from a point far away with strict boundary check
   auto result = tree.query(Point3D(10.0, 10.0, 10.0), 3,
+                           std::numeric_limits<double>::max(),
                            pyinterp::geometry::BoundaryCheck::kConvexHull);
 
   // Should return empty or very few results
