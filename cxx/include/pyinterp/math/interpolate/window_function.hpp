@@ -236,7 +236,10 @@ class WindowFunction {
 
   /// @brief Constructor
   /// @param[in] wf The window function type to use
-  explicit WindowFunction(const window::Function wf) {
+  /// @param[in] arg Optional argument for the window function. Defaults to 0.
+  /// Its meaning depends on the window function selected.
+  explicit WindowFunction(const window::Function wf, const T arg = T{0})
+      : arg_(arg) {
     switch (wf) {
       case window::Function::kBlackman:
         function_ = &window::blackman<T>;
@@ -278,18 +281,17 @@ class WindowFunction {
   /// @tparam T Floating-point type
   /// @param[in] data Distance from window center
   /// @param[in] r Radius (half-width) of the window
-  /// @param[in] arg Optional argument (depends on window type: nlobes for
-  /// Lanczos, sigma for Gaussian)
   /// @return Window coefficient [0, 1]
-  [[nodiscard]] constexpr auto operator()(const T data, const T r,
-                                          const T arg = T{0}) const noexcept
-      -> T {
-    return function_(data, r, arg);
+  [[nodiscard]] constexpr auto operator()(const T data,
+                                          const T r) const noexcept -> T {
+    return function_(data, r, arg_);
   }
 
  private:
   /// Pointer to the selected window function
   WindowFunctionPtr function_;
+  /// Additional argument for the window function
+  T arg_;
 };
 
 }  // namespace pyinterp::math::interpolate
