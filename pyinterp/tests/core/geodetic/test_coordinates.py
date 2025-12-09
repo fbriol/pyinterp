@@ -338,7 +338,7 @@ class TestCoordinates:
         z = np.array([0.0])  # Wrong shape
 
         with pytest.raises(
-            ValueError, match='x, z could not be broadcast together'
+            ValueError, match="x, z could not be broadcast together"
         ):
             coords.ecef_to_lla(x, y, z)
 

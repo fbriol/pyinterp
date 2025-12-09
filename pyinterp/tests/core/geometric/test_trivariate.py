@@ -22,8 +22,7 @@ class TestTrivariateGeometric:
     def create_analytical_grid3d(
         dtype: type[np.float32 | np.float64],
     ) -> core.Grid3DFloat64 | core.Grid3DFloat32:
-        """
-        Create a 3D grid with an analytical field.
+        """Create a 3D grid with an analytical field.
 
         f(x, y, z) = sin(x) * cos(y) * exp(-z/10)
 
@@ -38,7 +37,7 @@ class TestTrivariateGeometric:
         z_axis = core.Axis(z_vals)
 
         x_grid, y_grid, z_grid = np.meshgrid(
-            x_vals, y_vals, z_vals, indexing='ij'
+            x_vals, y_vals, z_vals, indexing="ij"
         )
 
         # Create analytical field: f(x, y, z) = sin(x) * cos(y) * exp(-z/10)
@@ -54,7 +53,7 @@ class TestTrivariateGeometric:
         return class_name(x_axis, y_axis, z_axis, data)
 
     def test_single_point_bilinear(self) -> None:
-        """Test trivariate interpolation at a single point with bilinear method."""
+        """Perform bilinear interpolation at a single point."""
         grid = self.create_analytical_grid3d(np.float64)
 
         # Test point: (π, π/2, 0)
@@ -130,7 +129,7 @@ class TestTrivariateGeometric:
 
         # With bounds_error=True, should raise an error
         config = geometric.Trivariate.bilinear().bounds_error(True)
-        with pytest.raises(ValueError, match='out of bounds'):
+        with pytest.raises(ValueError, match="out of bounds"):
             core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (1,)
@@ -141,7 +140,7 @@ class TestTrivariateGeometric:
         grid_data = load_grid3d()
         x_axis = core.Axis(grid_data.longitude.values, period=360.0)
         y_axis = core.Axis(grid_data.latitude.values)
-        z_axis = core.Axis(grid_data.time.values.astype('float64'))
+        z_axis = core.Axis(grid_data.time.values.astype("float64"))
 
         matrix = np.ascontiguousarray(grid_data.tcw.values.transpose())
         grid = core.Grid3DFloat64(x_axis, y_axis, z_axis, matrix)
@@ -151,9 +150,9 @@ class TestTrivariateGeometric:
         y = np.array([-10.0, 0.0, 10.0])
         z = np.array(
             [
-                grid_data.time.values[0].astype('float64'),
-                grid_data.time.values[1].astype('float64'),
-                grid_data.time.values[-1].astype('float64'),
+                grid_data.time.values[0].astype("float64"),
+                grid_data.time.values[1].astype("float64"),
+                grid_data.time.values[-1].astype("float64"),
             ]
         )
 
@@ -268,9 +267,10 @@ class TestTrivariateGeometric:
 
         # Create large arrays of points
         n_points = 1000
-        x = np.random.uniform(0.1, 2 * np.pi - 0.1, n_points)
-        y = np.random.uniform(0.1, np.pi - 0.1, n_points)
-        z = np.random.uniform(0.1, 9.9, n_points)
+        rng = np.random.default_rng(42)
+        x = rng.uniform(0.1, 2 * np.pi - 0.1, n_points)
+        y = rng.uniform(0.1, np.pi - 0.1, n_points)
+        z = rng.uniform(0.1, 9.9, n_points)
 
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
@@ -287,8 +287,7 @@ class TestTrivariateGeometricTemporalAxis:
     def create_analytical_temporal_grid3d(
         dtype: type[np.float32 | np.float64],
     ) -> core.TemporalGrid3DFloat64 | core.TemporalGrid3DFloat32:
-        """
-        Create a 3D grid with temporal Z-axis and analytical field.
+        """Create a 3D grid with temporal Z-axis and analytical field.
 
         f(x, y, t) = sin(x) * cos(y) * exp(-t_normalized/10)
 
@@ -298,9 +297,9 @@ class TestTrivariateGeometricTemporalAxis:
         y_vals = np.linspace(0, np.pi, 10)
         # Create a temporal axis with datetime64 values
         time_vals: np.ndarray[tuple[int], np.dtype[np.datetime64]] = np.arange(
-            np.datetime64('2020-01-01'),
-            np.datetime64('2020-01-09'),
-            np.timedelta64(1, 'D'),
+            np.datetime64("2020-01-01"),
+            np.datetime64("2020-01-09"),
+            np.timedelta64(1, "D"),
         )
 
         x_axis = core.Axis(x_vals, period=None)
@@ -311,7 +310,7 @@ class TestTrivariateGeometricTemporalAxis:
         time_normalized = np.arange(8)
 
         x_grid, y_grid, t_grid = np.meshgrid(
-            x_vals, y_vals, time_normalized, indexing='ij'
+            x_vals, y_vals, time_normalized, indexing="ij"
         )
 
         # Create analytical field: f(x, y, t) = sin(x) * cos(y) * exp(-t/10)
@@ -334,7 +333,7 @@ class TestTrivariateGeometricTemporalAxis:
         x = np.array([np.pi / 4])
         y = np.array([np.pi / 4])
         # Use a datetime64 value for z
-        z = np.array([np.datetime64('2020-01-01')])
+        z = np.array([np.datetime64("2020-01-01")])
 
         config = geometric.Trivariate.bilinear()
         result = core.trivariate(grid, x, y, z, config)
@@ -350,9 +349,9 @@ class TestTrivariateGeometricTemporalAxis:
         y = np.array([np.pi / 6, np.pi / 3, np.pi / 2])
         z = np.array(
             [
-                np.datetime64('2020-01-01'),
-                np.datetime64('2020-01-04'),
-                np.datetime64('2020-01-08'),
+                np.datetime64("2020-01-01"),
+                np.datetime64("2020-01-04"),
+                np.datetime64("2020-01-08"),
             ]
         )
 
@@ -407,7 +406,7 @@ class TestTrivariateGeometricTemporalAxis:
 
         x = np.array([0.0])
         y = np.array([0.0])
-        z = np.array([np.datetime64('2020-01-05')])
+        z = np.array([np.datetime64("2020-01-05")])
 
         config = geometric.Trivariate.nearest()
         result = core.trivariate(grid, x, y, z, config)
@@ -420,8 +419,8 @@ class TestTrivariateGeometricTemporalAxis:
         grid = self.create_analytical_temporal_grid3d(np.float64)
 
         # Create two close times
-        t1 = np.datetime64('2020-01-03', 'D')
-        t2 = np.datetime64('2020-01-03', 'D') + np.timedelta64(12, 'h')
+        t1 = np.datetime64("2020-01-03", "D")
+        t2 = np.datetime64("2020-01-03", "D") + np.timedelta64(12, "h")
 
         x1 = np.array([1.0])
         y1 = np.array([1.0])

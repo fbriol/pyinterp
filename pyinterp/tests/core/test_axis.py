@@ -142,9 +142,9 @@ def test_axis_regular_ascending() -> None:
     # Test string representation
     assert isinstance(str(a), str)
     a_repr = str(a)
-    assert 'Axis(regular, period=360)' in a_repr
-    assert 'step: 1' in a_repr
-    assert 'size: 360' in a_repr
+    assert "Axis(regular, period=360)" in a_repr
+    assert "step: 1" in a_repr
+    assert "size: 360" in a_repr
 
     # Test basic properties
     assert a.is_regular()
@@ -210,9 +210,9 @@ def test_axis_irregular() -> None:
     values = np.array([0.0, 1.0, 4.0, 8.0, 20.0, 50.0], dtype=np.float64)
     a = core.Axis(values, epsilon=1e-6)
     a_repr = str(a)
-    assert 'Axis(irregular)' in a_repr
-    assert 'values: [0, 1, 4, 8, 20, 50]' in a_repr
-    assert 'size: 6' in a_repr
+    assert "Axis(irregular)" in a_repr
+    assert "values: [0, 1, 4, 8, 20, 50]" in a_repr
+    assert "size: 6" in a_repr
 
     assert not a.is_regular()
     assert a.is_ascending()
@@ -283,8 +283,10 @@ def test_axis_periodic() -> None:
 
 
 def test_axis_mercator_latitudes() -> None:
-    """Test Axis with Mercator projection latitudes
-    (irregular, non-periodic)."""
+    """Test Axis with Mercator projection latitudes.
+
+    Ensure latitudes are handled correctly.
+    """
     a = core.Axis(MERCATOR_LATITUDES, epsilon=1e-6)
 
     assert not a.is_regular()
@@ -296,12 +298,12 @@ def test_axis_mercator_latitudes() -> None:
     assert a.back() == MERCATOR_LATITUDES[-1]
 
     a_repr = str(a)
-    assert 'Axis(irregular)' in a_repr
+    assert "Axis(irregular)" in a_repr
     assert (
-        'values: [-89, -88.908818, -88.809323, ..., '
-        '88.738328, 88.843755, 88.940374]' in a_repr
+        "values: [-89, -88.908818, -88.809323, ..., "
+        "88.738328, 88.843755, 88.940374]" in a_repr
     )
-    assert 'size: 109' in a_repr
+    assert "size: 109" in a_repr
 
     # Test find_index
     mid_idx = len(MERCATOR_LATITUDES) // 2

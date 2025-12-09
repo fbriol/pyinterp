@@ -22,8 +22,7 @@ class TestQuadrivariateGeometric:
     def create_analytical_grid4d(
         dtype: type[np.float32 | np.float64],
     ) -> core.Grid4DFloat64 | core.Grid4DFloat32:
-        """
-        Create a 4D grid with an analytical field.
+        """Create a 4D grid with an analytical field.
 
         f(x, y, z, u) = sin(x) * cos(y) * exp(-z/5) * sin(u)
 
@@ -40,10 +39,11 @@ class TestQuadrivariateGeometric:
         u_axis = core.Axis(u_vals)
 
         x_grid, y_grid, z_grid, u_grid = np.meshgrid(
-            x_vals, y_vals, z_vals, u_vals, indexing='ij'
+            x_vals, y_vals, z_vals, u_vals, indexing="ij"
         )
 
-        # Create analytical field: f(x, y, z, u) = sin(x) * cos(y) * exp(-z/5) * sin(u)
+        # Create analytical field: f(x, y, z, u)
+        #   = sin(x) * cos(y) * exp(-z/5) * sin(u)
         data = (
             np.sin(x_grid)
             * np.cos(y_grid)
@@ -59,7 +59,7 @@ class TestQuadrivariateGeometric:
         return class_name(x_axis, y_axis, z_axis, u_axis, data)
 
     def test_single_point_bilinear(self) -> None:
-        """Test quadrivariate interpolation at a single point with bilinear method."""
+        """Test bilinear interpolation at a single point."""
         grid = self.create_analytical_grid4d(np.float64)
 
         # Test point: (π, π/2, 0, π/2)
@@ -143,7 +143,7 @@ class TestQuadrivariateGeometric:
 
         # With bounds_error=True, should raise an error
         config = geometric.Quadrivariate.bilinear().bounds_error(True)
-        with pytest.raises(ValueError, match='out of bounds'):
+        with pytest.raises(ValueError, match="out of bounds"):
             core.quadrivariate(grid, x, y, z, u, config)
 
     def test_bounds_error_z_axis(self) -> None:
@@ -183,7 +183,7 @@ class TestQuadrivariateGeometric:
         grid_data = load_grid4d()
         x_axis = core.Axis(grid_data.longitude.values, period=360.0)
         y_axis = core.Axis(grid_data.latitude.values)
-        z_axis = core.Axis(grid_data.time.values.astype('float64'))
+        z_axis = core.Axis(grid_data.time.values.astype("float64"))
         u_axis = core.Axis(grid_data.level.values)
 
         matrix = np.ascontiguousarray(grid_data.temperature.values.transpose())
@@ -208,9 +208,9 @@ class TestQuadrivariateGeometric:
         )
         z = np.array(
             [
-                grid_data.time.values[0].astype('float64'),
-                grid_data.time.values[1].astype('float64'),
-                grid_data.time.values[-1].astype('float64'),
+                grid_data.time.values[0].astype("float64"),
+                grid_data.time.values[1].astype("float64"),
+                grid_data.time.values[-1].astype("float64"),
             ]
         )
         u = np.array(
@@ -330,7 +330,8 @@ class TestQuadrivariateGeometric:
             [analytical_func(x[i], y[i], z[i], u[i]) for i in range(len(x))]
         )
 
-        # Allow some tolerance for interpolation error (relaxed tolerance for coarser grid)
+        # Allow some tolerance for interpolation error
+        # (relaxed tolerance for coarser grid)
         np.testing.assert_allclose(result, expected, rtol=0.15)
 
     def test_large_array(self) -> None:
@@ -339,10 +340,11 @@ class TestQuadrivariateGeometric:
 
         # Create large arrays of points
         n_points = 500
-        x = np.random.uniform(0.1, 2 * np.pi - 0.1, n_points)
-        y = np.random.uniform(0.1, np.pi - 0.1, n_points)
-        z = np.random.uniform(0.1, 4.9, n_points)
-        u = np.random.uniform(0.1, np.pi - 0.1, n_points)
+        rng = np.random.default_rng(42)
+        x = rng.uniform(0.1, 2 * np.pi - 0.1, n_points)
+        y = rng.uniform(0.1, np.pi - 0.1, n_points)
+        z = rng.uniform(0.1, 4.9, n_points)
+        u = rng.uniform(0.1, np.pi - 0.1, n_points)
 
         config = geometric.Quadrivariate.bilinear()
         result = core.quadrivariate(grid, x, y, z, u, config)
@@ -443,8 +445,7 @@ class TestQuadrivariateGeometricTemporalAxis:
     def create_analytical_temporal_grid4d(
         dtype: type[np.float32 | np.float64],
     ) -> core.TemporalGrid4DFloat64 | core.TemporalGrid4DFloat32:
-        """
-        Create a 4D grid with temporal Z-axis and analytical field.
+        """Create a 4D grid with temporal Z-axis and analytical field.
 
         f(x, y, t, u) = sin(x) * cos(y) * exp(-t_normalized/5) * sin(u)
 
@@ -454,9 +455,9 @@ class TestQuadrivariateGeometricTemporalAxis:
         y_vals = np.linspace(0, np.pi, 9)
         # Create a temporal axis with datetime64 values
         time_vals: np.ndarray[tuple[int], np.dtype[np.datetime64]] = np.arange(
-            np.datetime64('2020-01-01'),
-            np.datetime64('2020-01-06'),
-            np.timedelta64(1, 'D'),
+            np.datetime64("2020-01-01"),
+            np.datetime64("2020-01-06"),
+            np.timedelta64(1, "D"),
         )
         u_vals = np.linspace(0, np.pi, 6)
 
@@ -469,10 +470,11 @@ class TestQuadrivariateGeometricTemporalAxis:
         time_normalized = np.arange(5)
 
         x_grid, y_grid, t_grid, u_grid = np.meshgrid(
-            x_vals, y_vals, time_normalized, u_vals, indexing='ij'
+            x_vals, y_vals, time_normalized, u_vals, indexing="ij"
         )
 
-        # Create analytical field: f(x, y, t, u) = sin(x) * cos(y) * exp(-t/5) * sin(u)
+        # Create analytical field: f(x, y, t, u) =
+        #   sin(x) * cos(y) * exp(-t/5) * sin(u)
         data = (
             np.sin(x_grid)
             * np.cos(y_grid)
@@ -494,7 +496,7 @@ class TestQuadrivariateGeometricTemporalAxis:
 
         x = np.array([np.pi / 4])
         y = np.array([np.pi / 4])
-        z = np.array([np.datetime64('2020-01-01')])
+        z = np.array([np.datetime64("2020-01-01")])
         u = np.array([np.pi / 3])
 
         config = geometric.Quadrivariate.bilinear()
@@ -511,9 +513,9 @@ class TestQuadrivariateGeometricTemporalAxis:
         y = np.array([np.pi / 6, np.pi / 3, np.pi / 2])
         z = np.array(
             [
-                np.datetime64('2020-01-01'),
-                np.datetime64('2020-01-03'),
-                np.datetime64('2020-01-05'),
+                np.datetime64("2020-01-01"),
+                np.datetime64("2020-01-03"),
+                np.datetime64("2020-01-05"),
             ]
         )
         u = np.array([np.pi / 6, np.pi / 3, np.pi / 2])
@@ -576,7 +578,7 @@ class TestQuadrivariateGeometricTemporalAxis:
 
         x = np.array([0.0])
         y = np.array([0.0])
-        z = np.array([np.datetime64('2020-01-03')])
+        z = np.array([np.datetime64("2020-01-03")])
         u = np.array([0.0])
 
         config = geometric.Quadrivariate.nearest()
@@ -590,8 +592,8 @@ class TestQuadrivariateGeometricTemporalAxis:
         grid = self.create_analytical_temporal_grid4d(np.float64)
 
         # Create two close times
-        t1 = np.datetime64('2020-01-02', 'D')
-        t2 = np.datetime64('2020-01-02', 'D') + np.timedelta64(12, 'h')
+        t1 = np.datetime64("2020-01-02", "D")
+        t2 = np.datetime64("2020-01-02", "D") + np.timedelta64(12, "h")
 
         x1 = np.array([1.0])
         y1 = np.array([1.0])

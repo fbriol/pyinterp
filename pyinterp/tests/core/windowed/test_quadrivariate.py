@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pytest
 
@@ -13,6 +15,9 @@ from pyinterp import core
 from pyinterp.core.config import windowed
 
 from ... import load_grid4d
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class TestQuadrivariateWindowed:
@@ -22,8 +27,7 @@ class TestQuadrivariateWindowed:
     def create_analytical_grid4d(
         dtype: type[np.float32 | np.float64],
     ) -> core.Grid4DFloat64 | core.Grid4DFloat32:
-        """
-        Create a 4D grid with an analytical field.
+        """Create a 4D grid with an analytical field.
 
         f(x, y, z, u) = sin(x) * cos(y) * exp(-z/5) * sin(u)
 
@@ -40,7 +44,7 @@ class TestQuadrivariateWindowed:
         u_axis = core.Axis(u_vals)
 
         x_grid, y_grid, z_grid, u_grid = np.meshgrid(
-            x_vals, y_vals, z_vals, u_vals, indexing='ij'
+            x_vals, y_vals, z_vals, u_vals, indexing="ij"
         )
 
         # Create analytical field: f(x, y, z, u)
@@ -61,7 +65,7 @@ class TestQuadrivariateWindowed:
 
     @staticmethod
     def make_config(
-        method,
+        method: Callable[[], windowed.Quadrivariate],
         *,
         boundary: windowed.Boundary = windowed.Boundary.EXPAND,
         window_size_x: int | None = 5,
@@ -69,11 +73,7 @@ class TestQuadrivariateWindowed:
         third_axis: windowed.AxisConfig | None = None,
         fourth_axis: windowed.AxisConfig | None = None,
     ) -> windowed.Quadrivariate:
-        """Convenience helper to build a stable windowed config.
-
-        The third and fourth axes use nearest sampling by default
-        to avoid undefined interpolation near the grid edges.
-        """
+        """Build a windowed quadrivariate interpolation configuration."""
         third_axis = third_axis or windowed.AxisConfig.nearest()
         fourth_axis = fourth_axis or windowed.AxisConfig.nearest()
 
@@ -90,8 +90,7 @@ class TestQuadrivariateWindowed:
         return cfg
 
     def test_single_point_bilinear(self) -> None:
-        """Test windowed quadrivariate interpolation at a single point with
-        bilinear method."""
+        """Test bilinear windowed interpolation at a single point."""
         grid = self.create_analytical_grid4d(np.float64)
 
         # Test point: (π/2, π/4, 2.0, π/3)
@@ -118,8 +117,7 @@ class TestQuadrivariateWindowed:
         np.testing.assert_allclose(result[0], expected, rtol=0.35)
 
     def test_multiple_points_bilinear(self) -> None:
-        """Test windowed quadrivariate interpolation at multiple points with
-        validation."""
+        """Test bilinear windowed interpolation at multiple points."""
         grid = self.create_analytical_grid4d(np.float64)
 
         # Multiple test points with known analytical values (avoid grid edges)
@@ -187,8 +185,7 @@ class TestQuadrivariateWindowed:
         assert not np.isclose(result_linear[0], result_nearest[0], rtol=0.01)
 
     def test_interpolation_method_comparison(self) -> None:
-        """Compare different spatial interpolation methods for consistency and
-        accuracy."""
+        """Test different interpolation methods produce finite results."""
         grid = self.create_analytical_grid4d(np.float64)
 
         # Use interior point (not at grid edge)
@@ -201,21 +198,21 @@ class TestQuadrivariateWindowed:
 
         # Only test methods that work well with windowed interpolation
         methods = {
-            'bilinear': windowed.Quadrivariate.bilinear,
-            'linear': windowed.Quadrivariate.linear,
+            "bilinear": windowed.Quadrivariate.bilinear,
+            "linear": windowed.Quadrivariate.linear,
         }
 
         results = {}
         for name, method in methods.items():
             config = self.make_config(method)
             result = core.quadrivariate(grid, x, y, z, u, config)
-            assert np.isfinite(result[0]), f'Method {name} produced NaN'
+            assert np.isfinite(result[0]), f"Method {name} produced NaN"
             results[name] = result[0]
 
         # All should be reasonably close to expected
         for name, value in results.items():
             assert np.abs(value - expected) < 0.2, (
-                f'Method {name} error too large: {value} vs {expected}'
+                f"Method {name} error too large: {value} vs {expected}"
             )
 
     def test_bounds_error(self) -> None:
@@ -239,7 +236,7 @@ class TestQuadrivariateWindowed:
         config = self.make_config(windowed.Quadrivariate.bilinear).bounds_error(
             True
         )
-        with pytest.raises((ValueError, IndexError), match='out of bounds'):
+        with pytest.raises((ValueError, IndexError), match="out of bounds"):
             core.quadrivariate(grid, x, y, z, u, config)
 
     def test_window_size_configuration(self) -> None:
@@ -341,7 +338,7 @@ class TestQuadrivariateWindowed:
         grid_data = load_grid4d()
         x_axis = core.Axis(grid_data.longitude.values, period=360.0)
         y_axis = core.Axis(grid_data.latitude.values)
-        z_axis = core.Axis(grid_data.time.values.astype('float64'))
+        z_axis = core.Axis(grid_data.time.values.astype("float64"))
         u_axis = core.Axis(grid_data.level.values)
 
         matrix = np.ascontiguousarray(grid_data.temperature.values.transpose())
@@ -366,9 +363,9 @@ class TestQuadrivariateWindowed:
         )
         z = np.array(
             [
-                grid_data.time.values[0].astype('float64'),
-                grid_data.time.values[1].astype('float64'),
-                grid_data.time.values[-1].astype('float64'),
+                grid_data.time.values[0].astype("float64"),
+                grid_data.time.values[1].astype("float64"),
+                grid_data.time.values[-1].astype("float64"),
             ]
         )
         u = np.array(
@@ -402,8 +399,11 @@ class TestQuadrivariateWindowed:
         assert np.isfinite(result[0])
 
     def test_num_threads(self) -> None:
-        """Test windowed quadrivariate interpolation with different thread
-        counts."""
+        """Test windowed quadrivariate interpolation with different threads.
+
+        This test checks the performance and consistency of interpolation
+        results when using different numbers of threads.
+        """
         grid = self.create_analytical_grid4d(np.float64)
 
         x = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
@@ -448,7 +448,7 @@ class TestQuadrivariateWindowed:
         # close. Windowed interpolation may have slightly larger steps due to
         # window changes
         assert max_diff < 0.15, (
-            f'Interpolation not continuous, max diff: {max_diff}'
+            f"Interpolation not continuous, max diff: {max_diff}"
         )
         assert np.all(np.isfinite(results))
 
@@ -485,7 +485,7 @@ class TestQuadrivariateWindowed:
             result_bilinear,
             expected,
             rtol=0.4,
-            err_msg='Bilinear interpolation accuracy too low',
+            err_msg="Bilinear interpolation accuracy too low",
         )
 
         # Linear should also be reasonably accurate
@@ -494,7 +494,7 @@ class TestQuadrivariateWindowed:
             result_linear,
             expected,
             rtol=0.5,
-            err_msg='Linear interpolation accuracy too low',
+            err_msg="Linear interpolation accuracy too low",
         )
 
     def test_large_array(self) -> None:
@@ -535,16 +535,16 @@ class TestQuadrivariateWindowed:
 
         # Test all available interpolation methods
         all_methods = [
-            'akima',
-            'akima_periodic',
-            'bicubic',
-            'bilinear',
-            'c_spline',
-            'c_spline_not_a_knot',
-            'c_spline_periodic',
-            'linear',
-            'polynomial',
-            'steffen',
+            "akima",
+            "akima_periodic",
+            "bicubic",
+            "bilinear",
+            "c_spline",
+            "c_spline_not_a_knot",
+            "c_spline_periodic",
+            "linear",
+            "polynomial",
+            "steffen",
         ]
 
         # Use interior point to avoid edge effects
@@ -557,8 +557,8 @@ class TestQuadrivariateWindowed:
             config = self.make_config(getattr(windowed.Quadrivariate, method))
             result = core.quadrivariate(grid, x, y, z, u, config)
 
-            assert result.shape == (1,), f'Method {method} produced wrong shape'
-            assert np.isfinite(result[0]), f'Method {method} produced NaN'
+            assert result.shape == (1,), f"Method {method} produced wrong shape"
+            assert np.isfinite(result[0]), f"Method {method} produced NaN"
 
     def test_error_on_mismatched_array_sizes(self) -> None:
         """Test that mismatched input array sizes raise appropriate errors."""
@@ -575,8 +575,7 @@ class TestQuadrivariateWindowed:
             core.quadrivariate(grid, x, y, z, u, config)
 
     def test_reproducibility(self) -> None:
-        """Test that repeated calls with same inputs produce identical
-        results."""
+        """Test that windowed interpolation produces reproducible results."""
         grid = self.create_analytical_grid4d(np.float64)
 
         x = np.array([np.pi / 3, np.pi / 2, 2 * np.pi / 3])
@@ -634,8 +633,7 @@ class TestQuadrivariateWindowed:
     def create_analytical_temporal_grid4d(
         dtype: type[np.float32 | np.float64],
     ) -> core.TemporalGrid4DFloat64 | core.TemporalGrid4DFloat32:
-        """
-        Create a 4D grid with temporal Z-axis and analytical field.
+        """Create a 4D grid with temporal Z-axis and analytical field.
 
         f(x, y, t, u) = sin(x) * cos(y) * exp(-t_normalized/5) * sin(u)
 
@@ -645,9 +643,9 @@ class TestQuadrivariateWindowed:
         y_vals = np.linspace(0, np.pi, 18)
         # Create a temporal axis with datetime64 values
         time_vals: np.ndarray = np.arange(
-            np.datetime64('2020-01-01'),
-            np.datetime64('2020-01-11'),
-            np.timedelta64(1, 'D'),
+            np.datetime64("2020-01-01"),
+            np.datetime64("2020-01-11"),
+            np.timedelta64(1, "D"),
         )
         u_vals = np.linspace(0, np.pi, 8)
 
@@ -660,7 +658,7 @@ class TestQuadrivariateWindowed:
         time_normalized = np.arange(10)
 
         x_grid, y_grid, t_grid, u_grid = np.meshgrid(
-            x_vals, y_vals, time_normalized, u_vals, indexing='ij'
+            x_vals, y_vals, time_normalized, u_vals, indexing="ij"
         )
 
         # Create analytical field: f(x, y, t, u)
@@ -687,7 +685,7 @@ class TestQuadrivariateWindowed:
         x = np.array([np.pi / 4])
         y = np.array([np.pi / 4])
         # Use a datetime64 value for z
-        z = np.array([np.datetime64('2020-01-03')])
+        z = np.array([np.datetime64("2020-01-03")])
         u = np.array([np.pi / 4])
 
         config = self.make_config(windowed.Quadrivariate.bilinear)
@@ -714,9 +712,9 @@ class TestQuadrivariateWindowed:
         y = np.array([np.pi / 4, np.pi / 3, np.pi / 2])
         z = np.array(
             [
-                np.datetime64('2020-01-01'),
-                np.datetime64('2020-01-05'),
-                np.datetime64('2020-01-09'),
+                np.datetime64("2020-01-01"),
+                np.datetime64("2020-01-05"),
+                np.datetime64("2020-01-09"),
             ]
         )
         u = np.array([np.pi / 4, np.pi / 3, np.pi / 2])
@@ -737,7 +735,7 @@ class TestQuadrivariateWindowed:
         x = np.array([np.pi / 2])
         y = np.array([np.pi / 4])
         # Datetime between grid points
-        z = np.array([np.datetime64('2020-01-03T12:00:00')])
+        z = np.array([np.datetime64("2020-01-03T12:00:00")])
         u = np.array([np.pi / 4])
 
         # Use linear interpolation on time axis
@@ -751,8 +749,8 @@ class TestQuadrivariateWindowed:
         assert np.isfinite(result[0])
 
         # Result should be between values at day 3 and day 4
-        z_day3 = np.array([np.datetime64('2020-01-03')])
-        z_day4 = np.array([np.datetime64('2020-01-04')])
+        z_day3 = np.array([np.datetime64("2020-01-03")])
+        z_day4 = np.array([np.datetime64("2020-01-04")])
 
         config_nearest = self.make_config(
             windowed.Quadrivariate.bilinear,
@@ -773,17 +771,17 @@ class TestQuadrivariateWindowed:
         grid = self.create_analytical_temporal_grid4d(np.float64)
 
         methods = [
-            'bilinear',
-            'bicubic',
-            'c_spline',
-            'linear',
-            'akima',
-            'steffen',
+            "bilinear",
+            "bicubic",
+            "c_spline",
+            "linear",
+            "akima",
+            "steffen",
         ]
 
         x = np.array([np.pi / 2])
         y = np.array([np.pi / 4])
-        z = np.array([np.datetime64('2020-01-05')])
+        z = np.array([np.datetime64("2020-01-05")])
         u = np.array([np.pi / 3])
 
         for method in methods:
@@ -791,7 +789,7 @@ class TestQuadrivariateWindowed:
             result = core.quadrivariate(grid, x, y, z, u, config)
 
             assert result.shape == (1,)
-            assert np.isfinite(result[0]), f'Method {method} produced NaN'
+            assert np.isfinite(result[0]), f"Method {method} produced NaN"
 
     def test_temporal_grid_mixed_axis_interpolation(self) -> None:
         """Test temporal grid with different interpolation on Z and U axes."""
@@ -799,7 +797,7 @@ class TestQuadrivariateWindowed:
 
         x = np.array([np.pi / 2])
         y = np.array([np.pi / 4])
-        z = np.array([np.datetime64('2020-01-05T12:00:00')])
+        z = np.array([np.datetime64("2020-01-05T12:00:00")])
         u = np.array([1.5])  # Between grid points
 
         # Linear on both Z (temporal) and U axes

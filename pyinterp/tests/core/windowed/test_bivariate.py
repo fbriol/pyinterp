@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pytest
 
@@ -13,6 +15,9 @@ from pyinterp import core
 from pyinterp.core.config import windowed
 
 from ... import load_grid2d
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class TestBivariateWindowed:
@@ -22,8 +27,7 @@ class TestBivariateWindowed:
     def create_analytical_grid2d(
         dtype: type[np.float32 | np.float64],
     ) -> core.Grid2DFloat64 | core.Grid2DFloat32:
-        """
-        Create a 2D grid with an analytical field.
+        """Create a 2D grid with an analytical field.
 
         f(x, y) = sin(x) * cos(y)
 
@@ -35,7 +39,7 @@ class TestBivariateWindowed:
         x_axis = core.Axis(x_vals, period=None)
         y_axis = core.Axis(y_vals)
 
-        x_grid, y_grid = np.meshgrid(x_vals, y_vals, indexing='ij')
+        x_grid, y_grid = np.meshgrid(x_vals, y_vals, indexing="ij")
 
         # Create analytical field: f(x, y) = sin(x) * cos(y)
         data = (np.sin(x_grid) * np.cos(y_grid)).astype(dtype)
@@ -49,17 +53,13 @@ class TestBivariateWindowed:
 
     @staticmethod
     def make_config(
-        method,
+        method: Callable[[], windowed.Bivariate],
         *,
         boundary: windowed.Boundary = windowed.Boundary.EXPAND,
         window_size_x: int | None = 5,
         window_size_y: int | None = 5,
     ) -> windowed.Bivariate:
-        """Convenience helper to build a stable windowed config.
-
-        Windowed interpolation requires window sizes and boundary mode
-        to be set for proper operation.
-        """
+        """Build a windowed bivariate configuration with standard parameters."""
         cfg = method().with_boundary_mode(boundary)
         if window_size_x is not None:
             cfg = cfg.with_window_size_x(window_size_x)
@@ -68,8 +68,9 @@ class TestBivariateWindowed:
         return cfg
 
     def test_single_point_bilinear(self) -> None:
-        """Test windowed bivariate interpolation at a single point with
-        bilinear method."""
+        """Perform bilinear interpolation at a single point."""
+        # Test single point windowed bivariate interpolation with bilinear
+        # method.
         grid = self.create_analytical_grid2d(np.float64)
 
         # Test point: (π/2, π/4)
@@ -88,8 +89,7 @@ class TestBivariateWindowed:
         np.testing.assert_allclose(result[0], expected, rtol=0.02)
 
     def test_multiple_points_bilinear(self) -> None:
-        """Test windowed bivariate interpolation at multiple points with
-        validation."""
+        """Test bilinear interpolation with multiple points."""
         grid = self.create_analytical_grid2d(np.float64)
 
         # Multiple test points with known analytical values
@@ -110,8 +110,7 @@ class TestBivariateWindowed:
         np.testing.assert_allclose(result, expected, rtol=0.05)
 
     def test_interpolation_method_comparison(self) -> None:
-        """Compare different interpolation methods for consistency and
-        accuracy."""
+        """Compare interpolation accuracy across all available methods."""
         grid = self.create_analytical_grid2d(np.float64)
 
         x = np.array([1.5])
@@ -121,16 +120,16 @@ class TestBivariateWindowed:
 
         # Test all available interpolation methods
         all_methods = [
-            'akima',
-            'akima_periodic',
-            'bicubic',
-            'bilinear',
-            'c_spline',
-            'c_spline_not_a_knot',
-            'c_spline_periodic',
-            'linear',
-            'polynomial',
-            'steffen',
+            "akima",
+            "akima_periodic",
+            "bicubic",
+            "bilinear",
+            "c_spline",
+            "c_spline_not_a_knot",
+            "c_spline_periodic",
+            "linear",
+            "polynomial",
+            "steffen",
         ]
 
         results = {}
@@ -138,13 +137,13 @@ class TestBivariateWindowed:
             method = getattr(windowed.Bivariate, name)
             config = self.make_config(method)
             result = core.bivariate(grid, x, y, config)
-            assert np.isfinite(result[0]), f'Method {name} produced NaN'
+            assert np.isfinite(result[0]), f"Method {name} produced NaN"
             results[name] = result[0]
 
         # All should be reasonably close to expected
         for name, value in results.items():
             assert np.abs(value - expected) < 0.1, (
-                f'Method {name} error too large: {value} vs {expected}'
+                f"Method {name} error too large: {value} vs {expected}"
             )
 
     def test_bounds_error(self) -> None:
@@ -166,7 +165,7 @@ class TestBivariateWindowed:
         config = self.make_config(
             windowed.Bivariate.bilinear,
         ).bounds_error(True)
-        with pytest.raises((ValueError, IndexError), match='out of bounds'):
+        with pytest.raises((ValueError, IndexError), match="out of bounds"):
             core.bivariate(grid, x, y, config)
 
     def test_window_size_configuration(self) -> None:
@@ -311,8 +310,7 @@ class TestBivariateWindowed:
         assert np.isfinite(result[0])
 
     def test_num_threads(self) -> None:
-        """Test windowed bivariate interpolation with different thread
-        counts."""
+        """Test interpolation results are consistent across thread counts."""
         grid = self.create_analytical_grid2d(np.float64)
 
         x = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
@@ -353,7 +351,7 @@ class TestBivariateWindowed:
         # close. Windowed interpolation may have slightly larger steps due to
         # window changes
         assert max_diff < 0.08, (
-            f'Interpolation not continuous, max diff: {max_diff}'
+            f"Interpolation not continuous, max diff: {max_diff}"
         )
         assert np.all(np.isfinite(results))
 
@@ -388,7 +386,7 @@ class TestBivariateWindowed:
             result_bilinear,
             expected,
             rtol=0.05,
-            err_msg='Bilinear interpolation accuracy too low',
+            err_msg="Bilinear interpolation accuracy too low",
         )
 
         # Bicubic should be at least as accurate on finite values
@@ -447,8 +445,7 @@ class TestBivariateWindowed:
             core.bivariate(grid, x, y, config)
 
     def test_reproducibility(self) -> None:
-        """Test that repeated calls with same inputs produce identical
-        results."""
+        """Test that repeated calls produce identical results."""
         grid = self.create_analytical_grid2d(np.float64)
 
         x = np.array([np.pi / 3, np.pi / 2, 2 * np.pi / 3])

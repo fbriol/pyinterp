@@ -22,8 +22,7 @@ class TestBivariateGeometric:
     def create_analytical_grid2d(
         dtype: type[np.float32 | np.float64],
     ) -> core.Grid2DFloat64 | core.Grid2DFloat32:
-        """
-        Create a 2D grid with an analytical field.
+        """Create a 2D grid with an analytical field.
 
         f(x, y) = sin(x) * cos(y)
 
@@ -35,7 +34,7 @@ class TestBivariateGeometric:
         x_axis = core.Axis(x_vals, period=None)
         y_axis = core.Axis(y_vals)
 
-        x_grid, y_grid = np.meshgrid(x_vals, y_vals, indexing='ij')
+        x_grid, y_grid = np.meshgrid(x_vals, y_vals, indexing="ij")
 
         # Create analytical field: f(x, y) = sin(x) * cos(y)
         data = (np.sin(x_grid) * np.cos(y_grid)).astype(dtype)
@@ -48,8 +47,11 @@ class TestBivariateGeometric:
         return class_name(x_axis, y_axis, data)
 
     def test_single_point_bilinear(self) -> None:
-        """Test geometric bivariate interpolation at a single point with
-        bilinear method."""
+        """Perform bilinear interpolation at a single point.
+
+        Test geometric bivariate interpolation at a single point with
+        bilinear method.
+        """
         grid = self.create_analytical_grid2d(np.float64)
 
         # Test point: (π/2, π/4)
@@ -68,8 +70,7 @@ class TestBivariateGeometric:
         np.testing.assert_allclose(result[0], expected, rtol=0.02)
 
     def test_multiple_points_bilinear(self) -> None:
-        """Test geometric bivariate interpolation at multiple points with
-        validation."""
+        """Validate geometric bivariate interpolation at multiple points."""
         grid = self.create_analytical_grid2d(np.float64)
 
         # Multiple test points with known analytical values
@@ -90,8 +91,10 @@ class TestBivariateGeometric:
         np.testing.assert_allclose(result, expected, rtol=0.05)
 
     def test_nearest_method(self) -> None:
-        """Test geometric bivariate interpolation with nearest neighbor
-        method."""
+        """Use nearest neighbor method for geometric bivariate interpolation.
+
+        Test geometric bivariate interpolation with nearest neighbor method.
+        """
         grid = self.create_analytical_grid2d(np.float64)
 
         x = np.array([1.5])
@@ -133,7 +136,7 @@ class TestBivariateGeometric:
 
         # With bounds_error=True, should raise an error
         config = geometric.Bivariate.bilinear().bounds_error(True)
-        with pytest.raises(ValueError, match='out of bounds'):
+        with pytest.raises(ValueError, match="out of bounds"):
             core.bivariate(grid, x, y, config)
 
     def test_with_real_data(self) -> None:
@@ -184,8 +187,10 @@ class TestBivariateGeometric:
         assert np.isfinite(result[0])
 
     def test_num_threads(self) -> None:
-        """Test geometric bivariate interpolation with different thread
-        counts."""
+        """Test geometric bivariate interpolation with varying thread counts.
+
+        Validate performance with different thread configurations.
+        """
         grid = self.create_analytical_grid2d(np.float64)
 
         x = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
@@ -291,7 +296,7 @@ class TestBivariateGeometric:
         """Test all available geometric bivariate methods."""
         grid = self.create_analytical_grid2d(np.float64)
 
-        methods = ['nearest', 'idw', 'bilinear']
+        methods = ["nearest", "idw", "bilinear"]
 
         x = np.array([np.pi / 2])
         y = np.array([np.pi / 2])
@@ -301,4 +306,4 @@ class TestBivariateGeometric:
             result = core.bivariate(grid, x, y, config)
 
             assert result.shape == (1,)
-            assert np.isfinite(result[0]), f'Method {method} produced NaN'
+            assert np.isfinite(result[0]), f"Method {method} produced NaN"

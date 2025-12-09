@@ -19,7 +19,7 @@ def test_temporal_axis_datetime64_regular() -> None:
     start = datetime.datetime(2000, 1, 1)
     values = np.array(
         [start + datetime.timedelta(hours=index) for index in range(24)],
-        dtype='datetime64[h]',
+        dtype="datetime64[h]",
     )
 
     axis = core.TemporalAxis(values)
@@ -28,7 +28,7 @@ def test_temporal_axis_datetime64_regular() -> None:
     assert isinstance(str(axis), str)
 
     # Test dtype
-    assert axis.dtype == np.dtype('datetime64[h]')
+    assert axis.dtype == np.dtype("datetime64[h]")
 
     # Test basic properties
     assert axis.is_regular()
@@ -36,19 +36,19 @@ def test_temporal_axis_datetime64_regular() -> None:
     assert len(axis) == 24
 
     # Test front, back, min, max
-    assert axis.front() == np.datetime64('2000-01-01T00:00')
-    assert axis.back() == np.datetime64('2000-01-01T23:00')
-    assert axis.min_value() == np.datetime64('2000-01-01T00:00')
-    assert axis.max_value() == np.datetime64('2000-01-01T23:00')
+    assert axis.front() == np.datetime64("2000-01-01T00:00")
+    assert axis.back() == np.datetime64("2000-01-01T23:00")
+    assert axis.min_value() == np.datetime64("2000-01-01T00:00")
+    assert axis.max_value() == np.datetime64("2000-01-01T23:00")
 
     # Test increment
     increment = axis.increment()
-    assert increment == np.timedelta64(1, 'h')
+    assert increment == np.timedelta64(1, "h")
 
     # Test indexing
-    assert axis[0] == np.datetime64('2000-01-01T00:00')
-    assert axis[12] == np.datetime64('2000-01-01T12:00')
-    assert axis[23] == np.datetime64('2000-01-01T23:00')
+    assert axis[0] == np.datetime64("2000-01-01T00:00")
+    assert axis[12] == np.datetime64("2000-01-01T12:00")
+    assert axis[23] == np.datetime64("2000-01-01T23:00")
 
     # Test slicing
     slice_values = axis[5:10]
@@ -57,21 +57,21 @@ def test_temporal_axis_datetime64_regular() -> None:
 
     # Test find_index
     test_coords = np.array(
-        ['2000-01-01T06:00', '2000-01-01T18:00'], dtype='datetime64[h]'
+        ["2000-01-01T06:00", "2000-01-01T18:00"], dtype="datetime64[h]"
     )
     indexes = axis.find_index(test_coords, bounded=True)
     assert np.array_equal(indexes, [6, 18])
 
     # Test find_index with out of bounds
     test_coords_oob = np.array(
-        ['1999-12-31', '2000-01-02'], dtype='datetime64[h]'
+        ["1999-12-31", "2000-01-02"], dtype="datetime64[h]"
     )
     indexes_oob = axis.find_index(test_coords_oob, bounded=False)
     assert indexes_oob[0] == -1
     assert indexes_oob[1] == -1
 
     # Test find_indexes
-    test_coords_mid = np.array(['2000-01-01T06:30'], dtype='datetime64[h]')
+    test_coords_mid = np.array(["2000-01-01T06:30"], dtype="datetime64[h]")
     indexes_surround = axis.find_indexes(test_coords_mid)
     assert indexes_surround.shape == (1, 2)
     # Since we're using hourly resolution, 6:30 rounds to 6:00
@@ -85,27 +85,27 @@ def test_temporal_axis_datetime64_microseconds() -> None:
     start = datetime.datetime(2000, 1, 1)
     values = np.array(
         [start + datetime.timedelta(seconds=index) for index in range(86400)],
-        dtype='datetime64[us]',
+        dtype="datetime64[us]",
     )
 
     axis = core.TemporalAxis(values)
 
-    assert axis.dtype == np.dtype('datetime64[us]')
+    assert axis.dtype == np.dtype("datetime64[us]")
     assert axis.is_regular()
     assert len(axis) == 86400
 
     # Test increment (1 second = 1,000,000 microseconds)
     increment = axis.increment()
-    assert increment == np.timedelta64(1000000, 'us')
+    assert increment == np.timedelta64(1000000, "us")
 
     # Test boundaries
-    assert axis.front() == np.datetime64('2000-01-01T00:00:00.000000')
-    assert axis.back() == np.datetime64('2000-01-01T23:59:59.000000')
-    assert axis.min_value() == np.datetime64('2000-01-01T00:00:00.000000')
-    assert axis.max_value() == np.datetime64('2000-01-01T23:59:59.000000')
+    assert axis.front() == np.datetime64("2000-01-01T00:00:00.000000")
+    assert axis.back() == np.datetime64("2000-01-01T23:59:59.000000")
+    assert axis.min_value() == np.datetime64("2000-01-01T00:00:00.000000")
+    assert axis.max_value() == np.datetime64("2000-01-01T23:59:59.000000")
 
     # Test find_index with different dates
-    test_coords = np.array(['2000-01-01', '2000-02-01'], dtype='datetime64')
+    test_coords = np.array(["2000-01-01", "2000-02-01"], dtype="datetime64")
     indexes = axis.find_index(test_coords, bounded=False)
     assert indexes[0] == 0
     assert indexes[1] == -1
@@ -124,29 +124,29 @@ def test_temporal_axis_timedelta64() -> None:
     # Create axis with timedelta values
     values = np.array(
         [datetime.timedelta(seconds=index) for index in range(86400)],
-        dtype='timedelta64[us]',
+        dtype="timedelta64[us]",
     )
 
     axis = core.TemporalAxis(values)
 
-    assert axis.dtype == np.dtype('timedelta64[us]')
+    assert axis.dtype == np.dtype("timedelta64[us]")
     assert axis.is_regular()
     assert len(axis) == 86400
 
     # Test increment
-    assert axis.increment() == np.timedelta64(1000000, 'us')
+    assert axis.increment() == np.timedelta64(1000000, "us")
 
     # Test boundaries
-    assert axis.front() == np.timedelta64(0, 'us')
-    assert axis.back() == np.timedelta64(86399, 's')
-    assert axis.min_value() == np.timedelta64(0, 'us')
-    assert axis.max_value() == np.timedelta64(86399, 's')
+    assert axis.front() == np.timedelta64(0, "us")
+    assert axis.back() == np.timedelta64(86399, "s")
+    assert axis.min_value() == np.timedelta64(0, "us")
+    assert axis.max_value() == np.timedelta64(86399, "s")
 
     # Test indexing
-    assert axis[0] == np.timedelta64(0, 'us')
+    assert axis[0] == np.timedelta64(0, "us")
 
     # Test find_index
-    test_coords = np.array([0, 86400], dtype='timedelta64[s]')
+    test_coords = np.array([0, 86400], dtype="timedelta64[s]")
     indexes = axis.find_index(test_coords, bounded=False)
     assert indexes[0] == 0
     assert indexes[1] == -1
@@ -162,13 +162,13 @@ def test_temporal_axis_timedelta64() -> None:
     # Irregular timedelta axis
     irregular_values = np.array(
         [datetime.timedelta(seconds=index) for index in [0, 1, 4, 8, 20, 50]],
-        dtype='timedelta64[s]',
+        dtype="timedelta64[s]",
     )
     irregular_axis = core.TemporalAxis(irregular_values)
     assert not irregular_axis.is_regular()
 
     # Test find_indexes
-    test_coords_irregular = np.array([2, 10], dtype='timedelta64[s]')
+    test_coords_irregular = np.array([2, 10], dtype="timedelta64[s]")
     indexes_surround = irregular_axis.find_indexes(test_coords_irregular)
     assert indexes_surround.shape == (2, 2)
     assert indexes_surround[0, 0] == 1  # Surrounding index for 2s
@@ -182,7 +182,7 @@ def test_temporal_axis_flip() -> None:
     start = datetime.datetime(2000, 1, 1)
     values = np.array(
         [start + datetime.timedelta(seconds=index) for index in range(86400)],
-        dtype='datetime64[us]',
+        dtype="datetime64[us]",
     )
 
     axis = core.TemporalAxis(values)
@@ -197,14 +197,14 @@ def test_temporal_axis_flip() -> None:
     assert axis.back() == original_front
 
     # Min and max should remain the same
-    assert axis.min_value() == np.datetime64('2000-01-01T00:00:00.000000')
-    assert axis.max_value() == np.datetime64('2000-01-01T23:59:59.000000')
+    assert axis.min_value() == np.datetime64("2000-01-01T00:00:00.000000")
+    assert axis.max_value() == np.datetime64("2000-01-01T23:59:59.000000")
 
     # Increment should be negative
-    assert axis.increment() == np.timedelta64(-1000000, 'us')
+    assert axis.increment() == np.timedelta64(-1000000, "us")
 
     # Test find_index after flip
-    test_coords = np.array(['2000-01-01', '2000-02-01'], dtype='datetime64')
+    test_coords = np.array(["2000-01-01", "2000-02-01"], dtype="datetime64")
     indexes = axis.find_index(test_coords, bounded=False)
     assert indexes[0] == 86399  # Now at the end
     assert indexes[1] == -1
@@ -221,7 +221,7 @@ def test_temporal_axis_flip_copy() -> None:
     """Test flipping TemporalAxis with copy."""
     values = np.array(
         [datetime.timedelta(seconds=index) for index in range(100)],
-        dtype='timedelta64[s]',
+        dtype="timedelta64[s]",
     )
 
     axis = core.TemporalAxis(values)
@@ -242,17 +242,17 @@ def test_temporal_axis_flip_copy() -> None:
 def test_temporal_axis_epsilon() -> None:
     """Test TemporalAxis with epsilon parameter."""
     values = np.array(
-        ['2000-01-01T00:00:00', '2000-01-01T00:00:01', '2000-01-01T00:00:02'],
-        dtype='datetime64[s]',
+        ["2000-01-01T00:00:00", "2000-01-01T00:00:01", "2000-01-01T00:00:02"],
+        dtype="datetime64[s]",
     )
 
     # Epsilon finer than the time resolution cannot determine axis regularity
-    epsilon = np.timedelta64(100, 'ms')
-    with pytest.raises(ValueError, match='is finer than points resolution'):
+    epsilon = np.timedelta64(100, "ms")
+    with pytest.raises(ValueError, match="is finer than points resolution"):
         core.TemporalAxis(values, epsilon=epsilon)
 
     # Epsilon of 1 seconds
-    epsilon = np.timedelta64(1, 's')
+    epsilon = np.timedelta64(1, "s")
     axis = core.TemporalAxis(values, epsilon=epsilon)
 
     assert axis.is_regular()
@@ -264,15 +264,15 @@ def test_temporal_axis_period() -> None:
     # Daily cycle (24 hours)
     values = np.array(
         [
-            '2000-01-01T00:00',
-            '2000-01-01T06:00',
-            '2000-01-01T12:00',
-            '2000-01-01T18:00',
+            "2000-01-01T00:00",
+            "2000-01-01T06:00",
+            "2000-01-01T12:00",
+            "2000-01-01T18:00",
         ],
-        dtype='datetime64[h]',
+        dtype="datetime64[h]",
     )
 
-    period = np.timedelta64(24, 'h')
+    period = np.timedelta64(24, "h")
     axis = core.TemporalAxis(values, period=period)
 
     assert axis.is_periodic
@@ -289,15 +289,15 @@ def test_temporal_axis_cast_to_temporal_axis() -> None:
     start = datetime.datetime(2000, 1, 1)
     values = np.array(
         [start + datetime.timedelta(seconds=index) for index in range(86400)],
-        dtype='datetime64[us]',
+        dtype="datetime64[us]",
     )
 
     axis = core.TemporalAxis(values)
 
     # Convert from hours to microseconds - should produce different values
-    values_hours = values.astype('datetime64[h]')
+    values_hours = values.astype("datetime64[h]")
     converted = axis.cast_to_temporal_axis(values_hours)
-    assert converted.dtype == np.dtype('datetime64[us]')
+    assert converted.dtype == np.dtype("datetime64[us]")
     assert not np.array_equal(values, converted)
 
     # Test with same resolution
@@ -310,7 +310,7 @@ def test_temporal_axis_pickle() -> None:
     start = datetime.datetime(2000, 1, 1)
     values = np.array(
         [start + datetime.timedelta(hours=index) for index in range(24)],
-        dtype='datetime64[h]',
+        dtype="datetime64[h]",
     )
 
     axis = core.TemporalAxis(values)
@@ -332,15 +332,15 @@ def test_temporal_axis_pickle() -> None:
 def test_temporal_axis_equality() -> None:
     """Test equality comparison for TemporalAxis."""
     values1 = np.array(
-        ['2000-01-01', '2000-01-02', '2000-01-03'], dtype='datetime64[D]'
+        ["2000-01-01", "2000-01-02", "2000-01-03"], dtype="datetime64[D]"
     )
 
     values2 = np.array(
-        ['2000-01-01', '2000-01-02', '2000-01-03'], dtype='datetime64[D]'
+        ["2000-01-01", "2000-01-02", "2000-01-03"], dtype="datetime64[D]"
     )
 
     values3 = np.array(
-        ['2000-01-01', '2000-01-02', '2000-01-04'], dtype='datetime64[D]'
+        ["2000-01-01", "2000-01-02", "2000-01-04"], dtype="datetime64[D]"
     )
 
     axis1 = core.TemporalAxis(values1)
@@ -361,21 +361,21 @@ def test_temporal_axis_validation() -> None:
 
     # Empty array should raise ValueError
     with pytest.raises(ValueError):
-        core.TemporalAxis(np.array([], dtype='datetime64[s]'))
+        core.TemporalAxis(np.array([], dtype="datetime64[s]"))
 
     # Non-monotonic values should raise ValueError
     with pytest.raises(ValueError):
         core.TemporalAxis(
             np.array(
-                ['2000-01-03', '2000-01-01', '2000-01-02'],
-                dtype='datetime64[D]',
+                ["2000-01-03", "2000-01-01", "2000-01-02"],
+                dtype="datetime64[D]",
             )
         )
 
 
 def test_temporal_axis_cast_to_temporal_axis_validation() -> None:
     """Test cast_to_temporal_axis validation."""
-    values = np.array(['2000-01-01', '2000-02-01'], dtype='datetime64[s]')
+    values = np.array(["2000-01-01", "2000-02-01"], dtype="datetime64[s]")
 
     axis = core.TemporalAxis(values)
 
@@ -384,24 +384,24 @@ def test_temporal_axis_cast_to_temporal_axis_validation() -> None:
         axis.cast_to_temporal_axis(np.arange(2))
 
     # Valid conversion from days to seconds
-    values_days = np.array(['2000-01-01', '2000-02-01'], dtype='datetime64[D]')
+    values_days = np.array(["2000-01-01", "2000-02-01"], dtype="datetime64[D]")
     converted = axis.cast_to_temporal_axis(values_days)
-    assert converted.dtype == np.dtype('datetime64[s]')
+    assert converted.dtype == np.dtype("datetime64[s]")
 
 
 def test_temporal_axis_irregular() -> None:
     """Test TemporalAxis with irregular spacing."""
     values = np.array(
         [
-            '2000-01-01T00:00',
-            '2000-01-01T06:09',
-            '2000-01-01T12:30',
-            '2000-01-01T18:45',
+            "2000-01-01T00:00",
+            "2000-01-01T06:09",
+            "2000-01-01T12:30",
+            "2000-01-01T18:45",
         ],
-        dtype='datetime64[m]',
+        dtype="datetime64[m]",
     )
 
-    axis = core.TemporalAxis(values, epsilon=np.timedelta64(1, 'm'))
+    axis = core.TemporalAxis(values, epsilon=np.timedelta64(1, "m"))
 
     assert not axis.is_regular()
     assert axis.is_ascending()

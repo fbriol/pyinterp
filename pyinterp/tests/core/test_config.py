@@ -117,16 +117,16 @@ class TestWindowed:
     def test_bivariate_class_methods(self) -> None:
         """Test Bivariate class methods return instances."""
         methods = [
-            'akima',
-            'akima_periodic',
-            'bicubic',
-            'bilinear',
-            'c_spline',
-            'c_spline_not_a_knot',
-            'c_spline_periodic',
-            'linear',
-            'polynomial',
-            'steffen',
+            "akima",
+            "akima_periodic",
+            "bicubic",
+            "bilinear",
+            "c_spline",
+            "c_spline_not_a_knot",
+            "c_spline_periodic",
+            "linear",
+            "polynomial",
+            "steffen",
         ]
 
         for method in methods:
@@ -175,16 +175,16 @@ class TestWindowed:
     def test_trivariate_class_methods(self) -> None:
         """Test Trivariate class methods return instances."""
         methods = [
-            'akima',
-            'akima_periodic',
-            'bicubic',
-            'bilinear',
-            'c_spline',
-            'c_spline_not_a_knot',
-            'c_spline_periodic',
-            'linear',
-            'polynomial',
-            'steffen',
+            "akima",
+            "akima_periodic",
+            "bicubic",
+            "bilinear",
+            "c_spline",
+            "c_spline_not_a_knot",
+            "c_spline_periodic",
+            "linear",
+            "polynomial",
+            "steffen",
         ]
 
         for method in methods:
@@ -232,16 +232,16 @@ class TestWindowed:
     def test_quadrivariate_class_methods(self) -> None:
         """Test Quadrivariate class methods return instances."""
         methods = [
-            'akima',
-            'akima_periodic',
-            'bicubic',
-            'bilinear',
-            'c_spline',
-            'c_spline_not_a_knot',
-            'c_spline_periodic',
-            'linear',
-            'polynomial',
-            'steffen',
+            "akima",
+            "akima_periodic",
+            "bicubic",
+            "bilinear",
+            "c_spline",
+            "c_spline_not_a_knot",
+            "c_spline_periodic",
+            "linear",
+            "polynomial",
+            "steffen",
         ]
 
         for method in methods:
