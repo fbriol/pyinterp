@@ -251,9 +251,8 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
              const std::optional<config::rtree::Query>& config) {
-            auto [distances, values] = self.query(
-                coordinates, config.value_or(config::rtree::Query{}));
-            return nb::make_tuple(std::move(distances), std::move(values));
+            return self.query(coordinates,
+                              config.value_or(config::rtree::Query{}));
           },
           nb::arg("coordinates"), nb::arg("config") = std::nullopt, kQueryDoc,
           nb::call_guard<nb::gil_scoped_release>())
@@ -265,10 +264,9 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
                  coordinates,
              const std::optional<config::rtree::InverseDistanceWeighting>&
                  config) {
-            auto [values, counts] = self.inverse_distance_weighting(
+            return self.inverse_distance_weighting(
                 coordinates,
                 config.value_or(config::rtree::InverseDistanceWeighting{}));
-            return nb::make_tuple(std::move(values), std::move(counts));
           },
           nb::arg("coordinates"), nb::arg("config") = std::nullopt,
           kInverseDistanceWeightingDoc,
@@ -280,9 +278,8 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
              const std::optional<config::rtree::Kriging>& config) {
-            auto [values, counts] = self.kriging(
-                coordinates, config.value_or(config::rtree::Kriging{}));
-            return nb::make_tuple(std::move(values), std::move(counts));
+            return self.kriging(coordinates,
+                                config.value_or(config::rtree::Kriging{}));
           },
           nb::arg("coordinates"), nb::arg("config") = std::nullopt, kKrigingDoc,
           nb::call_guard<nb::gil_scoped_release>())
@@ -293,10 +290,9 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
              const std::optional<config::rtree::RadialBasisFunction>& config) {
-            auto [values, counts] = self.radial_basis_function(
+            return self.radial_basis_function(
                 coordinates,
                 config.value_or(config::rtree::RadialBasisFunction{}));
-            return nb::make_tuple(std::move(values), std::move(counts));
           },
           nb::arg("coordinates"), nb::arg("config") = std::nullopt,
           kRadialBasisFunctionDoc, nb::call_guard<nb::gil_scoped_release>())
@@ -307,10 +303,9 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
              const std::optional<config::rtree::InterpolationWindow>& config) {
-            auto [values, counts] = self.window_function(
+            return self.window_function(
                 coordinates,
                 config.value_or(config::rtree::InterpolationWindow{}));
-            return nb::make_tuple(std::move(values), std::move(counts));
           },
           nb::arg("coordinates"), nb::arg("config") = std::nullopt,
           kWindowFunctionDoc, nb::call_guard<nb::gil_scoped_release>())
