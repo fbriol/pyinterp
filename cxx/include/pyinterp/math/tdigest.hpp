@@ -192,6 +192,8 @@ class TDigest {
   }
 
  private:
+  /// Magic number for t-digest serialization
+  static constexpr uint32_t kMagicNumber = 0x54444947;
   /// Compression parameter
   size_t compression_{100};
   /// Total count of values added
@@ -427,7 +429,7 @@ auto TDigest<T>::pack() const -> serialization::Writer {
 
   serialization::Writer writer;
   // Write version for future compatibility
-  writer.write(static_cast<uint32_t>(1));
+  writer.write(kMagicNumber);
   writer.write(count_);
   writer.write(min_);
   writer.write(max_);
@@ -445,10 +447,10 @@ auto TDigest<T>::unpack(serialization::Reader& state) -> TDigest<T> {
   }
 
   TDigest<T> digest;
-  // Read and validate version
-  auto version = state.read<uint32_t>();
-  if (version != 1) {
-    throw std::invalid_argument("Unsupported TDigest serialization version");
+  // Read and validate magic number
+  const auto magic = state.read<uint32_t>();
+  if (magic != kMagicNumber) {
+    throw std::invalid_argument("Invalid TDigest serialization magic number");
   }
 
   digest.count_ = state.read<uint64_t>();

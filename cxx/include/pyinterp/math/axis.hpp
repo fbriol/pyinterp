@@ -411,6 +411,9 @@ class Axis {
   /// Function pointer to handle boundary violations
   using BoundaryHandler = int64_t (*)(int64_t, int64_t);
 
+  /// Magic number for axis serialization
+  static constexpr uint32_t kMagicNumber = 0x41584953;
+
   /// True, if the axis is periodic.
   bool is_periodic_{false};
 
@@ -886,6 +889,9 @@ template <typename T>
   requires std::is_arithmetic_v<T>
 auto Axis<T>::pack() const -> serialization::Writer {
   serialization::Writer buffer;
+  // Write magic number for validation
+  buffer.write(kMagicNumber);
+
   // Serialize the axis container type identifier (axis::AxisType) as a single
   // byte.
   buffer.write(static_cast<uint8_t>(container_->type()));
@@ -919,6 +925,10 @@ template <typename T>
 auto Axis<T>::unpack(serialization::Reader& state) -> Axis<T> {
   if (state.size() == 0) {
     throw std::invalid_argument("Cannot restore axis from empty state.");
+  }
+  auto magic_number = state.read<uint32_t>();
+  if (magic_number != kMagicNumber) {
+    throw std::invalid_argument("Invalid axis state (bad magic number).");
   }
 
   auto type_id = state.read<uint8_t>();
