@@ -5,6 +5,7 @@
 #include "pyinterp/pybind/geodetic.hpp"
 #include "pyinterp/pybind/geometric.hpp"
 #include "pyinterp/pybind/grid.hpp"
+#include "pyinterp/pybind/rtree.hpp"
 #include "pyinterp/pybind/windowed.hpp"
 
 NB_MODULE(core, m) {
@@ -18,4 +19,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::windowed::init_trivariate(m);
   pyinterp::pybind::windowed::init_quadrivariate(m);
   pyinterp::pybind::init_geodetic(m);
+  pyinterp::pybind::init_rtree_3d(m);
 }

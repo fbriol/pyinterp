@@ -89,6 +89,17 @@ class RTreeBase : public ThreadConfig {
   double radius_{std::numeric_limits<double>::max()};
 };
 
+// ////////////////////////////////////////////////////////////////////////////
+
+/// Configuration for query operations
+class Query : public RTreeBase<Query> {
+ public:
+  /// @brief Default constructor
+  constexpr Query() noexcept = default;
+};
+
+// ////////////////////////////////////////////////////////////////////////////
+
 /// Configuration for inverse distance weighting interpolation
 class InverseDistanceWeighting : public RTreeBase<InverseDistanceWeighting> {
  public:

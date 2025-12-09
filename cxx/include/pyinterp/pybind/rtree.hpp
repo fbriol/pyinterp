@@ -4,6 +4,8 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 
+#include <nanobind/nanobind.h>
+
 #include <Eigen/Core>
 #include <concepts>
 #include <cstdint>
@@ -19,17 +21,12 @@
 #include "pyinterp/geometry/rtree.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
+#include "pyinterp/parallel_for.hpp"
+#include "pyinterp/pybind/config/rtree.hpp"
+#include "pyinterp/pybind/ndarray_serialization.hpp"
 #include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::pybind {
-
-/// 3D bounding box for Cartesian coordinates
-/// @tparam T Coordinate type
-template <std::floating_point T>
-struct Box3D {
-  std::array<T, 3> min_corner;
-  std::array<T, 3> max_corner;
-};
 
 /// RTree spatial index for 3D points
 ///
@@ -87,10 +84,6 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
     return spheroid_;
   }
 
-  /// Get the 3D bounding box of all stored points
-  /// @return Optional box containing all points, or nullopt if empty
-  [[nodiscard]] auto bounds() const -> std::optional<Box3D<T>>;
-
   /// Bulk-load points using STR packing algorithm
   ///
   /// @param[in] coordinates Matrix of shape (n, 3) or (n, 2) containing
@@ -118,92 +111,77 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   /// @param[in] num_threads Number of threads (0 = auto)
   /// @return Tuple of (distances, values) matrices [n_points x k]
   [[nodiscard]] auto query(
-      const Eigen::Ref<const CoordinateMatrix>& coordinates, uint32_t k,
-      const geometry::BoundaryCheck check, size_t num_threads) const
+      const Eigen::Ref<const CoordinateMatrix>& coordinates,
+      const config::rtree::Query& config) const
       -> std::tuple<Matrix<distance_t>, Matrix<promotion_t>>;
 
   /// Inverse distance weighting interpolation
   ///
   /// @param[in] coordinates Query coordinates, shape (n, 3) or (n, 2)
-  /// @param[in] radius Optional search radius (meters)
-  /// @param[in] k Number of neighbors to use
-  /// @param[in] p Power parameter (typically 2)
-  /// @param[in] check Type of boundary verification to apply
-  /// @param[in] num_threads Number of threads (0 = auto)
+  /// @param[in] config Configuration for IDW interpolation
   /// @return Tuple of (interpolated values, neighbor counts)
   [[nodiscard]] auto inverse_distance_weighting(
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
-      const std::optional<coordinate_t>& radius, uint32_t k, uint32_t p,
-      const geometry::BoundaryCheck check, size_t num_threads) const
+      const config::rtree::InverseDistanceWeighting& config) const
       -> std::tuple<ValueVector, Vector<uint32_t>>;
 
   /// Kriging interpolation
   ///
   /// @param[in] coordinates Query coordinates, shape (n, 3) or (n, 2)
-  /// @param[in] radius Optional search radius (meters)
-  /// @param[in] k Number of neighbors to use
-  /// @param[in] covariance_model Covariance function
-  /// @param[in] drift_function Optional drift function
-  /// @param[in] sigma Sill parameter
-  /// @param[in] lambda Range parameter
-  /// @param[in] nugget Nugget effect parameter
-  /// @param[in] check Type of boundary verification to apply
-  /// @param[in] num_threads Number of threads (0 = auto)
+  /// @param[in] config Configuration for Kriging interpolation
   /// @return Tuple of (interpolated values, neighbor counts)
   [[nodiscard]] auto kriging(
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
-      const std::optional<coordinate_t>& radius, const uint32_t k,
-      const math::interpolate::CovarianceFunction covariance_model,
-      const std::optional<math::interpolate::DriftFunction>& drift_function,
-      const coordinate_t sigma, const coordinate_t lambda,
-      const coordinate_t nugget, const geometry::BoundaryCheck check,
-      const size_t num_threads) const
+      const config::rtree::Kriging& config) const
       -> std::tuple<ValueVector, Vector<uint32_t>>;
 
   /// Radial basis function interpolation
   ///
   /// @param[in] coordinates Query coordinates, shape (n, 3) or (n, 2)
-  /// @param[in] radius Optional search radius (meters)
-  /// @param[in] k Number of neighbors to use
-  /// @param[in] rbf Radial basis function type
-  /// @param[in] epsilon Optional shape parameter
-  /// @param[in] smooth Smoothing parameter
-  /// @param[in] check Type of boundary verification to apply
-  /// @param[in] num_threads Number of threads (0 = auto)
+  /// @param[in] config Configuration for RBF interpolation
   /// @return Tuple of (interpolated values, neighbor counts)
   [[nodiscard]] auto radial_basis_function(
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
-      const std::optional<T>& radius, uint32_t k,
-      math::interpolate::RBFType rbf, const std::optional<T>& epsilon, T smooth,
-      const geometry::BoundaryCheck check, size_t num_threads) const
+      const config::rtree::RadialBasisFunction& config) const
       -> std::tuple<ValueVector, Vector<uint32_t>>;
 
   /// Window function based interpolation
   ///
   /// @param coordinates Query coordinates, shape (n, 3) or (n, 2)
-  /// @param radius Optional search radius (meters)
-  /// @param k Number of neighbors to use
-  /// @param wf Window function type
-  /// @param arg Optional window function argument
-  /// @param check Type of boundary verification to apply
-  /// @param num_threads Number of threads (0 = auto)
+  /// @param config Configuration for window function interpolation
   /// @return Tuple of (interpolated values, neighbor counts)
   [[nodiscard]] auto window_function(
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
-      const std::optional<T>& radius, uint32_t k,
-      math::interpolate::window::Kernel wf, const std::optional<double>& arg,
-      const geometry::BoundaryCheck check, size_t num_threads) const
+      const config::rtree::InterpolationWindow& config) const
       -> std::tuple<ValueVector, Vector<uint32_t>>;
 
   /// Serialize the RTree3D state
   /// @return Serialized byte buffer
-  [[nodiscard]] auto serialize() const -> std::vector<std::byte>;
+  [[nodiscard]] auto getstate() const -> nanobind::tuple {
+    serialization::Writer state;
+    {
+      nanobind::gil_scoped_release release;
+      state = base_t::pack();
+    }
+    return nanobind::make_tuple(writer_to_ndarray(std::move(state)));
+  }
 
   /// Deserialize an RTree3D from a byte buffer
   /// @param buffer Serialized data
   /// @return Deserialized RTree3D instance
-  [[nodiscard]] static auto deserialize(std::span<const std::byte> buffer)
-      -> RTree3D;
+  [[nodiscard]] static auto setstate(const nanobind::tuple& state) -> RTree3D {
+    if (state.size() != 1) {
+      throw std::invalid_argument("Invalid state");
+    }
+    auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+    auto reader = reader_from_ndarray(array);
+    {
+      nanobind::gil_scoped_release release;
+      RTree3D<T> rtree;
+      static_cast<base_t&>(rtree) = base_t::unpack(reader);
+      return rtree;
+    }
+  }
 
  private:
   /// Spheroid for geodetic calculations
@@ -231,8 +209,8 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   /// Helper: perform batch query operation
   template <typename QueryFunc>
   [[nodiscard]] auto batch_query(
-      const Eigen::Ref<const CoordinateMatrix>& coordinates, uint32_t k,
-      size_t num_threads, QueryFunc&& query_func) const
+      const Eigen::Ref<const CoordinateMatrix>& coordinates,
+      const config::rtree::Query& config, QueryFunc&& query_func) const
       -> std::tuple<Matrix<distance_t>, Matrix<promotion_t>>;
 
   /// Helper: perform batch interpolation operation
@@ -297,22 +275,6 @@ auto RTree3D<T>::to_internal_point(
 // ////////////////////////////////////////////////////////////////////////////
 
 template <std::floating_point T>
-auto RTree3D<T>::bounds() const -> std::optional<Box3D<T>> {
-  if (base_t::empty()) {
-    return std::nullopt;
-  }
-
-  auto box = base_t::bounds();
-  return Box3D<T>{
-      {box.min_corner().template get<0>(), box.min_corner().template get<1>(),
-       box.min_corner().template get<2>()},
-      {box.max_corner().template get<0>(), box.max_corner().template get<1>(),
-       box.max_corner().template get<2>()}};
-}
-
-// ////////////////////////////////////////////////////////////////////////////
-
-template <std::floating_point T>
 void RTree3D<T>::packing(const Eigen::Ref<const CoordinateMatrix>& coordinates,
                          const Eigen::Ref<const ValueVector>& values) {
   validate_coordinates(coordinates, values);
@@ -335,7 +297,7 @@ void RTree3D<T>::insert(const Eigen::Ref<const CoordinateMatrix>& coordinates,
   validate_coordinates(coordinates, values);
 
   for (int64_t ix = 0; ix < coordinates.rows(); ++ix) {
-    base_t::insert(to_internal_point(coordinates, ix), values[ix]);
+    base_t::insert({to_internal_point(coordinates, ix), values[ix]});
   }
 }
 
@@ -344,14 +306,14 @@ void RTree3D<T>::insert(const Eigen::Ref<const CoordinateMatrix>& coordinates,
 template <std::floating_point T>
 template <typename QueryFunc>
 auto RTree3D<T>::batch_query(
-    const Eigen::Ref<const CoordinateMatrix>& coordinates, uint32_t k,
-    size_t num_threads, QueryFunc&& query_func) const
+    const Eigen::Ref<const CoordinateMatrix>& coordinates,
+    const config::rtree::Query& config, QueryFunc&& query_func) const
     -> std::tuple<Matrix<distance_t>, Matrix<promotion_t>> {
   validate_coordinates(coordinates);
 
   const auto n = coordinates.rows();
-  Matrix<distance_t> distances(n, k);
-  Matrix<promotion_t> values(n, k);
+  Matrix<distance_t> distances(n, config.k());
+  Matrix<promotion_t> values(n, config.k());
 
   // Initialize with sentinel values
   distances.setConstant(std::numeric_limits<distance_t>::quiet_NaN());
@@ -363,15 +325,15 @@ auto RTree3D<T>::batch_query(
         for (size_t idx = start; idx < end; ++idx) {
           const auto ix = static_cast<int64_t>(idx);
           auto point = to_internal_point(coordinates, ix);
-          auto results = query_func(point, k);
+          auto results = query_func(point, config.k());
 
-          for (size_t jx = 0; jx < results.size() && jx < k; ++jx) {
+          for (size_t jx = 0; jx < results.size() && jx < config.k(); ++jx) {
             distances(ix, static_cast<int64_t>(jx)) = std::get<0>(results[jx]);
             values(ix, static_cast<int64_t>(jx)) = std::get<1>(results[jx]);
           }
         }
       },
-      num_threads);
+      config.num_threads());
 
   return {std::move(distances), std::move(values)};
 }
@@ -413,12 +375,12 @@ auto RTree3D<T>::batch_interpolate(
 
 template <std::floating_point T>
 auto RTree3D<T>::query(const Eigen::Ref<const CoordinateMatrix>& coordinates,
-                       uint32_t k, geometry::BoundaryCheck check,
-                       size_t num_threads) const
+                       const config::rtree::Query& config) const
     -> std::tuple<Matrix<distance_t>, Matrix<promotion_t>> {
-  return batch_query(coordinates, k, num_threads,
-                     [this, check](const point_t& pt, uint32_t neighbors) {
-                       return base_t::query(pt, neighbors, check);
+  return batch_query(coordinates, config,
+                     [this, config](const point_t& pt, uint32_t neighbors) {
+                       return base_t::query(pt, neighbors, config.radius(),
+                                            config.boundary_check());
                      });
 }
 
@@ -427,43 +389,32 @@ auto RTree3D<T>::query(const Eigen::Ref<const CoordinateMatrix>& coordinates,
 template <std::floating_point T>
 auto RTree3D<T>::inverse_distance_weighting(
     const Eigen::Ref<const CoordinateMatrix>& coordinates,
-    const std::optional<coordinate_t>& radius, uint32_t k, uint32_t p,
-    const geometry::BoundaryCheck check, size_t num_threads) const
+    const config::rtree::InverseDistanceWeighting& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
-  auto resolved_radius = radius.has_value()
-                             ? radius.value()
-                             : std::numeric_limits<coordinate_t>::max();
   return batch_interpolate(
-      coordinates, num_threads,
-      [this, &resolved_radius, k, p,
-       check](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::inverse_distance_weighting(pt, resolved_radius, k, p,
-                                                  check);
+      coordinates, config.num_threads(),
+      [this, config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+        return base_t::inverse_distance_weighting(pt, config.radius(),
+                                                  config.k(), config.p(),
+                                                  config.boundary_check());
       });
 }
 
 // //////////////////////////////////////////////////////////////////////////
 
 template <std::floating_point T>
-auto RTree3D<T>::kriging(
-    const Eigen::Ref<const CoordinateMatrix>& coordinates,
-    const std::optional<coordinate_t>& radius, const uint32_t k,
-    const math::interpolate::CovarianceFunction covariance_model,
-    const std::optional<math::interpolate::DriftFunction>& drift_function,
-    const coordinate_t sigma, const coordinate_t lambda,
-    const coordinate_t nugget, const geometry::BoundaryCheck check,
-    const size_t num_threads) const
+auto RTree3D<T>::kriging(const Eigen::Ref<const CoordinateMatrix>& coordinates,
+                         const config::rtree::Kriging& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
-  auto resolved_radius = radius.has_value()
-                             ? radius.value()
-                             : std::numeric_limits<coordinate_t>::max();
   auto model = math::interpolate::Kriging<promotion_t>(
-      sigma, lambda, nugget, covariance_model, drift_function);
+      config.sigma(), config.lambda(), config.nugget(),
+      config.covariance_model(), config.drift_function());
   return batch_interpolate(
-      coordinates, num_threads,
-      [this, &model, &resolved_radius, k,
-       check](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::kriging(pt, resolved_radius, k, check, model);
+      coordinates, config.num_threads(),
+      [this, &model,
+       &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+        return base_t::kriging(model, pt, config.radius(), config.k(),
+                               config.boundary_check());
       });
 }
 
@@ -472,23 +423,16 @@ auto RTree3D<T>::kriging(
 template <std::floating_point T>
 auto RTree3D<T>::radial_basis_function(
     const Eigen::Ref<const CoordinateMatrix>& coordinates,
-    const std::optional<T>& radius, uint32_t k, math::interpolate::RBFType rbf,
-    const std::optional<T>& epsilon, T smooth,
-    const geometry::BoundaryCheck check, size_t num_threads) const
+    const config::rtree::RadialBasisFunction& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
-  auto resolved_radius =
-      radius.has_value() ? radius.value() : std::numeric_limits<T>::max();
-  auto resolved_epsilon = epsilon.has_value()
-                              ? static_cast<promotion_t>(epsilon.value())
-                              : std::numeric_limits<promotion_t>::quiet_NaN();
-  auto model =
-      math::interpolate::RBF<promotion_t>(resolved_epsilon, smooth, rbf);
+  auto model = math::interpolate::RBF<promotion_t>(
+      config.epsilon(), config.smooth(), config.rbf());
   return batch_interpolate(
-      coordinates, num_threads,
-      [this, &model, &resolved_radius, k,
-       check](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::radial_basis_function(pt, model, resolved_radius, k,
-                                             check);
+      coordinates, config.num_threads(),
+      [this, &model,
+       &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+        return base_t::radial_basis_function(
+            model, pt, config.radius(), config.k(), config.boundary_check());
       });
 }
 
@@ -497,21 +441,21 @@ auto RTree3D<T>::radial_basis_function(
 template <std::floating_point T>
 auto RTree3D<T>::window_function(
     const Eigen::Ref<const CoordinateMatrix>& coordinates,
-    const std::optional<T>& radius, uint32_t k,
-    math::interpolate::window::Kernel wf, const std::optional<double>& arg,
-    const geometry::BoundaryCheck check, size_t num_threads) const
+    const config::rtree::InterpolationWindow& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
-  auto resolved_arg = arg.has_value() ? arg.value() : 0.0;
-  auto resolved_radius =
-      radius.has_value() ? radius.value() : std::numeric_limits<T>::max();
-  auto model = math::interpolate::InterpolationWindow<coordinate_t>(wf);
+  auto model = math::interpolate::InterpolationWindow<coordinate_t>(
+      config.wf(), config.arg());
   return batch_interpolate(
-      coordinates, num_threads,
-      [this, &model, &resolved_radius, resolved_arg, k,
-       check](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::window_function(pt, model, resolved_arg, resolved_radius,
-                                       k, check);
+      coordinates, config.num_threads(),
+      [this, &model,
+       &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+        return base_t::window_function(model, pt, config.radius(), config.k(),
+                                       config.boundary_check());
       });
 }
+
+/// @brief Register RTree3D class and its methods to a Python module.
+/// @param[in,out] m Python module
+auto init_rtree_3d(nanobind::module_& m) -> void;
 
 }  // namespace pyinterp::pybind

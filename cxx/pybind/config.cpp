@@ -298,6 +298,12 @@ auto bind(nb::module_& m) -> void {
       .value("QUADRATIC", math::interpolate::DriftFunction::kQuadratic,
              "Constant + linear + quadratic terms (10 parameters).");
 
+  // Bind Query configuration
+  add_rtree_methods(
+      nb::class_<Query>(m, "Query", "Configuration for query operations.")
+          .def(nb::init<>(), "Default constructor.",
+               nb::call_guard<nb::gil_scoped_release>()));
+
   // Bind InverseDistanceWeighting configuration
   add_rtree_methods(
       nb::class_<InverseDistanceWeighting>(
