@@ -16,7 +16,7 @@
 namespace pyinterp::math::interpolate {
 
 /// Known radial basis functions.
-enum class RadialBasisFunction : uint8_t {
+enum class RBFKernel : uint8_t {
   kCubic,
   kGaussian,
   kInverseMultiquadric,
@@ -50,25 +50,25 @@ class RBF {
   /// go through the nodal points in this case.
   /// @param[in] rbf The radial basis function, based on the radius, r, given by
   /// the norm (Euclidean distance)
-  constexpr RBF(const T epsilon, const T smooth, const RadialBasisFunction rbf)
+  constexpr RBF(const T epsilon, const T smooth, const RBFKernel rbf)
       : epsilon_reciprocal_{T{1} / epsilon}, smooth_{smooth} {
     switch (rbf) {
-      case RadialBasisFunction::kCubic:
+      case RBFKernel::kCubic:
         function_ = &RBF::cubic;
         break;
-      case RadialBasisFunction::kGaussian:
+      case RBFKernel::kGaussian:
         function_ = &RBF::gaussian;
         break;
-      case RadialBasisFunction::kInverseMultiquadric:
+      case RBFKernel::kInverseMultiquadric:
         function_ = &RBF::inverse_multiquadric;
         break;
-      case RadialBasisFunction::kLinear:
+      case RBFKernel::kLinear:
         function_ = &RBF::linear;
         break;
-      case RadialBasisFunction::kMultiquadric:
+      case RBFKernel::kMultiquadric:
         function_ = &RBF::multiquadric;
         break;
-      case RadialBasisFunction::kThinPlate:
+      case RBFKernel::kThinPlate:
         function_ = &RBF::thin_plate;
         break;
       [[unlikely]] default:

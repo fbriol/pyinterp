@@ -128,7 +128,7 @@ TEST(RTree2D, RBFInstantiation) {
   using promotion_t = decltype(std::declval<double>() + std::declval<double>());
   math::interpolate::RBF<promotion_t> model(
       std::numeric_limits<double>::quiet_NaN(), 0,
-      math::interpolate::RadialBasisFunction::kMultiquadric);
+      math::interpolate::RBFKernel::kMultiquadric);
   RTree2D tree;
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point2D(i, 0), static_cast<double>(i)});
@@ -145,7 +145,7 @@ TEST(RTree2D, WindowFunctionInstantiation) {
     tree.insert({Point2D(i, 0), static_cast<double>(i)});
   }
   math::interpolate::InterpolationWindow<double> model(
-      math::interpolate::window::Function::kHamming, 0.5);
+      math::interpolate::window::Kernel::kHamming, 0.5);
   auto [val, n] = tree.window_function(
       model, Point2D(1, 0), 2.0, 3, pyinterp::geometry::BoundaryCheck::kNone);
   EXPECT_TRUE(std::isfinite(val) || std::isnan(val));
@@ -256,7 +256,7 @@ TEST(RTree3D, RBFInstantiation) {
   using promotion_t = decltype(std::declval<double>() + std::declval<double>());
   math::interpolate::RBF<promotion_t> model(
       std::numeric_limits<double>::quiet_NaN(), 0,
-      math::interpolate::RadialBasisFunction::kMultiquadric);
+      math::interpolate::RBFKernel::kMultiquadric);
   RTree3D tree;
   for (int i = 0; i < 3; ++i) {
     tree.insert({Point3D(i, 0, 0), static_cast<double>(i)});
@@ -274,7 +274,7 @@ TEST(RTree3D, WindowFunctionInstantiation) {
     tree.insert({Point3D(i, 0, 0), static_cast<double>(i)});
   }
   math::interpolate::InterpolationWindow<double> model(
-      math::interpolate::window::Function::kHamming, 0.5);
+      math::interpolate::window::Kernel::kHamming, 0.5);
   auto [val, n] =
       tree.window_function(model, Point3D(1, 0, 0), 2.0, 3,
                            pyinterp::geometry::BoundaryCheck::kNone);

@@ -174,7 +174,7 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   [[nodiscard]] auto radial_basis_function(
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
       const std::optional<T>& radius, uint32_t k,
-      math::interpolate::RadialBasisFunction rbf,
+      math::interpolate::RBFType rbf,
       const std::optional<T>& epsilon, T smooth,
       const geometry::BoundaryCheck check, size_t num_threads) const
       -> std::tuple<ValueVector, Vector<uint32_t>>;
@@ -192,7 +192,7 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   [[nodiscard]] auto window_function(
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
       const std::optional<T>& radius, uint32_t k,
-      math::interpolate::window::Function wf, const std::optional<double>& arg,
+      math::interpolate::window::Kernel wf, const std::optional<double>& arg,
       const geometry::BoundaryCheck check, size_t num_threads) const
       -> std::tuple<ValueVector, Vector<uint32_t>>;
 
@@ -474,7 +474,7 @@ template <std::floating_point T>
 auto RTree3D<T>::radial_basis_function(
     const Eigen::Ref<const CoordinateMatrix>& coordinates,
     const std::optional<T>& radius, uint32_t k,
-    math::interpolate::RadialBasisFunction rbf, const std::optional<T>& epsilon,
+    math::interpolate::RBFType rbf, const std::optional<T>& epsilon,
     T smooth, const geometry::BoundaryCheck check, size_t num_threads) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   auto resolved_radius =
@@ -499,7 +499,7 @@ template <std::floating_point T>
 auto RTree3D<T>::window_function(
     const Eigen::Ref<const CoordinateMatrix>& coordinates,
     const std::optional<T>& radius, uint32_t k,
-    math::interpolate::window::Function wf, const std::optional<double>& arg,
+    math::interpolate::window::Kernel wf, const std::optional<double>& arg,
     const geometry::BoundaryCheck check, size_t num_threads) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   auto resolved_arg = arg.has_value() ? arg.value() : 0.0;

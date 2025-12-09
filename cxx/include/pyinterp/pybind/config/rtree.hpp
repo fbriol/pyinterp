@@ -2,9 +2,7 @@
 
 #include <cstdint>
 #include <optional>
-#include <stdexcept>
-#include <string>
-#include <string_view>
+
 
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
@@ -45,19 +43,28 @@ class RTreeBase : public ThreadConfig {
   /// @brief Set the search radius in meters
   /// @param[in] value Search radius (nullopt for unlimited)
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_radius(std::optional<double> value) const
-      -> Derived {
+  [[nodiscard]] constexpr auto with_radius(
+      const std::optional<double>& value) const -> Derived {
     auto copy = static_cast<const Derived&>(*this);
     copy.radius_ = value;
     return copy;
   }
 
- protected:
-  /// Number of neighbors to consider
-  uint32_t k_{8};
+  /// @brief Set the number of threads
+  /// @param[in] value Number of threads
+  /// @return Updated configuration
+  [[nodiscard]] constexpr auto with_num_threads(uint32_t value) const -> Derived {
+    auto copy = static_cast<const Derived&>(*this);
+    static_cast<ThreadConfig&>(copy) = ThreadConfig::with_num_threads(value);
+    return copy;
+  }
 
-  /// Optional search radius in meters (nullopt = unlimited)
-  std::optional<double> radius_;
+   protected:
+    /// Number of neighbors to consider
+    uint32_t k_{8};
+
+    /// Optional search radius in meters (nullopt = unlimited)
+    std::optional<double> radius_;
 };
 
 /// Configuration for inverse distance weighting interpolation
@@ -195,7 +202,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
   /// @brief Get the radial basis function type.
   /// @return Radial basis function type
   [[nodiscard]] constexpr auto rbf() const
-      -> math::interpolate::RadialBasisFunction {
+      -> math::interpolate::RBFKernel {
     return rbf_;
   }
 
@@ -213,7 +220,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
   /// @param[in] value Radial basis function type
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_rbf(
-      math::interpolate::RadialBasisFunction value) const
+      math::interpolate::RBFKernel value) const
       -> RadialBasisFunction {
     auto copy = *this;
     copy.rbf_ = value;
@@ -242,8 +249,8 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
 
  private:
   /// Radial basis function type
-  math::interpolate::RadialBasisFunction rbf_{
-      math::interpolate::RadialBasisFunction::kMultiquadric};
+  math::interpolate::RBFKernel rbf_{
+      math::interpolate::RBFKernel::kMultiquadric};
 
   /// Optional shape parameter (epsilon)
   std::optional<double> epsilon_;
@@ -263,7 +270,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
   /// @brief Get the window function type.
   /// @return Window function type
   [[nodiscard]] constexpr auto wf() const
-      -> math::interpolate::window::Function {
+      -> math::interpolate::window::Kernel {
     return wf_;
   }
 
@@ -277,7 +284,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
   /// @param[in] value Window function type
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_wf(
-      math::interpolate::window::Function value) const -> InterpolationWindow {
+      math::interpolate::window::Kernel value) const -> InterpolationWindow {
     auto copy = *this;
     copy.wf_ = value;
     return copy;
@@ -295,8 +302,8 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
 
  private:
   /// Window function type
-  math::interpolate::window::Function wf_{
-      math::interpolate::window::Function::kGaussian};
+  math::interpolate::window::Kernel wf_{
+      math::interpolate::window::Kernel::kGaussian};
 
   /// Optional window function argument
   std::optional<double> arg_;

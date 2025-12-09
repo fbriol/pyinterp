@@ -12,8 +12,8 @@
 namespace pyinterp::math::interpolate {
 namespace window {
 
-/// @brief Known window functions for signal processing
-enum class Function : uint8_t {
+/// @brief Known window kernel for signal processing
+enum class Kernel : uint8_t {
   kBlackman,        /// Blackman window
   kBlackmanHarris,  /// Blackman-Harris window
   kBoxcar,          /// Boxcar window
@@ -238,37 +238,37 @@ class InterpolationWindow {
   /// @param[in] wf The window function type to use
   /// @param[in] arg Optional argument for the window function. Defaults to 0.
   /// Its meaning depends on the window function selected.
-  explicit InterpolationWindow(const window::Function wf, const T arg = T{0})
+  explicit InterpolationWindow(const window::Kernel wf, const T arg = T{0})
       : arg_(arg) {
     switch (wf) {
-      case window::Function::kBlackman:
+      case window::Kernel::kBlackman:
         function_ = &window::blackman<T>;
         break;
-      case window::Function::kBlackmanHarris:
+      case window::Kernel::kBlackmanHarris:
         function_ = &window::blackman_harris<T>;
         break;
-      case window::Function::kBoxcar:
+      case window::Kernel::kBoxcar:
         function_ = &window::boxcar<T>;
         break;
-      case window::Function::kFlatTop:
+      case window::Kernel::kFlatTop:
         function_ = &window::flat_top<T>;
         break;
-      case window::Function::kLanczos:
+      case window::Kernel::kLanczos:
         function_ = &window::lanczos<T>;
         break;
-      case window::Function::kGaussian:
+      case window::Kernel::kGaussian:
         function_ = &window::gaussian<T>;
         break;
-      case window::Function::kHamming:
+      case window::Kernel::kHamming:
         function_ = &window::hamming<T>;
         break;
-      case window::Function::kNuttall:
+      case window::Kernel::kNuttall:
         function_ = &window::nuttall<T>;
         break;
-      case window::Function::kParzen:
+      case window::Kernel::kParzen:
         function_ = &window::parzen<T>;
         break;
-      case window::Function::kParzenSWOT:
+      case window::Kernel::kParzenSWOT:
         function_ = &window::parzen_swot<T>;
         break;
       [[unlikely]] default:

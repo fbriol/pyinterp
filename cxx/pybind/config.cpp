@@ -1,6 +1,9 @@
 #include "pyinterp/pybind/config.hpp"
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
+
+#include <optional>
 
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/pybind/config/common.hpp"
@@ -199,9 +202,14 @@ auto add_rtree_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
       .def("with_k", &Class::with_k, nb::arg("value"),
            "Set the number of neighbors to consider for interpolation.",
            nb::call_guard<nb::gil_scoped_release>())
-      .def("with_radius", &Class::with_radius, nb::arg("value"),
-           "Set the search radius in meters (None for unlimited).",
-           nb::call_guard<nb::gil_scoped_release>())
+      .def(
+          "with_radius",
+          [](const Class& self, const std::optional<double>& value) {
+            return self.with_radius(value);
+          },
+          nb::arg("value") = std::nullopt,
+          "Set the search radius in meters (None for unlimited).",
+          nb::call_guard<nb::gil_scoped_release>())
       .def("with_num_threads", &Class::with_num_threads, nb::arg("value"),
            "Number of threads to use for interpolation. A value of 0 means "
            "that all available cores will be used.",
@@ -211,23 +219,20 @@ auto add_rtree_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
 
 auto bind(nb::module_& m) -> void {
   // Bind RadialBasisFunction enum
-  nb::enum_<math::interpolate::RadialBasisFunction>(
-      m, "RadialBasisFunction",
-      "Type of radial basis function for RadialBasisFunction "
-      "interpolation.")
-      .value("CUBIC", math::interpolate::RadialBasisFunction::kCubic,
+  nb::enum_<math::interpolate::RBFKernel>(m, "RBFKernel",
+                                          "Type of radial basis kernel.")
+      .value("CUBIC", math::interpolate::RBFKernel::kCubic,
              "Cubic radial basis function.")
-      .value("GAUSSIAN", math::interpolate::RadialBasisFunction::kGaussian,
+      .value("GAUSSIAN", math::interpolate::RBFKernel::kGaussian,
              "Gaussian radial basis function.")
       .value("INVERSE_MULTIQUADRIC",
-             math::interpolate::RadialBasisFunction::kInverseMultiquadric,
+             math::interpolate::RBFKernel::kInverseMultiquadric,
              "Inverse multiquadric radial basis function.")
-      .value("LINEAR", math::interpolate::RadialBasisFunction::kLinear,
+      .value("LINEAR", math::interpolate::RBFKernel::kLinear,
              "Linear radial basis function.")
-      .value("MULTIQUADRIC",
-             math::interpolate::RadialBasisFunction::kMultiquadric,
+      .value("MULTIQUADRIC", math::interpolate::RBFKernel::kMultiquadric,
              "Multiquadric radial basis function.")
-      .value("THIN_PLATE", math::interpolate::RadialBasisFunction::kThinPlate,
+      .value("THIN_PLATE", math::interpolate::RBFKernel::kThinPlate,
              "Thin plate radial basis function.");
 
   // Bind CovarianceFunction enum
@@ -251,30 +256,29 @@ auto bind(nb::module_& m) -> void {
           "Wendland :math:`\\phi_{3,0}` (compact support, sparse matrices).");
 
   // Bind window::Function enum
-  nb::enum_<math::interpolate::window::Function>(
-      m, "WindowFunction",
-      "Type of window function for WindowFunction interpolation.")
-      .value("BLACKMAN", math::interpolate::window::Function::kBlackman,
+  nb::enum_<math::interpolate::window::Kernel>(m, "WindowKernel",
+                                               "Window kernel function.")
+      .value("BLACKMAN", math::interpolate::window::Kernel::kBlackman,
              "Blackman window function.")
       .value("BLACKMAN_HARRIS",
-             math::interpolate::window::Function::kBlackmanHarris,
+             math::interpolate::window::Kernel::kBlackmanHarris,
              "Blackman-Harris window function.")
-      .value("BOXCAR", math::interpolate::window::Function::kBoxcar,
+      .value("BOXCAR", math::interpolate::window::Kernel::kBoxcar,
              "Boxcar (rectangular) window function.")
-      .value("FLAT_TOP", math::interpolate::window::Function::kFlatTop,
+      .value("FLAT_TOP", math::interpolate::window::Kernel::kFlatTop,
              "Flat top window function (used for accurate amplitude "
              "measurements).")
-      .value("GAUSSIAN", math::interpolate::window::Function::kGaussian,
+      .value("GAUSSIAN", math::interpolate::window::Kernel::kGaussian,
              "Gaussian window function.")
-      .value("HAMMING", math::interpolate::window::Function::kHamming,
+      .value("HAMMING", math::interpolate::window::Kernel::kHamming,
              "Hamming window function.")
-      .value("LANCZOS", math::interpolate::window::Function::kLanczos,
+      .value("LANCZOS", math::interpolate::window::Kernel::kLanczos,
              "Lanczos window function.")
-      .value("NUTTALL", math::interpolate::window::Function::kNuttall,
+      .value("NUTTALL", math::interpolate::window::Kernel::kNuttall,
              "Nuttall window function.")
-      .value("PARZEN", math::interpolate::window::Function::kParzen,
+      .value("PARZEN", math::interpolate::window::Kernel::kParzen,
              "Parzen window function.")
-      .value("PARZEN_SWOT", math::interpolate::window::Function::kParzenSWOT,
+      .value("PARZEN_SWOT", math::interpolate::window::Kernel::kParzenSWOT,
              "Parzen SWOT window function.");
 
   // Bind DriftFunction enum

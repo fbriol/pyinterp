@@ -12,10 +12,10 @@
 namespace pyinterp::math::interpolate {
 
 // Test 1D interpolation with various radial basis functions
-static void test_1d(RadialBasisFunction function) {
+static void test_1d(RBFKernel kernel) {
   auto x = Eigen::Matrix<double, 1, 9>::LinSpaced(9, 0, 10);
   auto y = x.array().sin();
-  auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0, function);
+  auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0, kernel);
   auto yi = rbf.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi.size());
@@ -25,11 +25,11 @@ static void test_1d(RadialBasisFunction function) {
 }
 
 // Test 2D interpolation with various radial basis functions
-static void test_2d(RadialBasisFunction function) {
+static void test_2d(RBFKernel kernel) {
   Eigen::Matrix<double, 2, 50> x = Eigen::Matrix<double, 2, 50>::Random();
   Eigen::Matrix<double, 50, 1> y =
       (x.row(0).array().pow(2) - x.row(1).array().pow(2)).array().exp();
-  auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0, function);
+  auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0, kernel);
   auto yi = rbf.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi.size());
@@ -39,11 +39,11 @@ static void test_2d(RadialBasisFunction function) {
 }
 
 // Test 3D interpolation with various radial basis functions
-static void test_3d(RadialBasisFunction function) {
+static void test_3d(RBFKernel kernel) {
   Eigen::Matrix<double, 3, 50> x = Eigen::Matrix<double, 3, 50>::Random();
   Eigen::Matrix<double, 50, 1> y =
       (x.row(0).array().pow(2) - x.row(1).array().pow(2)).array().exp();
-  auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0, function);
+  auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0, kernel);
   auto yi = rbf.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi.size());
@@ -54,32 +54,32 @@ static void test_3d(RadialBasisFunction function) {
 
 // Test all radial basis functions in 1D
 TEST(MathRbf, 1d) {
-  test_1d(RadialBasisFunction::kCubic);
-  test_1d(RadialBasisFunction::kGaussian);
-  test_1d(RadialBasisFunction::kInverseMultiquadric);
-  test_1d(RadialBasisFunction::kLinear);
-  test_1d(RadialBasisFunction::kMultiquadric);
-  test_1d(RadialBasisFunction::kThinPlate);
+  test_1d(RBFKernel::kCubic);
+  test_1d(RBFKernel::kGaussian);
+  test_1d(RBFKernel::kInverseMultiquadric);
+  test_1d(RBFKernel::kLinear);
+  test_1d(RBFKernel::kMultiquadric);
+  test_1d(RBFKernel::kThinPlate);
 }
 
 // Test all radial basis functions in 2D
 TEST(MathRbf, 2d) {
-  test_2d(RadialBasisFunction::kCubic);
-  test_2d(RadialBasisFunction::kGaussian);
-  test_2d(RadialBasisFunction::kInverseMultiquadric);
-  test_2d(RadialBasisFunction::kLinear);
-  test_2d(RadialBasisFunction::kMultiquadric);
-  test_2d(RadialBasisFunction::kThinPlate);
+  test_2d(RBFKernel::kCubic);
+  test_2d(RBFKernel::kGaussian);
+  test_2d(RBFKernel::kInverseMultiquadric);
+  test_2d(RBFKernel::kLinear);
+  test_2d(RBFKernel::kMultiquadric);
+  test_2d(RBFKernel::kThinPlate);
 }
 
 // Test all radial basis functions in 3D
 TEST(MathRbf, 3d) {
-  test_3d(RadialBasisFunction::kCubic);
-  test_3d(RadialBasisFunction::kGaussian);
-  test_3d(RadialBasisFunction::kInverseMultiquadric);
-  test_3d(RadialBasisFunction::kLinear);
-  test_3d(RadialBasisFunction::kMultiquadric);
-  test_3d(RadialBasisFunction::kThinPlate);
+  test_3d(RBFKernel::kCubic);
+  test_3d(RBFKernel::kGaussian);
+  test_3d(RBFKernel::kInverseMultiquadric);
+  test_3d(RBFKernel::kLinear);
+  test_3d(RBFKernel::kMultiquadric);
+  test_3d(RBFKernel::kThinPlate);
 }
 
 // Test single point interpolation
@@ -88,7 +88,7 @@ TEST(MathRbf, Point) {
   Eigen::Matrix<double, 50, 1> y =
       (x.row(0).array().pow(2) - x.row(1).array().pow(2)).array().exp();
   auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0,
-                         RadialBasisFunction::kCubic);
+                         RBFKernel::kCubic);
 
   auto xi = Eigen::Matrix<double, 3, 1>();
   for (int64_t ix = 0; ix < x.cols(); ++ix) {
@@ -106,7 +106,7 @@ TEST(MathRbf, ExplicitEpsilon) {
   auto y = x.array().sin();
 
   // Test with explicit epsilon value
-  auto rbf = RBF<double>(1.0, 0, RadialBasisFunction::kGaussian);
+  auto rbf = RBF<double>(1.0, 0, RBFKernel::kGaussian);
   auto yi = rbf.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi.size());
@@ -122,12 +122,12 @@ TEST(MathRbf, Smoothing) {
 
   // Without smoothing (interpolation)
   auto rbf_no_smooth = RBF<double>(std::numeric_limits<double>::quiet_NaN(),
-                                   0.0, RadialBasisFunction::kMultiquadric);
+                                   0.0, RBFKernel::kMultiquadric);
   auto yi_no_smooth = rbf_no_smooth.interpolate(x, y, x);
 
   // With smoothing (approximation)
   auto rbf_smooth = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0.1,
-                                RadialBasisFunction::kMultiquadric);
+                                RBFKernel::kMultiquadric);
   auto yi_smooth = rbf_smooth.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi_no_smooth.size());
@@ -153,7 +153,7 @@ TEST(MathRbf, Extrapolation) {
   auto x = Eigen::Matrix<double, 1, 10>::LinSpaced(10, 0, 5);
   auto y = x.array().sin();
   auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0,
-                         RadialBasisFunction::kLinear);
+                         RBFKernel::kLinear);
 
   // Test points outside the training range
   Eigen::Matrix<double, 1, 3> xi;
@@ -173,7 +173,7 @@ TEST(MathRbf, FloatType) {
   auto x = Eigen::Matrix<float, 1, 9>::LinSpaced(9, 0.0f, 10.0f);
   auto y = x.array().sin();
   auto rbf = RBF<float>(std::numeric_limits<float>::quiet_NaN(), 0.0f,
-                        RadialBasisFunction::kCubic);
+                        RBFKernel::kCubic);
   auto yi = rbf.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi.size());
@@ -187,7 +187,7 @@ TEST(MathRbf, MinimalPoints) {
   auto x = Eigen::Matrix<double, 1, 2>::LinSpaced(2, 0, 1);
   auto y = x.array().sin();
   auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0,
-                         RadialBasisFunction::kLinear);
+                         RBFKernel::kLinear);
   auto yi = rbf.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi.size());
@@ -201,7 +201,7 @@ TEST(MathRbf, ConstantValues) {
   auto x = Eigen::Matrix<double, 2, 10>::Random();
   auto y = Eigen::Matrix<double, 10, 1>::Constant(5.0);
   auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0,
-                         RadialBasisFunction::kMultiquadric);
+                         RBFKernel::kMultiquadric);
 
   // Test at training points
   auto yi = rbf.interpolate(x, y, x);
@@ -227,7 +227,7 @@ TEST(MathRbf, LinearFunctionReproduction) {
       2.0 * x.row(0).array() + 3.0 * x.row(1).array() + 1.0;
 
   auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0,
-                         RadialBasisFunction::kLinear);
+                         RBFKernel::kLinear);
 
   // Test at new points
   Eigen::Matrix<double, 2, 10> xi = Eigen::Matrix<double, 2, 10>::Random();
@@ -253,7 +253,7 @@ TEST(MathRbf, DuplicatePoints) {
 
   // Thin plate should handle zero distances gracefully
   auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0.01,
-                         RadialBasisFunction::kThinPlate);
+                         RBFKernel::kThinPlate);
 
   auto yi = rbf.interpolate(x, y, x);
 
@@ -270,11 +270,11 @@ TEST(MathRbf, EpsilonEffect) {
   auto y = x.array().sin();
 
   // Small epsilon
-  auto rbf1 = RBF<double>(0.1, 0, RadialBasisFunction::kGaussian);
+  auto rbf1 = RBF<double>(0.1, 0, RBFKernel::kGaussian);
   auto yi1 = rbf1.interpolate(x, y, x);
 
   // Large epsilon
-  auto rbf2 = RBF<double>(2.0, 0, RadialBasisFunction::kGaussian);
+  auto rbf2 = RBF<double>(2.0, 0, RBFKernel::kGaussian);
   auto yi2 = rbf2.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi1.size());
@@ -293,7 +293,7 @@ TEST(MathRbf, HighDimensional) {
   Eigen::Matrix<double, 30, 1> y = x.row(0).array().square();
 
   auto rbf = RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0,
-                         RadialBasisFunction::kMultiquadric);
+                         RBFKernel::kMultiquadric);
   auto yi = rbf.interpolate(x, y, x);
 
   ASSERT_EQ(y.size(), yi.size());
