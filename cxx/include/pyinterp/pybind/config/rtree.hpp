@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 
+#include "pyinterp/geometry/rtree.hpp"
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
@@ -18,22 +19,31 @@ template <typename Derived>
 class RTreeBase : public ThreadConfig {
  public:
   /// @brief Default constructor
-  constexpr RTreeBase() = default;
+  constexpr RTreeBase() noexcept = default;
 
   /// @brief Get the number of neighbors.
   /// @return Number of neighbors to consider
-  [[nodiscard]] constexpr auto k() const -> uint32_t { return k_; }
+  [[nodiscard]] constexpr auto k() const noexcept -> uint32_t { return k_; }
 
   /// @brief Get the search radius.
   /// @return Optional search radius in meters (nullopt = unlimited)
-  [[nodiscard]] constexpr auto radius() const -> const std::optional<double>& {
+  [[nodiscard]] constexpr auto radius() const noexcept
+      -> const std::optional<double>& {
     return radius_;
+  }
+
+  /// @brief Get the type of boundary check to apply.
+  /// @return Boundary check type
+  [[nodiscard]] constexpr auto boundary_check() const noexcept
+      -> geometry::BoundaryCheck {
+    return boundary_check_;
   }
 
   /// @brief Set the number of neighbors
   /// @param[in] value Number of neighbors
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_k(uint32_t value) const -> Derived {
+  [[nodiscard]] constexpr auto with_k(uint32_t value) const noexcept
+      -> Derived {
     auto copy = static_cast<const Derived&>(*this);
     copy.k_ = value;
     return copy;
@@ -43,7 +53,7 @@ class RTreeBase : public ThreadConfig {
   /// @param[in] value Search radius (nullopt for unlimited)
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_radius(
-      const std::optional<double>& value) const -> Derived {
+      const std::optional<double>& value) const noexcept -> Derived {
     auto copy = static_cast<const Derived&>(*this);
     copy.radius_ = value;
     return copy;
@@ -52,14 +62,27 @@ class RTreeBase : public ThreadConfig {
   /// @brief Set the number of threads
   /// @param[in] value Number of threads
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_num_threads(uint32_t value) const
+  [[nodiscard]] constexpr auto with_num_threads(uint32_t value) const noexcept
       -> Derived {
     auto copy = static_cast<const Derived&>(*this);
     static_cast<ThreadConfig&>(copy) = ThreadConfig::with_num_threads(value);
     return copy;
   }
 
+  /// @brief Set the boundary check type
+  /// @param[in] value Boundary check type
+  /// @return Updated configuration
+  [[nodiscard]] constexpr auto with_boundary_check(
+      geometry::BoundaryCheck value) const noexcept -> Derived {
+    auto copy = static_cast<const Derived&>(*this);
+    copy.boundary_check_ = value;
+    return copy;
+  }
+
  protected:
+  /// Type of boundary verification to apply
+  geometry::BoundaryCheck boundary_check_;
+
   /// Number of neighbors to consider
   uint32_t k_{8};
 
@@ -71,16 +94,16 @@ class RTreeBase : public ThreadConfig {
 class InverseDistanceWeighting : public RTreeBase<InverseDistanceWeighting> {
  public:
   /// @brief Default constructor
-  constexpr InverseDistanceWeighting() = default;
+  constexpr InverseDistanceWeighting() noexcept = default;
 
   /// @brief Get the power parameter.
   /// @return Power parameter (exponent)
-  [[nodiscard]] constexpr auto p() const -> uint32_t { return p_; }
+  [[nodiscard]] constexpr auto p() const noexcept -> uint32_t { return p_; }
 
   /// @brief Set the power parameter
   /// @param[in] value Power parameter
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_p(uint32_t value) const
+  [[nodiscard]] constexpr auto with_p(uint32_t value) const noexcept
       -> InverseDistanceWeighting {
     auto copy = *this;
     copy.p_ = value;
@@ -98,30 +121,35 @@ class InverseDistanceWeighting : public RTreeBase<InverseDistanceWeighting> {
 class Kriging : public RTreeBase<Kriging> {
  public:
   /// @brief Default constructor
-  constexpr Kriging() = default;
+  constexpr Kriging() noexcept = default;
 
   /// @brief Get the sill parameter.
   /// @return Sill parameter (variance at infinity)
-  [[nodiscard]] constexpr auto sigma() const -> double { return sigma_; }
+  [[nodiscard]] constexpr auto sigma() const noexcept -> double {
+    return sigma_;
+  }
 
   /// @brief Get the range parameter.
   /// @return Range parameter (distance scale)
-  [[nodiscard]] constexpr auto lambda() const -> double { return lambda_; }
-
+  [[nodiscard]] constexpr auto lambda() const noexcept -> double {
+    return lambda_;
+  }
   /// @brief Get the nugget effect parameter.
   /// @return Nugget effect parameter (micro-scale variance)
-  [[nodiscard]] constexpr auto nugget() const -> double { return nugget_; }
+  [[nodiscard]] constexpr auto nugget() const noexcept -> double {
+    return nugget_;
+  }
 
   /// @brief Get the covariance function type.
   /// @return Covariance function type
-  [[nodiscard]] constexpr auto covariance_model() const
+  [[nodiscard]] constexpr auto covariance_model() const noexcept
       -> math::interpolate::CovarianceFunction {
     return covariance_model_;
   }
 
   /// @brief Get the drift function.
   /// @return Optional drift function
-  [[nodiscard]] constexpr auto drift_function() const
+  [[nodiscard]] constexpr auto drift_function() const noexcept
       -> const std::optional<math::interpolate::DriftFunction>& {
     return drift_function_;
   }
@@ -129,7 +157,8 @@ class Kriging : public RTreeBase<Kriging> {
   /// @brief Set the sill parameter
   /// @param[in] value Sill parameter
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_sigma(double value) const -> Kriging {
+  [[nodiscard]] constexpr auto with_sigma(double value) const noexcept
+      -> Kriging {
     auto copy = *this;
     copy.sigma_ = value;
     return copy;
@@ -138,7 +167,8 @@ class Kriging : public RTreeBase<Kriging> {
   /// @brief Set the range parameter
   /// @param[in] value Range parameter
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_lambda(double value) const -> Kriging {
+  [[nodiscard]] constexpr auto with_lambda(double value) const noexcept
+      -> Kriging {
     auto copy = *this;
     copy.lambda_ = value;
     return copy;
@@ -147,7 +177,8 @@ class Kriging : public RTreeBase<Kriging> {
   /// @brief Set the nugget effect parameter
   /// @param[in] value Nugget effect parameter
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_nugget(double value) const -> Kriging {
+  [[nodiscard]] constexpr auto with_nugget(double value) const noexcept
+      -> Kriging {
     auto copy = *this;
     copy.nugget_ = value;
     return copy;
@@ -157,7 +188,7 @@ class Kriging : public RTreeBase<Kriging> {
   /// @param[in] value Covariance function type
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_covariance_model(
-      math::interpolate::CovarianceFunction value) const -> Kriging {
+      math::interpolate::CovarianceFunction value) const noexcept -> Kriging {
     auto copy = *this;
     copy.covariance_model_ = value;
     return copy;
@@ -167,7 +198,8 @@ class Kriging : public RTreeBase<Kriging> {
   /// @param[in] value Drift function type
   /// @return Updated configuration
   [[nodiscard]] auto with_drift_function(
-      std::optional<math::interpolate::DriftFunction> value) const -> Kriging {
+      std::optional<math::interpolate::DriftFunction> value) const noexcept
+      -> Kriging {
     auto copy = *this;
     copy.drift_function_ = value;
     return copy;
@@ -197,29 +229,33 @@ class Kriging : public RTreeBase<Kriging> {
 class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
  public:
   /// @brief Default constructor
-  constexpr RadialBasisFunction() = default;
+  constexpr RadialBasisFunction() noexcept = default;
 
   /// @brief Get the radial basis function type.
   /// @return Radial basis function type
-  [[nodiscard]] constexpr auto rbf() const -> math::interpolate::RBFKernel {
+  [[nodiscard]] constexpr auto rbf() const noexcept
+      -> math::interpolate::RBFKernel {
     return rbf_;
   }
 
   /// @brief Get the shape parameter (epsilon).
   /// @return Optional shape parameter (epsilon)
-  [[nodiscard]] constexpr auto epsilon() const -> const std::optional<double>& {
+  [[nodiscard]] constexpr auto epsilon() const noexcept
+      -> const std::optional<double>& {
     return epsilon_;
   }
 
   /// @brief Get the smoothing parameter.
   /// @return Smoothing parameter
-  [[nodiscard]] constexpr auto smooth() const -> double { return smooth_; }
+  [[nodiscard]] constexpr auto smooth() const noexcept -> double {
+    return smooth_;
+  }
 
   /// @brief Set the RBF type
   /// @param[in] value Radial basis function type
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_rbf(
-      math::interpolate::RBFKernel value) const -> RadialBasisFunction {
+  [[nodiscard]] constexpr auto with_rbf(math::interpolate::RBFKernel value)
+      const noexcept -> RadialBasisFunction {
     auto copy = *this;
     copy.rbf_ = value;
     return copy;
@@ -228,8 +264,8 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
   /// @brief Set the shape parameter (epsilon)
   /// @param[in] value Shape parameter (nullopt for auto)
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_epsilon(std::optional<double> value) const
-      -> RadialBasisFunction {
+  [[nodiscard]] constexpr auto with_epsilon(
+      std::optional<double> value) const noexcept -> RadialBasisFunction {
     auto copy = *this;
     copy.epsilon_ = value;
     return copy;
@@ -238,7 +274,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
   /// @brief Set the smoothing parameter
   /// @param[in] value Smoothing parameter
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_smooth(double value) const
+  [[nodiscard]] constexpr auto with_smooth(double value) const noexcept
       -> RadialBasisFunction {
     auto copy = *this;
     copy.smooth_ = value;
@@ -263,25 +299,27 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
 class InterpolationWindow : public RTreeBase<InterpolationWindow> {
  public:
   /// @brief Default constructor
-  constexpr InterpolationWindow() = default;
+  constexpr InterpolationWindow() noexcept = default;
 
   /// @brief Get the window function type.
   /// @return Window function type
-  [[nodiscard]] constexpr auto wf() const -> math::interpolate::window::Kernel {
+  [[nodiscard]] constexpr auto wf() const noexcept
+      -> math::interpolate::window::Kernel {
     return wf_;
   }
 
   /// @brief Get the window function argument.
   /// @return Optional window function argument
-  [[nodiscard]] constexpr auto arg() const -> const std::optional<double>& {
+  [[nodiscard]] constexpr auto arg() const noexcept
+      -> const std::optional<double>& {
     return arg_;
   }
 
   /// @brief Set the window function type
   /// @param[in] value Window function type
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_wf(
-      math::interpolate::window::Kernel value) const -> InterpolationWindow {
+  [[nodiscard]] constexpr auto with_wf(math::interpolate::window::Kernel value)
+      const noexcept -> InterpolationWindow {
     auto copy = *this;
     copy.wf_ = value;
     return copy;
@@ -290,8 +328,8 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
   /// @brief Set the window function argument
   /// @param[in] value Window function argument
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_arg(std::optional<double> value) const
-      -> InterpolationWindow {
+  [[nodiscard]] constexpr auto with_arg(
+      std::optional<double> value) const noexcept -> InterpolationWindow {
     auto copy = *this;
     copy.arg_ = value;
     return copy;

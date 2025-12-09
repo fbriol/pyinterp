@@ -210,6 +210,9 @@ auto add_rtree_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
           nb::arg("value") = std::nullopt,
           "Set the search radius in meters (None for unlimited).",
           nb::call_guard<nb::gil_scoped_release>())
+      .def("with_boundary_check", &Class::with_boundary_check, nb::arg("value"),
+           "Set the type of boundary check to apply.",
+           nb::call_guard<nb::gil_scoped_release>())
       .def("with_num_threads", &Class::with_num_threads, nb::arg("value"),
            "Number of threads to use for interpolation. A value of 0 means "
            "that all available cores will be used.",
@@ -218,6 +221,16 @@ auto add_rtree_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
 }
 
 auto bind(nb::module_& m) -> void {
+  // Bind BoundaryCheck enum
+  nb::enum_<geometry::BoundaryCheck>(m, "BoundaryCheck",
+                                     "Type of boundary check to apply.")
+      .value("NONE", geometry::BoundaryCheck::kNone,
+             "Do not apply boundary check (default).")
+      .value("ENVELOPE", geometry::BoundaryCheck::kEnvelope,
+             "Check if the point is within the Axis Aligned Bounding Box "
+             "(AABB) of the neighbors.")
+      .value("CONVEX_HULL", geometry::BoundaryCheck::kConvexHull,
+             "Check if the point is within the convex hull of the neighbors.");
   // Bind RadialBasisFunction enum
   nb::enum_<math::interpolate::RBFKernel>(m, "RBFKernel",
                                           "Type of radial basis kernel.")
@@ -342,18 +355,18 @@ auto bind(nb::module_& m) -> void {
                nb::call_guard<nb::gil_scoped_release>()));
 
   // Bind InterpolationWindow configuration
-  add_rtree_methods(
-      nb::class_<InterpolationWindow>(m, "InterpolationWindow",
-                                      "Configuration for window function "
-                                      "interpolation.")
-          .def(nb::init<>(), "Default constructor.",
-               nb::call_guard<nb::gil_scoped_release>())
-          .def("with_wf", &InterpolationWindow::with_wf, nb::arg("value"),
-               "Set the window function type.",
-               nb::call_guard<nb::gil_scoped_release>())
-          .def("with_arg", &InterpolationWindow::with_arg, nb::arg("value"),
-               "Set the window function argument.",
-               nb::call_guard<nb::gil_scoped_release>()));
+  add_rtree_methods(nb::class_<InterpolationWindow>(
+                        m, "InterpolationWindow",
+                        "Configuration for window function interpolation.")
+                        .def(nb::init<>(), "Default constructor.",
+                             nb::call_guard<nb::gil_scoped_release>())
+                        .def("with_wf", &InterpolationWindow::with_wf,
+                             nb::arg("value"), "Set the window function type.",
+                             nb::call_guard<nb::gil_scoped_release>())
+                        .def("with_arg", &InterpolationWindow::with_arg,
+                             nb::arg("value"),
+                             "Set the window function argument.",
+                             nb::call_guard<nb::gil_scoped_release>()));
 }
 
 }  // namespace rtree
