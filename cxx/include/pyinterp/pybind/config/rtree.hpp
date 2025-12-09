@@ -54,8 +54,7 @@ class RTreeBase : public ThreadConfig {
   [[nodiscard]] constexpr auto with_radius(
       const std::optional<double>& value) const noexcept -> Derived {
     auto copy = static_cast<const Derived&>(*this);
-    copy.radius_ =
-        value.has_value() ? value.value() : std::numeric_limits<double>::max();
+    copy.radius_ = value.value_or(std::numeric_limits<double>::max());
     return copy;
   }
 
@@ -87,7 +86,7 @@ class RTreeBase : public ThreadConfig {
   uint32_t k_{8};
 
   /// Optional search radius in meters (nullopt = unlimited)
-  double radius_;
+  double radius_{std::numeric_limits<double>::max()};
 };
 
 /// Configuration for inverse distance weighting interpolation
@@ -240,8 +239,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
 
   /// @brief Get the shape parameter (epsilon).
   /// @return Optional shape parameter (epsilon)
-  [[nodiscard]] constexpr auto epsilon() const noexcept
-      -> const std::optional<double>& {
+  [[nodiscard]] constexpr auto epsilon() const noexcept -> const double {
     return epsilon_;
   }
 
@@ -267,7 +265,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
   [[nodiscard]] constexpr auto with_epsilon(
       std::optional<double> value) const noexcept -> RadialBasisFunction {
     auto copy = *this;
-    copy.epsilon_ = value;
+    copy.epsilon_ = value.value_or(std::numeric_limits<double>::quiet_NaN());
     return copy;
   }
 
@@ -287,7 +285,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
       math::interpolate::RBFKernel::kMultiquadric};
 
   /// Optional shape parameter (epsilon)
-  std::optional<double> epsilon_;
+  double epsilon_{std::numeric_limits<double>::quiet_NaN()};
 
   /// Smoothing parameter
   double smooth_{0.0};
