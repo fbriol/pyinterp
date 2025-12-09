@@ -2,6 +2,7 @@
 
 #include "pyinterp/pybind/axis.hpp"
 #include "pyinterp/pybind/config.hpp"
+#include "pyinterp/pybind/geodetic.hpp"
 #include "pyinterp/pybind/geometric.hpp"
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/windowed.hpp"
@@ -16,4 +17,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::windowed::init_bivariate(m);
   pyinterp::pybind::windowed::init_trivariate(m);
   pyinterp::pybind::windowed::init_quadrivariate(m);
+  pyinterp::pybind::init_geodetic(m);
 }
