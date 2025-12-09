@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from pyinterp.core.config import geometric, windowed
+from pyinterp.core.config import geometric, rtree, windowed
 
 
 class TestGeometric:
@@ -311,3 +311,323 @@ class TestWindowed:
         assert isinstance(config1, geometric.Bivariate)
         assert isinstance(config2, geometric.Bivariate)
         assert isinstance(config3, geometric.Bivariate)
+
+
+class TestRTree:
+    """Test RTree interpolation configurations."""
+
+    def test_covariance_function_enum(self) -> None:
+        """Test CovarianceFunction enum values."""
+        assert rtree.CovarianceFunction.CAUCHY
+        assert rtree.CovarianceFunction.GAUSSIAN
+        assert rtree.CovarianceFunction.MATERN_12
+        assert rtree.CovarianceFunction.MATERN_32
+        assert rtree.CovarianceFunction.MATERN_52
+        assert rtree.CovarianceFunction.SPHERICAL
+        assert rtree.CovarianceFunction.WENDLAND
+
+        # Test that enum values are unique
+        values = [
+            rtree.CovarianceFunction.CAUCHY,
+            rtree.CovarianceFunction.GAUSSIAN,
+            rtree.CovarianceFunction.MATERN_12,
+            rtree.CovarianceFunction.MATERN_32,
+            rtree.CovarianceFunction.MATERN_52,
+            rtree.CovarianceFunction.SPHERICAL,
+            rtree.CovarianceFunction.WENDLAND,
+        ]
+        assert len(set(values)) == 7
+
+    def test_drift_function_enum(self) -> None:
+        """Test DriftFunction enum values."""
+        assert rtree.DriftFunction.LINEAR
+        assert rtree.DriftFunction.QUADRATIC
+
+        # Test that enum values are unique
+        values = [
+            rtree.DriftFunction.LINEAR,
+            rtree.DriftFunction.QUADRATIC,
+        ]
+        assert len(set(values)) == 2
+
+    def test_window_function_enum(self) -> None:
+        """Test WindowFunction enum values."""
+        assert rtree.WindowKernel.BLACKMAN
+        assert rtree.WindowKernel.BLACKMAN_HARRIS
+        assert rtree.WindowKernel.BOXCAR
+        assert rtree.WindowKernel.FLAT_TOP
+        assert rtree.WindowKernel.GAUSSIAN
+        assert rtree.WindowKernel.HAMMING
+        assert rtree.WindowKernel.LANCZOS
+        assert rtree.WindowKernel.NUTTALL
+        assert rtree.WindowKernel.PARZEN
+        assert rtree.WindowKernel.PARZEN_SWOT
+
+        # Test that enum values are unique
+        values = [
+            rtree.WindowKernel.BLACKMAN,
+            rtree.WindowKernel.BLACKMAN_HARRIS,
+            rtree.WindowKernel.BOXCAR,
+            rtree.WindowKernel.FLAT_TOP,
+            rtree.WindowKernel.GAUSSIAN,
+            rtree.WindowKernel.HAMMING,
+            rtree.WindowKernel.LANCZOS,
+            rtree.WindowKernel.NUTTALL,
+            rtree.WindowKernel.PARZEN,
+            rtree.WindowKernel.PARZEN_SWOT,
+        ]
+        assert len(set(values)) == 10
+
+    def test_inverse_distance_weighting_creation(self) -> None:
+        """Test InverseDistanceWeighting configuration creation."""
+        config = rtree.InverseDistanceWeighting()
+        assert isinstance(config, rtree.InverseDistanceWeighting)
+
+    def test_inverse_distance_weighting_instance_methods(self) -> None:
+        """Test InverseDistanceWeighting instance methods."""
+        config = rtree.InverseDistanceWeighting()
+
+        # Test with_k
+        config_k = config.with_k(12)
+        assert isinstance(config_k, rtree.InverseDistanceWeighting)
+        assert config_k is not config
+
+        # Test with_p
+        config_p = config.with_p(3)
+        assert isinstance(config_p, rtree.InverseDistanceWeighting)
+        assert config_p is not config
+
+        # Test with_radius
+        config_radius = config.with_radius(1000.0)
+        assert isinstance(config_radius, rtree.InverseDistanceWeighting)
+        assert config_radius is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(4)
+        assert isinstance(config_threads, rtree.InverseDistanceWeighting)
+        assert config_threads is not config
+
+    def test_inverse_distance_weighting_method_chaining(self) -> None:
+        """Test InverseDistanceWeighting method chaining."""
+        config = (
+            rtree.InverseDistanceWeighting()
+            .with_k(16)
+            .with_p(4)
+            .with_radius(5000.0)
+            .with_num_threads(8)
+        )
+        assert isinstance(config, rtree.InverseDistanceWeighting)
+
+    def test_kriging_creation(self) -> None:
+        """Test Kriging configuration creation."""
+        config = rtree.Kriging()
+        assert isinstance(config, rtree.Kriging)
+
+    def test_kriging_instance_methods(self) -> None:
+        """Test Kriging instance methods."""
+        config = rtree.Kriging()
+
+        # Test with_k
+        config_k = config.with_k(10)
+        assert isinstance(config_k, rtree.Kriging)
+        assert config_k is not config
+
+        # Test with_sigma
+        config_sigma = config.with_sigma(2.0)
+        assert isinstance(config_sigma, rtree.Kriging)
+        assert config_sigma is not config
+
+        # Test with_lambda
+        config_lambda = config.with_lambda(0.5)
+        assert isinstance(config_lambda, rtree.Kriging)
+        assert config_lambda is not config
+
+        # Test with_nugget
+        config_nugget = config.with_nugget(0.1)
+        assert isinstance(config_nugget, rtree.Kriging)
+        assert config_nugget is not config
+
+        # Test with_covariance_model
+        config_cov = config.with_covariance_model(rtree.CovarianceFunction.GAUSSIAN)
+        assert isinstance(config_cov, rtree.Kriging)
+        assert config_cov is not config
+
+        # Test with_drift_function
+        config_drift = config.with_drift_function(rtree.DriftFunction.LINEAR)
+        assert isinstance(config_drift, rtree.Kriging)
+        assert config_drift is not config
+
+        # Test with_radius
+        config_radius = config.with_radius(2000.0)
+        assert isinstance(config_radius, rtree.Kriging)
+        assert config_radius is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(6)
+        assert isinstance(config_threads, rtree.Kriging)
+        assert config_threads is not config
+
+    def test_kriging_method_chaining(self) -> None:
+        """Test Kriging method chaining."""
+        config = (
+            rtree.Kriging()
+            .with_k(12)
+            .with_sigma(1.5)
+            .with_lambda(1.0)
+            .with_nugget(0.05)
+            .with_covariance_model(rtree.CovarianceFunction.MATERN_32)
+            .with_drift_function(rtree.DriftFunction.QUADRATIC)
+            .with_radius(3000.0)
+            .with_num_threads(4)
+        )
+        assert isinstance(config, rtree.Kriging)
+
+    def test_radial_basis_function_creation(self) -> None:
+        """Test RadialBasisFunction configuration creation."""
+        config = rtree.RadialBasisFunction()
+        assert isinstance(config, rtree.RadialBasisFunction)
+
+    def test_radial_basis_function_instance_methods(self) -> None:
+        """Test RadialBasisFunction instance methods."""
+        config = rtree.RadialBasisFunction()
+
+        # Test with_k
+        config_k = config.with_k(15)
+        assert isinstance(config_k, rtree.RadialBasisFunction)
+        assert config_k is not config
+
+        # Test with_rbf
+        config_rbf = config.with_rbf(rtree.RBFKernel.GAUSSIAN)
+        assert isinstance(config_rbf, rtree.RadialBasisFunction)
+        assert config_rbf is not config
+
+        # Test with_epsilon
+        config_epsilon = config.with_epsilon(1.0)
+        assert isinstance(config_epsilon, rtree.RadialBasisFunction)
+        assert config_epsilon is not config
+
+        # Test with_smooth
+        config_smooth = config.with_smooth(0.01)
+        assert isinstance(config_smooth, rtree.RadialBasisFunction)
+        assert config_smooth is not config
+
+        # Test with_radius
+        config_radius = config.with_radius(4000.0)
+        assert isinstance(config_radius, rtree.RadialBasisFunction)
+        assert config_radius is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(8)
+        assert isinstance(config_threads, rtree.RadialBasisFunction)
+        assert config_threads is not config
+
+    def test_radial_basis_function_method_chaining(self) -> None:
+        """Test RadialBasisFunction method chaining."""
+        config = (
+            rtree.RadialBasisFunction()
+            .with_k(20)
+            .with_rbf(rtree.RBFKernel.THIN_PLATE)
+            .with_epsilon(0.5)
+            .with_smooth(0.001)
+            .with_radius(5000.0)
+            .with_num_threads(6)
+        )
+        assert isinstance(config, rtree.RadialBasisFunction)
+
+    def test_interpolation_window_creation(self) -> None:
+        """Test InterpolationWindow configuration creation."""
+        config = rtree.InterpolationWindow()
+        assert isinstance(config, rtree.InterpolationWindow)
+
+    def test_interpolation_window_instance_methods(self) -> None:
+        """Test InterpolationWindow instance methods."""
+        config = rtree.InterpolationWindow()
+
+        # Test with_k
+        config_k = config.with_k(10)
+        assert isinstance(config_k, rtree.InterpolationWindow)
+        assert config_k is not config
+
+        # Test with_wf
+        config_wf = config.with_wf(rtree.WindowKernel.GAUSSIAN)
+        assert isinstance(config_wf, rtree.InterpolationWindow)
+        assert config_wf is not config
+
+        # Test with_arg
+        config_arg = config.with_arg(0.5)
+        assert isinstance(config_arg, rtree.InterpolationWindow)
+        assert config_arg is not config
+
+        # Test with_radius
+        config_radius = config.with_radius(1500.0)
+        assert isinstance(config_radius, rtree.InterpolationWindow)
+        assert config_radius is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(4)
+        assert isinstance(config_threads, rtree.InterpolationWindow)
+        assert config_threads is not config
+
+    def test_interpolation_window_method_chaining(self) -> None:
+        """Test InterpolationWindow method chaining."""
+        config = (
+            rtree.InterpolationWindow()
+            .with_k(16)
+            .with_wf(rtree.WindowKernel.HAMMING)
+            .with_arg(0.3)
+            .with_radius(2500.0)
+            .with_num_threads(8)
+        )
+        assert isinstance(config, rtree.InterpolationWindow)
+
+    def test_multiple_covariance_models(self) -> None:
+        """Test different covariance models for kriging."""
+        models = [
+            rtree.CovarianceFunction.CAUCHY,
+            rtree.CovarianceFunction.GAUSSIAN,
+            rtree.CovarianceFunction.MATERN_12,
+            rtree.CovarianceFunction.MATERN_32,
+            rtree.CovarianceFunction.MATERN_52,
+            rtree.CovarianceFunction.SPHERICAL,
+            rtree.CovarianceFunction.WENDLAND,
+        ]
+
+        for model in models:
+            config = rtree.Kriging().with_covariance_model(model)
+            assert isinstance(config, rtree.Kriging)
+
+    def test_multiple_window_functions(self) -> None:
+        """Test different window functions."""
+        windows = [
+            rtree.WindowKernel.BLACKMAN,
+            rtree.WindowKernel.BLACKMAN_HARRIS,
+            rtree.WindowKernel.BOXCAR,
+            rtree.WindowKernel.FLAT_TOP,
+            rtree.WindowKernel.GAUSSIAN,
+            rtree.WindowKernel.HAMMING,
+            rtree.WindowKernel.LANCZOS,
+            rtree.WindowKernel.NUTTALL,
+            rtree.WindowKernel.PARZEN,
+            rtree.WindowKernel.PARZEN_SWOT,
+        ]
+
+        for window in windows:
+            config = rtree.InterpolationWindow().with_wf(window)
+            assert isinstance(config, rtree.InterpolationWindow)
+
+    def test_radius_handling(self) -> None:
+        """Test radius parameter handling across configs."""
+        # Test None radius
+        config_idw = rtree.InverseDistanceWeighting().with_radius(None)
+        assert isinstance(config_idw, rtree.InverseDistanceWeighting)
+
+        # Test specific radius values
+        config_kriging = rtree.Kriging().with_radius(1000.0)
+        assert isinstance(config_kriging, rtree.Kriging)
+
+        config_rbf = rtree.RadialBasisFunction().with_radius(2000.5)
+        assert isinstance(config_rbf, rtree.RadialBasisFunction)
+
+        config_window = rtree.InterpolationWindow().with_radius(500.0)
+        assert isinstance(config_window, rtree.InterpolationWindow)
+
