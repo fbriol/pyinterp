@@ -27,8 +27,7 @@ class RTreeBase : public ThreadConfig {
 
   /// @brief Get the search radius.
   /// @return Optional search radius in meters (nullopt = unlimited)
-  [[nodiscard]] constexpr auto radius() const noexcept
-      -> const std::optional<double>& {
+  [[nodiscard]] constexpr auto radius() const noexcept -> const double {
     return radius_;
   }
 
@@ -55,7 +54,8 @@ class RTreeBase : public ThreadConfig {
   [[nodiscard]] constexpr auto with_radius(
       const std::optional<double>& value) const noexcept -> Derived {
     auto copy = static_cast<const Derived&>(*this);
-    copy.radius_ = value;
+    copy.radius_ =
+        value.has_value() ? value.value() : std::numeric_limits<double>::max();
     return copy;
   }
 
@@ -87,7 +87,7 @@ class RTreeBase : public ThreadConfig {
   uint32_t k_{8};
 
   /// Optional search radius in meters (nullopt = unlimited)
-  std::optional<double> radius_;
+  double radius_;
 };
 
 /// Configuration for inverse distance weighting interpolation
