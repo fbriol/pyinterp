@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <optional>
 
-
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
@@ -53,18 +52,19 @@ class RTreeBase : public ThreadConfig {
   /// @brief Set the number of threads
   /// @param[in] value Number of threads
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_num_threads(uint32_t value) const -> Derived {
+  [[nodiscard]] constexpr auto with_num_threads(uint32_t value) const
+      -> Derived {
     auto copy = static_cast<const Derived&>(*this);
     static_cast<ThreadConfig&>(copy) = ThreadConfig::with_num_threads(value);
     return copy;
   }
 
-   protected:
-    /// Number of neighbors to consider
-    uint32_t k_{8};
+ protected:
+  /// Number of neighbors to consider
+  uint32_t k_{8};
 
-    /// Optional search radius in meters (nullopt = unlimited)
-    std::optional<double> radius_;
+  /// Optional search radius in meters (nullopt = unlimited)
+  std::optional<double> radius_;
 };
 
 /// Configuration for inverse distance weighting interpolation
@@ -201,8 +201,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
 
   /// @brief Get the radial basis function type.
   /// @return Radial basis function type
-  [[nodiscard]] constexpr auto rbf() const
-      -> math::interpolate::RBFKernel {
+  [[nodiscard]] constexpr auto rbf() const -> math::interpolate::RBFKernel {
     return rbf_;
   }
 
@@ -220,8 +219,7 @@ class RadialBasisFunction : public RTreeBase<RadialBasisFunction> {
   /// @param[in] value Radial basis function type
   /// @return Updated configuration
   [[nodiscard]] constexpr auto with_rbf(
-      math::interpolate::RBFKernel value) const
-      -> RadialBasisFunction {
+      math::interpolate::RBFKernel value) const -> RadialBasisFunction {
     auto copy = *this;
     copy.rbf_ = value;
     return copy;
@@ -269,8 +267,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
 
   /// @brief Get the window function type.
   /// @return Window function type
-  [[nodiscard]] constexpr auto wf() const
-      -> math::interpolate::window::Kernel {
+  [[nodiscard]] constexpr auto wf() const -> math::interpolate::window::Kernel {
     return wf_;
   }
 

@@ -174,8 +174,7 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   [[nodiscard]] auto radial_basis_function(
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
       const std::optional<T>& radius, uint32_t k,
-      math::interpolate::RBFType rbf,
-      const std::optional<T>& epsilon, T smooth,
+      math::interpolate::RBFType rbf, const std::optional<T>& epsilon, T smooth,
       const geometry::BoundaryCheck check, size_t num_threads) const
       -> std::tuple<ValueVector, Vector<uint32_t>>;
 
@@ -473,9 +472,9 @@ auto RTree3D<T>::kriging(
 template <std::floating_point T>
 auto RTree3D<T>::radial_basis_function(
     const Eigen::Ref<const CoordinateMatrix>& coordinates,
-    const std::optional<T>& radius, uint32_t k,
-    math::interpolate::RBFType rbf, const std::optional<T>& epsilon,
-    T smooth, const geometry::BoundaryCheck check, size_t num_threads) const
+    const std::optional<T>& radius, uint32_t k, math::interpolate::RBFType rbf,
+    const std::optional<T>& epsilon, T smooth,
+    const geometry::BoundaryCheck check, size_t num_threads) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   auto resolved_radius =
       radius.has_value() ? radius.value() : std::numeric_limits<T>::max();

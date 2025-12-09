@@ -448,7 +448,9 @@ class TestRTree:
         assert config_nugget is not config
 
         # Test with_covariance_model
-        config_cov = config.with_covariance_model(rtree.CovarianceFunction.GAUSSIAN)
+        config_cov = config.with_covariance_model(
+            rtree.CovarianceFunction.GAUSSIAN
+        )
         assert isinstance(config_cov, rtree.Kriging)
         assert config_cov is not config
 
@@ -630,4 +632,3 @@ class TestRTree:
 
         config_window = rtree.InterpolationWindow().with_radius(500.0)
         assert isinstance(config_window, rtree.InterpolationWindow)
-
