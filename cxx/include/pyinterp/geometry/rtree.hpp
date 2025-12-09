@@ -26,6 +26,7 @@
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
+#include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geometry {
 
@@ -242,10 +243,24 @@ class RTree {
                              const Strategy& strategy = Strategy()) const
       -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>>;
 
+  /// Serialize the RTree state for storage or transmission.
+  /// @return Serialized state as a Writer object
+  [[nodiscard]] virtual auto pack() const -> serialization::Writer;
+
+  /// Deserialize an RTree from serialized state.
+  /// @param[in] state Reference to serialization Reader containing encoded
+  /// RTree data
+  /// @return New RTree instance with restored properties
+  [[nodiscard]] static auto unpack(serialization::Reader& state)
+      -> RTree<Point, Type>;
+
  protected:
   rtree_t tree_;
 
  private:
+  /// Magic number for RTree serialization
+  static constexpr uint32_t kMagicNumber = 0x52545452 + dimension_t::value;
+
   /// Verifies if the point satisfies the requested boundary condition.
   [[nodiscard]] auto is_boundary_valid(
       const Point& point,
@@ -547,6 +562,61 @@ auto RTree<Point, Type>::is_boundary_valid(
   }
 
   return true;
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+template <typename Point, std::floating_point Type>
+auto RTree<Point, Type>::pack() const -> serialization::Writer {
+  serialization::Writer buffer;
+  // Write magic number for validation
+  buffer.write(kMagicNumber);
+  // Serialize the number of points as a size_t
+  const auto num_points = static_cast<size_t>(tree_.size());
+  buffer.write(num_points);
+  // Serialize each point and its associated value
+  for (const auto& item : tree_) {
+    // Serialize point coordinates
+    for (size_t dim = 0; dim < dimension_t::value; ++dim) {
+      buffer.write(geometry::point::get(item.first, dim));
+    }
+    // Serialize the associated value
+    buffer.write(item.second);
+  }
+
+  return buffer;
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+template <typename Point, std::floating_point Type>
+auto RTree<Point, Type>::unpack(serialization::Reader& state)
+    -> RTree<Point, Type> {
+  if (state.size() < sizeof(uint32_t) + sizeof(size_t)) {
+    throw std::invalid_argument("Cannot restore RTree from incomplete state.");
+  }
+  const auto magic_number = state.read<uint32_t>();
+  if (magic_number != kMagicNumber) {
+    throw std::invalid_argument(
+        "Invalid magic number for RTree serialization.");
+  }
+
+  const auto num_points = state.read<size_t>();
+
+  std::vector<value_t> points;
+  points.reserve(num_points);
+  for (size_t i = 0; i < num_points; ++i) {
+    Point point;
+    for (size_t dim = 0; dim < dimension_t::value; ++dim) {
+      const auto coord = state.read<coordinate_t>();
+      geometry::point::set(point, coord, dim);
+    }
+    const auto value = state.read<Type>();
+    points.emplace_back(point, value);
+  }
+  RTree<Point, Type> rtree;
+  rtree.packing(points);
+  return rtree;
 }
 
 }  // namespace pyinterp::geometry

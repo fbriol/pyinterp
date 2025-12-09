@@ -501,4 +501,43 @@ TEST(RTree3D, QueryEmptyResultWithBoundaryCheck) {
   EXPECT_LE(result.size(), 3);
 }
 
+TEST(RTree3D, SerializeDeserialize) {
+  RTree3D tree;
+  for (int i = 0; i < 5; ++i) {
+    for (int j = 0; j < 5; ++j) {
+      for (int k = 0; k < 5; ++k) {
+        tree.insert(
+            {Point3D(i, j, k), static_cast<double>(i * 25 + j * 5 + k)});
+      }
+    }
+  }
+
+  // Serialize the tree
+  auto serialized = serialization::Reader(tree.pack());
+
+  // Deserialize into a new tree
+  auto deserialized_tree = RTree3D::unpack(serialized);
+
+  // Verify size
+  EXPECT_EQ(tree.size(), deserialized_tree.size());
+
+  auto original_result =
+      tree.query(Point3D(2.0, 2.0, 2.0), 8, std::numeric_limits<double>::max());
+  auto deserialized_result = deserialized_tree.query(
+      Point3D(2.0, 2.0, 2.0), 8, std::numeric_limits<double>::max());
+
+  // Note: Results may be returned in different orders due to the R-Tree
+  // structure. When multiple points are equidistant, the library may return
+  // them in different orders depending on the tree's internal organization.
+  std::set<double> original_values;
+  std::set<double> deserialized_values;
+  for (auto&& item : original_result) {
+    original_values.insert(item.second);
+  }
+  for (auto&& item : deserialized_result) {
+    deserialized_values.insert(item.second);
+  }
+  EXPECT_EQ(original_values, deserialized_values);
+}
+
 }  // namespace pyinterp::geometry
