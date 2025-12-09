@@ -124,7 +124,7 @@ class Axis : public math::Axis<T> {
     auto reader = reader_from_ndarray(array);
     {
       nanobind::gil_scoped_release release;
-      return Axis<T>(math::Axis<T>::unpack(reader));
+      return Axis<T>(std::move(math::Axis<T>::unpack(reader)));
     }
   }
 };

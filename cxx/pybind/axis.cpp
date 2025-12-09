@@ -6,7 +6,6 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 
-#include "pyinterp/math/temporal_axis.hpp"
 #include "pyinterp/pybind/temporal_axis.hpp"
 
 namespace nb = nanobind;
