@@ -308,8 +308,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
 
   /// @brief Get the window function argument.
   /// @return Optional window function argument
-  [[nodiscard]] constexpr auto arg() const noexcept
-      -> const std::optional<double>& {
+  [[nodiscard]] constexpr auto arg() const noexcept -> const double& {
     return arg_;
   }
 
@@ -329,7 +328,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
   [[nodiscard]] constexpr auto with_arg(
       std::optional<double> value) const noexcept -> InterpolationWindow {
     auto copy = *this;
-    copy.arg_ = value;
+    copy.arg_ = value.value_or(0.0);
     return copy;
   }
 
@@ -339,7 +338,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
       math::interpolate::window::Kernel::kGaussian};
 
   /// Optional window function argument
-  std::optional<double> arg_;
+  double arg_{0};
 };
 
 }  // namespace pyinterp::pybind::config::rtree

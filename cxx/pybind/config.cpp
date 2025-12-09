@@ -359,7 +359,7 @@ auto bind(nb::module_& m) -> void {
                              nb::arg("value"), "Set the window function type.",
                              nb::call_guard<nb::gil_scoped_release>())
                         .def("with_arg", &InterpolationWindow::with_arg,
-                             nb::arg("value"),
+                             nb::arg("value") = std::nullopt,
                              "Set the window function argument.",
                              nb::call_guard<nb::gil_scoped_release>()));
 }
