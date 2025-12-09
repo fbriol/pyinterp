@@ -202,14 +202,9 @@ auto add_rtree_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
       .def("with_k", &Class::with_k, nb::arg("value"),
            "Set the number of neighbors to consider for interpolation.",
            nb::call_guard<nb::gil_scoped_release>())
-      .def(
-          "with_radius",
-          [](const Class& self, const std::optional<double>& value) {
-            return self.with_radius(value);
-          },
-          nb::arg("value") = std::nullopt,
-          "Set the search radius in meters (None for unlimited).",
-          nb::call_guard<nb::gil_scoped_release>())
+      .def("with_radius", &Class::with_radius, nb::arg("value") = std::nullopt,
+           "Set the search radius in meters (None for unlimited).",
+           nb::call_guard<nb::gil_scoped_release>())
       .def("with_boundary_check", &Class::with_boundary_check, nb::arg("value"),
            "Set the type of boundary check to apply.",
            nb::call_guard<nb::gil_scoped_release>())
@@ -347,7 +342,7 @@ auto bind(nb::module_& m) -> void {
                "Set the radial basis function type.",
                nb::call_guard<nb::gil_scoped_release>())
           .def("with_epsilon", &RadialBasisFunction::with_epsilon,
-               nb::arg("value"),
+               nb::arg("value") = std::nullopt,
                "Set the shape parameter epsilon (None for automatic).",
                nb::call_guard<nb::gil_scoped_release>())
           .def("with_smooth", &RadialBasisFunction::with_smooth,
