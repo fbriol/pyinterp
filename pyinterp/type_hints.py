@@ -26,3 +26,4 @@ if TYPE_CHECKING:
     NDArray2DFloat32 = np.ndarray[TwoDims, np.dtype[np.float32]]
     NDArray2DFloat64 = np.ndarray[TwoDims, np.dtype[np.float64]]
     NDArray2DInt64 = np.ndarray[TwoDims, np.dtype[np.int64]]
+    NDArray2DUInt64 = np.ndarray[TwoDims, np.dtype[np.int64]]

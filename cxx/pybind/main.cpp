@@ -1,6 +1,7 @@
 #include <nanobind/nanobind.h>
 
 #include "pyinterp/pybind/axis.hpp"
+#include "pyinterp/pybind/binning.hpp"
 #include "pyinterp/pybind/config.hpp"
 #include "pyinterp/pybind/geodetic.hpp"
 #include "pyinterp/pybind/geometric.hpp"
@@ -20,4 +21,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::windowed::init_quadrivariate(m);
   pyinterp::pybind::init_geodetic(m);
   pyinterp::pybind::init_rtree_3d(m);
+  pyinterp::pybind::init_binning(m);
 }
