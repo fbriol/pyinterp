@@ -21,7 +21,7 @@ class TestQuadrivariateGeometric:
     @staticmethod
     def create_analytical_grid4d(
         dtype: type[np.float32 | np.float64],
-    ) -> core.Grid4DFloat64 | core.Grid4DFloat32:
+    ) -> core.Grid4D:
         """Create a 4D grid with an analytical field.
 
         f(x, y, z, u) = sin(x) * cos(y) * exp(-z/5) * sin(u)
@@ -53,10 +53,7 @@ class TestQuadrivariateGeometric:
         # Ensure C-contiguous for grid creation
         data = np.ascontiguousarray(data)
 
-        class_name = (
-            core.Grid4DFloat32 if dtype == np.float32 else core.Grid4DFloat64
-        )
-        return class_name(x_axis, y_axis, z_axis, u_axis, data)
+        return core.Grid(x_axis, y_axis, z_axis, u_axis, data)
 
     def test_single_point_bilinear(self) -> None:
         """Test bilinear interpolation at a single point."""
@@ -187,7 +184,7 @@ class TestQuadrivariateGeometric:
         u_axis = core.Axis(grid_data.level.values)
 
         matrix = np.ascontiguousarray(grid_data.temperature.values.transpose())
-        grid = core.Grid4DFloat32(x_axis, y_axis, z_axis, u_axis, matrix)
+        grid = core.Grid(x_axis, y_axis, z_axis, u_axis, matrix)
 
         # Test points within bounds - use actual grid bounds
         lon_vals = grid_data.longitude.values
@@ -444,7 +441,7 @@ class TestQuadrivariateGeometricTemporalAxis:
     @staticmethod
     def create_analytical_temporal_grid4d(
         dtype: type[np.float32 | np.float64],
-    ) -> core.TemporalGrid4DFloat64 | core.TemporalGrid4DFloat32:
+    ) -> core.GridHolder:
         """Create a 4D grid with temporal Z-axis and analytical field.
 
         f(x, y, t, u) = sin(x) * cos(y) * exp(-t_normalized/5) * sin(u)
@@ -483,12 +480,7 @@ class TestQuadrivariateGeometricTemporalAxis:
         ).astype(dtype)
         data = np.ascontiguousarray(data)
 
-        class_name = (
-            core.TemporalGrid4DFloat32
-            if dtype == np.float32
-            else core.TemporalGrid4DFloat64
-        )
-        return class_name(x_axis, y_axis, z_axis, u_axis, data)
+        return core.Grid(x_axis, y_axis, z_axis, u_axis, data)
 
     def test_grid_basic_interpolation(self) -> None:
         """Test quadrivariate interpolation with temporal Z-axis."""
@@ -535,9 +527,7 @@ class TestQuadrivariateGeometricTemporalAxis:
         u_axis = core.Axis(grid_data.level.values)
 
         matrix = np.ascontiguousarray(grid_data.temperature.values.transpose())
-        grid = core.TemporalGrid4DFloat32(
-            x_axis, y_axis, z_axis, u_axis, matrix
-        )
+        grid = core.Grid(x_axis, y_axis, z_axis, u_axis, matrix)
 
         # Test points within bounds
         lon_vals = grid_data.longitude.values

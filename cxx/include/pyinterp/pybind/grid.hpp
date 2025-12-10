@@ -19,6 +19,8 @@
 #include <string_view>
 #include <tuple>
 #include <utility>
+#include <variant>
+#include <vector>
 
 #include "pyinterp/pybind/axis.hpp"
 #include "pyinterp/pybind/temporal_axis.hpp"
@@ -195,6 +197,9 @@ template <typename DataType, AxisTypeConcept... MathAxes>
   requires(sizeof...(MathAxes) >= 1 && sizeof...(MathAxes) <= 4)
 class Grid {
  public:
+  /// The data type of the grid values.
+  using data_type = DataType;
+
   /// Number of dimensions.
   static constexpr size_t kNDim = sizeof...(MathAxes);
 
@@ -247,13 +252,74 @@ class Grid {
   Grid() = default;
 
   /// Destructor.
-  virtual ~Grid() = default;
+  ~Grid() = default;
 
   /// Copy/move semantics.
   Grid(const Grid&) = default;
   Grid(Grid&&) noexcept = default;
   auto operator=(const Grid&) -> Grid& = default;
   auto operator=(Grid&&) noexcept -> Grid& = default;
+
+  /// @brief Get the data type as a string.
+  /// @return Data type string.
+  [[nodiscard]] auto dtype_str() const -> std::string_view {
+    return detail::dtype_name<DataType>();
+  }
+
+  /// @brief Get the number of dimensions.
+  /// @return Number of dimensions.
+  [[nodiscard]] auto ndim() const -> size_t { return kNDim; }
+
+  /// @brief Check if this grid has a temporal axis.
+  /// @return True if the grid has a temporal axis, false otherwise.
+  [[nodiscard]] auto has_temporal_axis() const -> bool {
+    return kHasTemporalAxis;
+  }
+
+  /// @brief Get the index of the temporal axis.
+  /// @return Index of the temporal axis, or -1 if no temporal axis.
+  [[nodiscard]] auto temporal_axis_index() const -> int {
+    return temporal_axis_index_impl(std::index_sequence_for<MathAxes...>{});
+  }
+
+  /// @brief Get the size of a specific axis.
+  /// @param dim Dimension index.
+  /// @return Size of the axis.
+  [[nodiscard]] auto axis_size(size_t dim) const -> int64_t {
+    return axis_size_impl(dim, std::index_sequence_for<MathAxes...>{});
+  }
+
+  /// @brief Check if a specific axis is periodic.
+  /// @param dim Dimension index.
+  /// @return True if the axis is periodic, false otherwise.
+  [[nodiscard]] auto axis_is_periodic(size_t dim) const -> bool {
+    return axis_is_periodic_impl(dim, std::index_sequence_for<MathAxes...>{});
+  }
+
+  /// @brief Get the shape of the grid as a vector.
+  /// @return Vector containing the shape of each dimension.
+  [[nodiscard]] auto shape() const -> std::vector<size_t> {
+    return shape_impl(std::index_sequence_for<MathAxes...>{});
+  }
+
+  /// @brief Get the pybind axis object at a specific dimension.
+  /// @param dim Dimension index.
+  /// @return The axis as a nanobind::object.
+  [[nodiscard]] auto pybind_axis_object(size_t dim) const -> nanobind::object {
+    return pybind_axis_object_impl(dim, std::index_sequence_for<MathAxes...>{});
+  }
+
+  /// @brief Get the underlying data array as a nanobind::object.
+  /// @return The data array.
+  [[nodiscard]] auto array_object() const -> nanobind::object {
+    return nanobind::cast(array_);
+  }
+
+  /// @brief Get a string representation of the grid.
+  /// @return String representation.
+  [[nodiscard]] auto repr() const -> std::string {
+    return static_cast<std::string>(*this);
+  }
 
   /// Get axis at index I at compile time.
   /// @tparam I Index of the axis.
@@ -347,7 +413,7 @@ class Grid {
 
   /// Get the state for pickling.
   /// @return Tuple representing the state.
-  [[nodiscard]] virtual auto getstate() const -> nanobind::tuple {
+  [[nodiscard]] auto getstate() const -> nanobind::tuple {
     return getstate_impl(std::index_sequence_for<MathAxes...>{});
   }
 
@@ -370,23 +436,16 @@ class Grid {
     constexpr std::array<std::string_view, 4> dim_names{"1D", "2D", "3D", "4D"};
     std::string_view prefix = has_temporal_axis() ? "Temporal" : "";
 
-    return std::format(
-        "{}Grid{}(shape={}, dtype={}, nbytes={})", prefix, dim_names[kNDim - 1],
-        detail::array_shape_str<kNDim>(array_), detail::dtype_name<DataType>(),
-        detail::format_bytes(array_.nbytes()));
+    return std::format("{}Grid{}(shape={}, dtype={}, nbytes={})", prefix,
+                       dim_names[kNDim - 1],
+                       detail::array_shape_str<kNDim>(array_), dtype_str(),
+                       detail::format_bytes(array_.nbytes()));
   }
 
   /// @brief Check if this grid has a temporal axis.
   /// @return True if the grid has a temporal axis, false otherwise.
   static constexpr bool kHasTemporalAxis =
       (std::is_same_v<MathAxes, math::TemporalAxis> || ...);
-
-  /// @brief Check if this grid has a temporal axis (instance method for
-  /// convenience).
-  /// @return True if the grid has a temporal axis, false otherwise.
-  [[nodiscard]] constexpr auto has_temporal_axis() const -> bool {
-    return kHasTemporalAxis;
-  }
 
  protected:
   pybind_axes_tuple_t pybind_axes_;
@@ -450,6 +509,60 @@ class Grid {
                     nanobind::cast<nanobind::tuple>(state[Is])))...,
                 nanobind::cast<array_t>(state[kNDim]));
   }
+
+  /// @brief Find the index of the temporal axis.
+  template <size_t... Is>
+  [[nodiscard]] static constexpr auto temporal_axis_index_impl(
+      std::index_sequence<Is...>) -> int {
+    int result = -1;
+    (void)((std::is_same_v<math_axis_t<Is>, math::TemporalAxis>
+                ? (result = static_cast<int>(Is), true)
+                : false) ||
+           ...);
+    return result;
+  }
+
+  /// @brief Get the size of a specific axis at runtime.
+  template <size_t... Is>
+  [[nodiscard]] auto axis_size_impl(size_t dim,
+                                    std::index_sequence<Is...>) const
+      -> int64_t {
+    int64_t result = 0;
+    (void)((dim == Is ? (result = static_cast<int64_t>(axis<Is>().size()), true)
+                      : false) ||
+           ...);
+    return result;
+  }
+
+  /// @brief Check if a specific axis is periodic at runtime.
+  template <size_t... Is>
+  [[nodiscard]] auto axis_is_periodic_impl(size_t dim,
+                                           std::index_sequence<Is...>) const
+      -> bool {
+    bool result = false;
+    (void)((dim == Is ? (result = axis<Is>().is_periodic(), true) : false) ||
+           ...);
+    return result;
+  }
+
+  /// @brief Get the shape of the grid.
+  template <size_t... Is>
+  [[nodiscard]] auto shape_impl(std::index_sequence<Is...>) const
+      -> std::vector<size_t> {
+    return {static_cast<size_t>(axis<Is>().size())...};
+  }
+
+  /// @brief Get the pybind axis object at a specific dimension at runtime.
+  template <size_t... Is>
+  [[nodiscard]] auto pybind_axis_object_impl(size_t dim,
+                                             std::index_sequence<Is...>) const
+      -> nanobind::object {
+    nanobind::object result = nanobind::none();
+    (void)((dim == Is ? (result = nanobind::cast(pybind_axis<Is>()), true)
+                      : false) ||
+           ...);
+    return result;
+  }
 };
 
 /// Spatial axis alias for clarity.
@@ -492,6 +605,292 @@ using TemporalGrid3D =
 template <typename DataType>
 using TemporalGrid4D = Grid<DataType, MathSpatialAxis<>, MathSpatialAxis<>,
                             MathTemporalAxis, MathSpatialAxis<>>;
+
+namespace detail {
+
+/// @brief Helper to generate all grid types for a given data type.
+/// @tparam T Data type.
+template <typename T>
+using GridsForType = std::variant<Grid1D<T>, Grid2D<T>, Grid3D<T>, Grid4D<T>,
+                                  TemporalGrid3D<T>, TemporalGrid4D<T>>;
+
+/// @brief List of supported data types for grids.
+using SupportedDataTypes =
+    std::tuple<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t,
+               uint64_t, float, double>;
+
+/// @brief Helper to concatenate variants.
+template <typename... Variants>
+struct variant_concat;
+
+template <typename... Ts>
+struct variant_concat<std::variant<Ts...>> {
+  using type = std::variant<Ts...>;
+};
+
+template <typename... Ts, typename... Us, typename... Rest>
+struct variant_concat<std::variant<Ts...>, std::variant<Us...>, Rest...> {
+  using type =
+      typename variant_concat<std::variant<Ts..., Us...>, Rest...>::type;
+};
+
+template <typename... Variants>
+using variant_concat_t = typename variant_concat<Variants...>::type;
+
+/// @brief Helper to generate GridVariant from tuple of data types.
+template <typename DataTypeTuple,
+          typename = std::make_index_sequence<std::tuple_size_v<DataTypeTuple>>>
+struct GridVariantBuilder;
+
+template <typename... DataTypes, size_t... Is>
+struct GridVariantBuilder<std::tuple<DataTypes...>,
+                          std::index_sequence<Is...>> {
+  using type = variant_concat_t<GridsForType<DataTypes>...>;
+};
+
+}  // namespace detail
+
+/// @brief Sum type holding all possible grid types.
+/// Contains 60 types: 6 grid shapes × 10 data types.
+using GridVariant =
+    typename detail::GridVariantBuilder<detail::SupportedDataTypes>::type;
+
+/// @brief Type-erased grid holder using std::variant internally.
+///
+/// This class wraps a GridVariant and provides a uniform interface for
+/// accessing grid properties regardless of the underlying type.
+class GridHolder {
+ public:
+  /// @brief Default constructor (required for pickle).
+  GridHolder() = default;
+
+  /// @brief Construct from any grid type.
+  /// @tparam GridType The concrete grid type.
+  /// @param grid The grid to store.
+  template <typename GridType>
+    requires(!std::is_same_v<std::decay_t<GridType>, GridHolder>)
+  explicit GridHolder(GridType&& grid) : value_(std::forward<GridType>(grid)) {}
+
+  /// @brief Get the data type as a string.
+  /// @return Data type string.
+  [[nodiscard]] auto dtype_str() const -> std::string_view {
+    return std::visit([](const auto& g) { return g.dtype_str(); }, value_);
+  }
+
+  /// @brief Get the number of dimensions.
+  /// @return Number of dimensions.
+  [[nodiscard]] auto ndim() const -> size_t {
+    return std::visit([](const auto& g) { return g.ndim(); }, value_);
+  }
+
+  /// @brief Check if this grid has a temporal axis.
+  /// @return True if the grid has a temporal axis, false otherwise.
+  [[nodiscard]] auto has_temporal_axis() const -> bool {
+    return std::visit([](const auto& g) { return g.has_temporal_axis(); },
+                      value_);
+  }
+
+  /// @brief Get the index of the temporal axis.
+  /// @return Index of the temporal axis, or -1 if no temporal axis.
+  [[nodiscard]] auto temporal_axis_index() const -> int {
+    return std::visit([](const auto& g) { return g.temporal_axis_index(); },
+                      value_);
+  }
+
+  /// @brief Get the size of a specific axis.
+  /// @param dim Dimension index.
+  /// @return Size of the axis.
+  [[nodiscard]] auto axis_size(size_t dim) const -> int64_t {
+    return std::visit([dim](const auto& g) { return g.axis_size(dim); },
+                      value_);
+  }
+
+  /// @brief Check if a specific axis is periodic.
+  /// @param dim Dimension index.
+  /// @return True if the axis is periodic, false otherwise.
+  [[nodiscard]] auto axis_is_periodic(size_t dim) const -> bool {
+    return std::visit([dim](const auto& g) { return g.axis_is_periodic(dim); },
+                      value_);
+  }
+
+  /// @brief Get the shape of the grid as a vector.
+  /// @return Vector containing the shape of each dimension.
+  [[nodiscard]] auto shape() const -> std::vector<size_t> {
+    return std::visit([](const auto& g) { return g.shape(); }, value_);
+  }
+
+  /// @brief Get the pybind axis object at a specific dimension.
+  /// @param dim Dimension index.
+  /// @return The axis as a nanobind::object.
+  [[nodiscard]] auto pybind_axis_object(size_t dim) const -> nanobind::object {
+    return std::visit(
+        [dim](const auto& g) { return g.pybind_axis_object(dim); }, value_);
+  }
+
+  /// @brief Get the underlying data array as a nanobind::object.
+  /// @return The data array.
+  [[nodiscard]] auto array_object() const -> nanobind::object {
+    return std::visit([](const auto& g) { return g.array_object(); }, value_);
+  }
+
+  /// @brief Get the state for pickling.
+  /// @return Tuple representing the state (axes..., array).
+  [[nodiscard]] auto getstate() const -> nanobind::tuple {
+    const auto n = ndim();
+    nanobind::list items;
+    for (size_t i = 0; i < n; ++i) {
+      items.append(pybind_axis_object(i));
+    }
+    items.append(array_object());
+    return nanobind::tuple(items);
+  }
+
+  /// @brief Get a string representation of the grid.
+  /// @return String representation.
+  [[nodiscard]] auto repr() const -> std::string {
+    return std::visit([](const auto& g) { return g.repr(); }, value_);
+  }
+
+  /// @brief Get the underlying variant.
+  /// @return Reference to the variant.
+  [[nodiscard]] auto variant() const noexcept -> const GridVariant& {
+    return value_;
+  }
+
+  /// @brief Get mutable access to the underlying variant.
+  /// @return Mutable reference to the variant.
+  [[nodiscard]] auto variant() noexcept -> GridVariant& { return value_; }
+
+  /// @brief Visit the underlying grid with a visitor.
+  /// @tparam Visitor The visitor type.
+  /// @param visitor The visitor callable.
+  /// @return The result of visiting.
+  template <typename Visitor>
+  [[nodiscard]] auto visit(Visitor&& visitor) const {
+    return std::visit(std::forward<Visitor>(visitor), value_);
+  }
+
+  /// @brief Visit the underlying grid with a visitor (mutable).
+  /// @tparam Visitor The visitor type.
+  /// @param visitor The visitor callable.
+  /// @return The result of visiting.
+  template <typename Visitor>
+  [[nodiscard]] auto visit(Visitor&& visitor) {
+    return std::visit(std::forward<Visitor>(visitor), value_);
+  }
+
+  /// @brief Check if the holder contains a specific grid type.
+  /// @tparam GridType The grid type to check for.
+  /// @return True if the holder contains the specified type.
+  template <typename GridType>
+  [[nodiscard]] auto holds() const noexcept -> bool {
+    return std::holds_alternative<GridType>(value_);
+  }
+
+  /// @brief Get the grid as a specific type.
+  /// @tparam GridType The grid type to get.
+  /// @return Reference to the grid.
+  /// @throws std::bad_variant_access if the type doesn't match.
+  template <typename GridType>
+  [[nodiscard]] auto as() const -> const GridType& {
+    return std::get<GridType>(value_);
+  }
+
+  /// @brief Get the grid as a specific type (mutable).
+  /// @tparam GridType The grid type to get.
+  /// @return Mutable reference to the grid.
+  /// @throws std::bad_variant_access if the type doesn't match.
+  template <typename GridType>
+  [[nodiscard]] auto as() -> GridType& {
+    return std::get<GridType>(value_);
+  }
+
+  /// @brief Try to get the grid as a specific type.
+  /// @tparam GridType The grid type to get.
+  /// @return Pointer to the grid, or nullptr if type doesn't match.
+  template <typename GridType>
+  [[nodiscard]] auto try_as() const noexcept -> const GridType* {
+    return std::get_if<GridType>(&value_);
+  }
+
+  /// @brief Try to get the grid as a specific type (mutable).
+  /// @tparam GridType The grid type to get.
+  /// @return Pointer to the grid, or nullptr if type doesn't match.
+  template <typename GridType>
+  [[nodiscard]] auto try_as() noexcept -> GridType* {
+    return std::get_if<GridType>(&value_);
+  }
+
+ private:
+  GridVariant value_;
+};
+
+/// @brief Factory to create grids from Python with runtime dtype detection.
+/// @tparam MathAxes Axis types (math::Axis<double>, math::TemporalAxis, etc.).
+/// @param axes Tuple of axes.
+/// @param array_obj Python array object.
+/// @return GridHolder containing the created grid.
+template <AxisTypeConcept... MathAxes>
+  requires(sizeof...(MathAxes) >= 1 && sizeof...(MathAxes) <= 4)
+auto grid_factory(detail::pybind_axes_tuple_t<MathAxes...>&& axes,
+                  const nanobind::object& array_obj) -> GridHolder {
+  // Helper to create the grid with the correct DataType
+  auto create_grid = [&]<typename DataType>() -> GridHolder {
+    // Cast the Python object to the specific DataType array
+    using array_t = nanobind::ndarray<nanobind::numpy, DataType,
+                                      nanobind::ndim<sizeof...(MathAxes)>,
+                                      nanobind::c_contig>;
+
+    // Extract axes from tuple and create grid
+    return std::apply(
+        [&](auto&&... ax) -> GridHolder {
+          return GridHolder(
+              Grid<DataType, MathAxes...>(std::forward<decltype(ax)>(ax)...,
+                                          nanobind::cast<array_t>(array_obj)));
+        },
+        std::move(axes));
+  };
+
+  // Get a generic ndarray view to check dtype
+  using generic_array_t =
+      nanobind::ndarray<nanobind::numpy, nanobind::c_contig,
+                        nanobind::ndim<sizeof...(MathAxes)>>;
+  auto array = nanobind::cast<generic_array_t>(array_obj);
+  const auto dtype = array.dtype();
+
+  if (dtype == nanobind::dtype<int8_t>()) {
+    return create_grid.template operator()<int8_t>();
+  }
+  if (dtype == nanobind::dtype<uint8_t>()) {
+    return create_grid.template operator()<uint8_t>();
+  }
+  if (dtype == nanobind::dtype<int16_t>()) {
+    return create_grid.template operator()<int16_t>();
+  }
+  if (dtype == nanobind::dtype<uint16_t>()) {
+    return create_grid.template operator()<uint16_t>();
+  }
+  if (dtype == nanobind::dtype<int32_t>()) {
+    return create_grid.template operator()<int32_t>();
+  }
+  if (dtype == nanobind::dtype<uint32_t>()) {
+    return create_grid.template operator()<uint32_t>();
+  }
+  if (dtype == nanobind::dtype<int64_t>()) {
+    return create_grid.template operator()<int64_t>();
+  }
+  if (dtype == nanobind::dtype<uint64_t>()) {
+    return create_grid.template operator()<uint64_t>();
+  }
+  if (dtype == nanobind::dtype<float>()) {
+    return create_grid.template operator()<float>();
+  }
+  if (dtype == nanobind::dtype<double>()) {
+    return create_grid.template operator()<double>();
+  }
+
+  throw std::invalid_argument("Unsupported array dtype");
+}
 
 /// Helper to bind a grid class to Python.
 /// @tparam GridType The grid type to bind.
@@ -546,101 +945,6 @@ auto bind_grid(nanobind::module_& m, std::string_view name,
   }
 
   return cls;
-}
-
-/// Bind specific constructor for 1D grid
-template <typename DataType>
-auto bind_grid_1d(nanobind::module_& m, std::string_view name,
-                  std::string_view docstring) -> void {
-  using GridType = Grid1D<DataType>;
-
-  bind_grid<GridType>(m, name, docstring)
-      .def(nanobind::init<Axis<double>, typename GridType::array_t>(),
-           nanobind::arg("x"), nanobind::arg("array"));
-}
-
-/// Bind specific constructor for 2D grid
-template <typename DataType>
-auto bind_grid_2d(nanobind::module_& m, std::string_view name,
-                  std::string_view docstring) -> void {
-  using GridType = Grid2D<DataType>;
-
-  bind_grid<GridType>(m, name, docstring)
-      .def(nanobind::init<Axis<double>, Axis<double>,
-                          typename GridType::array_t>(),
-           nanobind::arg("x"), nanobind::arg("y"), nanobind::arg("array"));
-}
-
-/// Bind specific constructor for 3D grid
-template <typename DataType>
-auto bind_grid_3d(nanobind::module_& m, std::string_view name,
-                  std::string_view docstring) -> void {
-  using GridType = Grid3D<DataType>;
-
-  bind_grid<GridType>(m, name, docstring)
-      .def(nanobind::init<Axis<double>, Axis<double>, Axis<double>,
-                          typename GridType::array_t>(),
-           nanobind::arg("x"), nanobind::arg("y"), nanobind::arg("z"),
-           nanobind::arg("array"));
-}
-
-/// Bind specific constructor for 4D grid
-template <typename DataType>
-auto bind_grid_4d(nanobind::module_& m, std::string_view name,
-                  std::string_view docstring) -> void {
-  using GridType = Grid4D<DataType>;
-
-  bind_grid<GridType>(m, name, docstring)
-      .def(nanobind::init<Axis<double>, Axis<double>, Axis<double>,
-                          Axis<double>, typename GridType::array_t>(),
-           nanobind::arg("x"), nanobind::arg("y"), nanobind::arg("z"),
-           nanobind::arg("u"), nanobind::arg("array"));
-}
-
-/// Bind specific constructor for 3D grid
-template <typename DataType>
-auto bind_temporal_grid_3d(nanobind::module_& m, std::string_view name,
-                           std::string_view docstring) -> void {
-  using GridType = TemporalGrid3D<DataType>;
-
-  bind_grid<GridType>(m, name, docstring)
-      .def(nanobind::init<Axis<double>, Axis<double>, TemporalAxis,
-                          typename GridType::array_t>(),
-           nanobind::arg("x"), nanobind::arg("y"), nanobind::arg("z"),
-           nanobind::arg("array"));
-}
-
-/// Bind specific constructor for 4D grid
-template <typename DataType>
-auto bind_temporal_grid_4d(nanobind::module_& m, std::string_view name,
-                           std::string_view docstring) -> void {
-  using GridType = TemporalGrid4D<DataType>;
-
-  bind_grid<GridType>(m, name, docstring)
-      .def(nanobind::init<Axis<double>, Axis<double>, TemporalAxis,
-                          Axis<double>, typename GridType::array_t>(),
-           nanobind::arg("x"), nanobind::arg("y"), nanobind::arg("z"),
-           nanobind::arg("u"), nanobind::arg("array"));
-}
-
-/// Bind all standard grid types for Python.
-/// @tparam DataType The data type for the grids.
-/// @param m Nanobind module.
-/// @param suffix Suffix for class names (e.g., "Float64").
-template <typename DataType>
-auto bind_grids(nanobind::module_& m, std::string_view suffix) -> void {
-  bind_grid_1d<DataType>(m, std::format("Grid1D{}", suffix),
-                         "Cartesian Grid 1D");
-  bind_grid_2d<DataType>(m, std::format("Grid2D{}", suffix),
-                         "Cartesian Grid 2D");
-  bind_grid_3d<DataType>(m, std::format("Grid3D{}", suffix),
-                         "Cartesian Grid 3D");
-  bind_grid_4d<DataType>(m, std::format("Grid4D{}", suffix),
-                         "Cartesian Grid 4D");
-  bind_temporal_grid_3d<DataType>(m, std::format("TemporalGrid3D{}", suffix),
-                                  "Temporal Cartesian Grid 3D");
-  bind_temporal_grid_4d<DataType>(m, std::format("TemporalGrid4D{}", suffix),
-                                  "Temporal Cartesian Grid 4D");
 }
 
 /// Bind Grid classes to Python.

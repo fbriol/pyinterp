@@ -2,16 +2,46 @@
 
 #include <nanobind/nanobind.h>
 
-#include <cstdint>
-
 #include "pyinterp/geometry/point.hpp"
+#include "pyinterp/pybind/grid.hpp"
+#include "pyinterp/pybind/grid_dispatch.hpp"
 
 namespace pyinterp::pybind::geometric {
 
+// Define Point alias for convenience
+template <typename T>
+using Point = geometry::SphericalPoint<T>;
+
+namespace {
+
+/// @brief Functor for bivariate interpolation dispatch
+struct BivariateInterpolator {
+  /// @brief Call operator for 2D grids
+  template <typename DataType, typename ResultType, typename GridType>
+  auto operator()(const GridType& grid,
+                  const Eigen::Ref<const Eigen::VectorXd>& x,
+                  const Eigen::Ref<const Eigen::VectorXd>& y,
+                  const config::geometric::Bivariate& config) const
+      -> Vector<ResultType> {
+    return bivariate<Point, DataType, ResultType>(grid, x, y, config);
+  }
+};
+
+}  // namespace
+
 auto init_bivariate(nanobind::module_& m) -> void {
-  bind_bivariate<geometry::SphericalPoint, double, double>(m);
-  bind_bivariate<geometry::SphericalPoint, float, float>(m);
-  bind_bivariate<geometry::SphericalPoint, int8_t, float>(m);
+  namespace nb = nanobind;
+
+  m.def(
+      "bivariate",
+      [](const GridHolder& grid, const Eigen::Ref<const Eigen::VectorXd>& x,
+         const Eigen::Ref<const Eigen::VectorXd>& y,
+         const config::geometric::Bivariate& config) -> nb::object {
+        return GridDispatcher<Point>::dispatch_bivariate(
+            grid, x, y, config, BivariateInterpolator{});
+      },
+      nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("config"),
+      detail::kBivariateDocstring);
 }
 
 }  // namespace pyinterp::pybind::geometric

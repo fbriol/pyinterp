@@ -29,14 +29,6 @@ repos:
         args: [--fix]
       - id: ruff-format
         args : [--line-length=80]
-  - repo: https://github.com/PyCQA/isort
-    rev: 7.0.0
-    hooks:
-      - id: isort
-        name: isort (python)
-      - id: isort
-        name: isort (pyi)
-        types: [pyi]
   # - repo: https://github.com/myint/docformatter
   #   rev: "v1.7.5"
   #   hooks:

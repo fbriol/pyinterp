@@ -1,5 +1,5 @@
 import typing
-from typing import Any, Generic, TypeVar, overload
+from typing import Any, Generic, TypeAlias, TypeVar, overload
 
 import numpy as np
 
@@ -20,252 +20,30 @@ from ..type_hints import (
 from . import geodetic
 from .config import geometric, rtree, windowed
 
-@overload
+# Type alias for temporal coordinate arrays
+TemporalArray: TypeAlias = NDArray1DDateTime64 | NDArray1DTimeDelta64
+
 def bivariate(
-    grid: Grid2DFloat64,
+    grid: GridHolder,
     x: NDArray1DFloat64,
     y: NDArray1DFloat64,
-    config: geometric.Bivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def bivariate(
-    grid: Grid2DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    config: geometric.Bivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def bivariate(
-    grid: Grid2DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    config: geometric.Bivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def bivariate(
-    grid: Grid2DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    config: windowed.Bivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def bivariate(
-    grid: Grid2DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    config: windowed.Bivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def bivariate(
-    grid: Grid2DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    config: windowed.Bivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: Grid4DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    u: NDArray1DFloat64,
-    config: geometric.Quadrivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def quadrivariate(
-    grid: Grid4DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    u: NDArray1DFloat64,
-    config: geometric.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: Grid4DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    u: NDArray1DFloat64,
-    config: geometric.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: TemporalGrid4DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    u: NDArray1DFloat64,
-    config: geometric.Quadrivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def quadrivariate(
-    grid: TemporalGrid4DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    u: NDArray1DFloat64,
-    config: geometric.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: TemporalGrid4DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    u: NDArray1DFloat64,
-    config: geometric.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: Grid4DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    u: NDArray1DFloat64,
-    config: windowed.Quadrivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def quadrivariate(
-    grid: Grid4DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    u: NDArray1DFloat64,
-    config: windowed.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: Grid4DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    u: NDArray1DFloat64,
-    config: windowed.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: TemporalGrid4DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    u: NDArray1DFloat64,
-    config: windowed.Quadrivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def quadrivariate(
-    grid: TemporalGrid4DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    u: NDArray1DFloat64,
-    config: windowed.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def quadrivariate(
-    grid: TemporalGrid4DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    u: NDArray1DFloat64,
-    config: windowed.Quadrivariate,
-) -> NDArray1DFloat32: ...
-@overload
+    config: geometric.Bivariate | windowed.Bivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 def trivariate(
-    grid: Grid3DFloat64,
+    grid: GridHolder,
     x: NDArray1DFloat64,
     y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    config: geometric.Trivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def trivariate(
-    grid: Grid3DFloat32,
+    z: NDArray1DFloat64 | TemporalArray,
+    config: geometric.Trivariate | windowed.Trivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+def quadrivariate(
+    grid: GridHolder,
     x: NDArray1DFloat64,
     y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    config: geometric.Trivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def trivariate(
-    grid: Grid3DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    config: geometric.Trivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def trivariate(
-    grid: TemporalGrid3DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    config: geometric.Trivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def trivariate(
-    grid: TemporalGrid3DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    config: geometric.Trivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def trivariate(
-    grid: TemporalGrid3DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    config: geometric.Trivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def trivariate(
-    grid: Grid3DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    config: windowed.Trivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def trivariate(
-    grid: Grid3DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    config: windowed.Trivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def trivariate(
-    grid: Grid3DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64,
-    config: windowed.Trivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def trivariate(
-    grid: TemporalGrid3DFloat64,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    config: windowed.Trivariate,
-) -> NDArray1DFloat64: ...
-@overload
-def trivariate(
-    grid: TemporalGrid3DFloat32,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    config: windowed.Trivariate,
-) -> NDArray1DFloat32: ...
-@overload
-def trivariate(
-    grid: TemporalGrid3DInt8,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DDateTime64 | NDArray1DTimeDelta64,
-    config: windowed.Trivariate,
-) -> NDArray1DFloat32: ...
+    z: NDArray1DFloat64 | TemporalArray,
+    u: NDArray1DFloat64,
+    config: geometric.Quadrivariate | windowed.Quadrivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
 class Axis:
     def __init__(
@@ -385,125 +163,88 @@ class Binning2DFloat64:
     @property
     def y(self) -> Axis: ...
 
-class Grid1DFloat32:
-    def __init__(self, x: Axis, array) -> None: ...
+class GridHolder:
+    """The actual C++ bound class for all grids."""
+    def __getstate__(self) -> tuple: ...
+    def __repr__(self) -> str: ...
     @property
-    def array(self): ...
+    def array(self) -> np.ndarray: ...
     @property
-    def x(self) -> Axis: ...
+    def dtype(self) -> np.dtype: ...
+    @property
+    def has_temporal_axis(self) -> bool: ...
+    @property
+    def ndim(self) -> int: ...
+    @property
+    def shape(self) -> tuple[int, ...]: ...
+    @property
+    def temporal_axis_index(self) -> int: ...
 
-class Grid1DFloat64:
-    def __init__(self, x: Axis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def x(self) -> Axis: ...
-
-class Grid1DInt8:
-    def __init__(self, x: Axis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def x(self) -> Axis: ...
-
-class Grid2DFloat32:
-    def __init__(self, x: Axis, y: Axis, array) -> None: ...
-    @property
-    def array(self): ...
+class Grid1D(GridHolder):
+    """1-dimensional grid."""
     @property
     def x(self) -> Axis: ...
     @property
-    def y(self) -> Axis: ...
-
-class Grid2DFloat64:
-    def __init__(self, x: Axis, y: Axis, array) -> None: ...
+    def y(self) -> None: ...
     @property
-    def array(self): ...
+    def z(self) -> None: ...
+    @property
+    def u(self) -> None: ...
+
+class Grid2D(GridHolder):
+    """2-dimensional grid."""
     @property
     def x(self) -> Axis: ...
     @property
     def y(self) -> Axis: ...
+    @property
+    def z(self) -> None: ...
+    @property
+    def u(self) -> None: ...
 
-class Grid2DInt8:
-    def __init__(self, x: Axis, y: Axis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-
-class Grid3DFloat32:
-    def __init__(self, x: Axis, y: Axis, z: Axis, array) -> None: ...
-    @property
-    def array(self): ...
+class Grid3D(GridHolder):
+    """3-dimensional grid with spatial z-axis."""
     @property
     def x(self) -> Axis: ...
     @property
     def y(self) -> Axis: ...
     @property
     def z(self) -> Axis: ...
-
-class Grid3DFloat64:
-    def __init__(self, x: Axis, y: Axis, z: Axis, array) -> None: ...
     @property
-    def array(self): ...
+    def u(self) -> None: ...
+
+class TemporalGrid3D(GridHolder):
+    """3-dimensional grid with temporal z-axis."""
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def z(self) -> TemporalAxis: ...
+    @property
+    def u(self) -> None: ...
+
+class Grid4D(GridHolder):
+    """4-dimensional grid with spatial z-axis."""
     @property
     def x(self) -> Axis: ...
     @property
     def y(self) -> Axis: ...
     @property
     def z(self) -> Axis: ...
-
-class Grid3DInt8:
-    def __init__(self, x: Axis, y: Axis, z: Axis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> Axis: ...
-
-class Grid4DFloat32:
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis, array) -> None: ...
-    @property
-    def array(self): ...
     @property
     def u(self) -> Axis: ...
+
+class TemporalGrid4D(GridHolder):
+    """4-dimensional grid with temporal z-axis."""
     @property
     def x(self) -> Axis: ...
     @property
     def y(self) -> Axis: ...
     @property
-    def z(self) -> Axis: ...
-
-class Grid4DFloat64:
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis, array) -> None: ...
-    @property
-    def array(self): ...
+    def z(self) -> TemporalAxis: ...
     @property
     def u(self) -> Axis: ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> Axis: ...
-
-class Grid4DInt8:
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def u(self) -> Axis: ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> Axis: ...
 
 class RTree3DFloat32:
     def __init__(self, spheroid: geodetic.Spheroid | None = ...) -> None: ...
@@ -579,6 +320,8 @@ _TemporalArray = TypeVar(
 )
 
 class TemporalAxis(Generic[_TemporalScalar, _TemporalArray]):
+    """A temporal coordinate axis for grid interpolation."""
+
     @overload
     def __init__(
         self: TemporalAxis[np.datetime64, NDArray1DDateTime64],
@@ -626,95 +369,44 @@ class TemporalAxis(Generic[_TemporalScalar, _TemporalArray]):
     @property
     def period(self) -> np.timedelta64 | None: ...
 
-class TemporalGrid3DFloat32:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> TemporalAxis: ...
-
-class TemporalGrid3DFloat64:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> TemporalAxis: ...
-
-class TemporalGrid3DInt8:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, array) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> TemporalAxis: ...
-
-class TemporalGrid4DFloat32:
-    def __init__(
-        self,
-        x: Axis,
-        y: Axis,
-        z: TemporalAxis,
-        u: Axis,
-        array,
-    ) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def u(self) -> Axis: ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> TemporalAxis: ...
-
-class TemporalGrid4DFloat64:
-    def __init__(
-        self,
-        x: Axis,
-        y: Axis,
-        z: TemporalAxis,
-        u: Axis,
-        array,
-    ) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def u(self) -> Axis: ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> TemporalAxis: ...
-
-class TemporalGrid4DInt8:
-    def __init__(
-        self,
-        x: Axis,
-        y: Axis,
-        z: TemporalAxis,
-        u: Axis,
-        array,
-    ) -> None: ...
-    @property
-    def array(self): ...
-    @property
-    def u(self) -> Axis: ...
-    @property
-    def x(self) -> Axis: ...
-    @property
-    def y(self) -> Axis: ...
-    @property
-    def z(self) -> TemporalAxis: ...
+@overload
+def Grid(
+    x: Axis,
+    array: object,
+) -> Grid1D: ...
+@overload
+def Grid(
+    x: Axis,
+    y: Axis,
+    array: object,
+) -> Grid2D: ...
+@overload
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: Axis,
+    array: object,
+) -> Grid3D: ...
+@overload
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: TemporalAxis,
+    array: object,
+) -> TemporalGrid3D: ...
+@overload
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: Axis,
+    u: Axis,
+    array: object,
+) -> Grid4D: ...
+@overload
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: TemporalAxis,
+    u: Axis,
+    array: object,
+) -> TemporalGrid4D: ...

@@ -1,0 +1,225 @@
+// Copyright (c) 2025 CNES
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+#pragma once
+
+#include <nanobind/nanobind.h>
+
+#include <format>
+#include <stdexcept>
+#include <string_view>
+#include <type_traits>
+
+#include "pyinterp/pybind/grid.hpp"
+
+namespace pyinterp::pybind {
+
+namespace detail {
+
+/// @brief Helper to determine the result type for interpolation.
+/// Double produces double, everything else produces float.
+template <typename DataType>
+using InterpolationResultType =
+    std::conditional_t<std::is_same_v<DataType, double>, double, float>;
+
+/// @brief Concept for checking if a grid is 2D.
+template <typename GridType>
+concept Is2DGrid = (GridType::kNDim == 2);
+
+/// @brief Concept for checking if a grid is 3D.
+template <typename GridType>
+concept Is3DGrid = (GridType::kNDim == 3);
+
+/// @brief Concept for checking if a grid is 4D.
+template <typename GridType>
+concept Is4DGrid = (GridType::kNDim == 4);
+
+/// @brief Concept for checking if a grid is temporal.
+template <typename GridType>
+concept IsTemporalGrid = GridType::kHasTemporalAxis;
+
+/// @brief Concept for checking if a grid is spatial (non-temporal).
+template <typename GridType>
+concept IsSpatialGrid = !GridType::kHasTemporalAxis;
+
+}  // namespace detail
+
+/// @brief Helper class for dispatching operations on GridHolder to concrete
+/// grid types.
+///
+/// This class provides static methods to dispatch operations using std::visit
+/// on the underlying GridVariant. The visitor pattern replaces the previous
+/// dynamic_cast-based dispatch.
+///
+/// @tparam Point Point type template (e.g., geometry::SphericalPoint)
+template <template <class> class Point>
+class GridDispatcher {
+ public:
+  /// @brief Determine the result type based on grid dtype.
+  /// @param dtype_str The dtype string from the grid.
+  /// @return "float32" for float32 grids, "float64" for float64 grids,
+  ///         "float32" for integer grids (promoted for interpolation).
+  [[nodiscard]] static constexpr auto result_dtype(std::string_view dtype_str)
+      -> std::string_view {
+    if (dtype_str == "float64") {
+      return "float64";
+    }
+    // All other types (float32, integers) produce float32 results
+    return "float32";
+  }
+
+  /// @brief Check if the grid dtype produces float64 results.
+  [[nodiscard]] static constexpr auto is_float64_result(
+      std::string_view dtype_str) -> bool {
+    return dtype_str == "float64";
+  }
+
+  /// @brief Dispatch bivariate interpolation to the appropriate concrete grid
+  /// type.
+  /// @tparam ConfigType Configuration type.
+  /// @tparam InterpolationFunc Interpolation function template.
+  /// @param grid The grid holder.
+  /// @param x X coordinates.
+  /// @param y Y coordinates.
+  /// @param config Configuration object.
+  /// @param func The interpolation function - should be callable as
+  ///             func.template operator()<DataType, ResultType>(grid, x, y,
+  ///             config)
+  /// @return nanobind::object containing the result vector.
+  template <typename ConfigType, typename InterpolationFunc>
+  static auto dispatch_bivariate(const GridHolder& grid,
+                                 const Eigen::Ref<const Vector<double>>& x,
+                                 const Eigen::Ref<const Vector<double>>& y,
+                                 const ConfigType& config,
+                                 InterpolationFunc&& func) -> nanobind::object {
+    if (grid.ndim() != 2) {
+      throw std::invalid_argument(
+          std::format("bivariate requires 2D grid, got {}D", grid.ndim()));
+    }
+
+    return grid.visit([&](const auto& concrete_grid) -> nanobind::object {
+      using GridType = std::decay_t<decltype(concrete_grid)>;
+
+      if constexpr (detail::Is2DGrid<GridType>) {
+        using DataType = typename GridType::data_type;
+        using ResultType = detail::InterpolationResultType<DataType>;
+        return nanobind::cast(func.template operator()<DataType, ResultType>(
+            concrete_grid, x, y, config));
+      } else {
+        // This branch should never be reached due to the ndim check above
+        throw std::invalid_argument("Grid is not 2D");
+      }
+    });
+  }
+
+  /// @brief Dispatch trivariate interpolation to the appropriate concrete grid
+  /// type.
+  /// @tparam ConfigType Configuration type.
+  /// @tparam InterpolationFunc Interpolation function template.
+  /// @param grid The grid holder.
+  /// @param x X coordinates.
+  /// @param y Y coordinates.
+  /// @param z Z coordinates (nanobind::object for temporal/spatial
+  /// flexibility).
+  /// @param config Configuration object.
+  /// @param func The interpolation function - should be callable as
+  ///             func.template operator()<DataType, ResultType, ZType>(grid, x,
+  ///             y, z, config)
+  /// @return nanobind::object containing the result vector.
+  template <typename ConfigType, typename InterpolationFunc>
+  static auto dispatch_trivariate(const GridHolder& grid,
+                                  const Eigen::Ref<const Vector<double>>& x,
+                                  const Eigen::Ref<const Vector<double>>& y,
+                                  const nanobind::object& z_obj,
+                                  const ConfigType& config,
+                                  InterpolationFunc&& func)
+      -> nanobind::object {
+    if (grid.ndim() != 3) {
+      throw std::invalid_argument(
+          std::format("trivariate requires 3D grid, got {}D", grid.ndim()));
+    }
+
+    return grid.visit([&](const auto& concrete_grid) -> nanobind::object {
+      using GridType = std::decay_t<decltype(concrete_grid)>;
+
+      if constexpr (detail::Is3DGrid<GridType>) {
+        using DataType = typename GridType::data_type;
+        using ResultType = detail::InterpolationResultType<DataType>;
+
+        if constexpr (detail::IsTemporalGrid<GridType>) {
+          // Temporal grid: convert z to int64
+          auto z = concrete_grid.template pybind_axis<2>().cast_to_int64(z_obj);
+          return nanobind::cast(
+              func.template operator()<DataType, ResultType, int64_t>(
+                  concrete_grid, x, y, z, config));
+        } else {
+          // Spatial grid: z is double
+          auto z = nanobind::cast<Eigen::Ref<const Vector<double>>>(z_obj);
+          return nanobind::cast(
+              func.template operator()<DataType, ResultType, double>(
+                  concrete_grid, x, y, z, config));
+        }
+      } else {
+        // This branch should never be reached due to the ndim check above
+        throw std::invalid_argument("Grid is not 3D");
+      }
+    });
+  }
+
+  /// @brief Dispatch quadrivariate interpolation to the appropriate concrete
+  /// grid type.
+  /// @tparam ConfigType Configuration type.
+  /// @tparam InterpolationFunc Interpolation function template.
+  /// @param grid The grid holder.
+  /// @param x X coordinates.
+  /// @param y Y coordinates.
+  /// @param z Z coordinates (nanobind::object for temporal/spatial
+  /// flexibility).
+  /// @param u U coordinates.
+  /// @param config Configuration object.
+  /// @param func The interpolation function.
+  /// @return nanobind::object containing the result vector.
+  template <typename ConfigType, typename InterpolationFunc>
+  static auto dispatch_quadrivariate(const GridHolder& grid,
+                                     const Eigen::Ref<const Vector<double>>& x,
+                                     const Eigen::Ref<const Vector<double>>& y,
+                                     const nanobind::object& z_obj,
+                                     const Eigen::Ref<const Vector<double>>& u,
+                                     const ConfigType& config,
+                                     InterpolationFunc&& func)
+      -> nanobind::object {
+    if (grid.ndim() != 4) {
+      throw std::invalid_argument(
+          std::format("quadrivariate requires 4D grid, got {}D", grid.ndim()));
+    }
+
+    return grid.visit([&](const auto& concrete_grid) -> nanobind::object {
+      using GridType = std::decay_t<decltype(concrete_grid)>;
+
+      if constexpr (detail::Is4DGrid<GridType>) {
+        using DataType = typename GridType::data_type;
+        using ResultType = detail::InterpolationResultType<DataType>;
+
+        if constexpr (detail::IsTemporalGrid<GridType>) {
+          // Temporal grid: convert z to int64
+          auto z = concrete_grid.template pybind_axis<2>().cast_to_int64(z_obj);
+          return nanobind::cast(
+              func.template operator()<DataType, ResultType, int64_t>(
+                  concrete_grid, x, y, z, u, config));
+        } else {
+          // Spatial grid: z is double
+          auto z = nanobind::cast<Eigen::Ref<const Vector<double>>>(z_obj);
+          return nanobind::cast(
+              func.template operator()<DataType, ResultType, double>(
+                  concrete_grid, x, y, z, u, config));
+        }
+      } else {
+        // This branch should never be reached due to the ndim check above
+        throw std::invalid_argument("Grid is not 4D");
+      }
+    });
+  }
+};
+
+}  // namespace pyinterp::pybind

@@ -21,7 +21,7 @@ class TestBivariateGeometric:
     @staticmethod
     def create_analytical_grid2d(
         dtype: type[np.float32 | np.float64],
-    ) -> core.Grid2DFloat64 | core.Grid2DFloat32:
+    ) -> core.Grid2D:
         """Create a 2D grid with an analytical field.
 
         f(x, y) = sin(x) * cos(y)
@@ -41,10 +41,7 @@ class TestBivariateGeometric:
         # Ensure C-contiguous for grid creation
         data = np.ascontiguousarray(data)
 
-        class_name = (
-            core.Grid2DFloat32 if dtype == np.float32 else core.Grid2DFloat64
-        )
-        return class_name(x_axis, y_axis, data)
+        return core.Grid(x_axis, y_axis, data)
 
     def test_single_point_bilinear(self) -> None:
         """Perform bilinear interpolation at a single point.
@@ -146,7 +143,7 @@ class TestBivariateGeometric:
         y_axis = core.Axis(grid_data.lat.values)
 
         matrix = np.ascontiguousarray(grid_data.mss.values.T)
-        grid = core.Grid2DFloat32(x_axis, y_axis, matrix)
+        grid = core.Grid(x_axis, y_axis, matrix)
 
         # Test points within bounds
         lon_vals = grid_data.lon.values

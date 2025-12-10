@@ -26,7 +26,7 @@ class TestTrivariateWindowed:
     @staticmethod
     def create_analytical_grid3d(
         dtype: type[np.float32 | np.float64],
-    ) -> core.Grid3DFloat64 | core.Grid3DFloat32:
+    ) -> core.Grid3D:
         """Create a 3D grid with an analytical field.
 
         f(x, y, z) = sin(x) * cos(y) * exp(-z/10)
@@ -52,10 +52,7 @@ class TestTrivariateWindowed:
         # Ensure C-contiguous for grid creation
         data = np.ascontiguousarray(data)
 
-        class_name = (
-            core.Grid3DFloat32 if dtype == np.float32 else core.Grid3DFloat64
-        )
-        return class_name(x_axis, y_axis, z_axis, data)
+        return core.Grid(x_axis, y_axis, z_axis, data)
 
     @staticmethod
     def make_config(
@@ -304,7 +301,7 @@ class TestTrivariateWindowed:
         data = (x_grid + y_grid + z_grid).astype(np.float64)
         data = np.ascontiguousarray(data)
 
-        grid = core.Grid3DFloat64(x_axis, y_axis, z_axis, data)
+        grid = core.Grid(x_axis, y_axis, z_axis, data)
 
         # Interpolate at center
         x = np.array([1.0])
@@ -346,7 +343,7 @@ class TestTrivariateWindowed:
         z_axis = core.Axis(grid_data.time.values.astype("float64"))
 
         matrix = np.ascontiguousarray(grid_data.tcw.values.transpose())
-        grid = core.Grid3DFloat64(x_axis, y_axis, z_axis, matrix)
+        grid = core.Grid(x_axis, y_axis, z_axis, matrix)
 
         # Test points within bounds
         x = np.array([10.0, 20.0, 30.0])
@@ -587,7 +584,7 @@ class TestTrivariateWindowed:
     @staticmethod
     def create_analytical_temporal_grid3d(
         dtype: type[np.float32 | np.float64],
-    ) -> core.TemporalGrid3DFloat64 | core.TemporalGrid3DFloat32:
+    ) -> core.GridHolder:
         """Create a 3D grid with temporal Z-axis and analytical field.
 
         f(x, y, t) = sin(x) * cos(y) * exp(-t_normalized/10)
@@ -620,12 +617,7 @@ class TestTrivariateWindowed:
         )
         data = np.ascontiguousarray(data)
 
-        class_name = (
-            core.TemporalGrid3DFloat32
-            if dtype == np.float32
-            else core.TemporalGrid3DFloat64
-        )
-        return class_name(x_axis, y_axis, z_axis, data)
+        return core.Grid(x_axis, y_axis, z_axis, data)
 
     def test_temporal_grid_basic_interpolation(self) -> None:
         """Test windowed trivariate interpolation with temporal Z-axis."""
