@@ -666,7 +666,7 @@ class GridHolder {
 
   /// @brief Construct from any grid type.
   /// @tparam GridType The concrete grid type.
-  /// @param grid The grid to store.
+  /// @param[in,out] grid The grid to store.
   template <typename GridType>
     requires(!std::is_same_v<std::decay_t<GridType>, GridHolder>)
   explicit GridHolder(GridType&& grid) : value_(std::forward<GridType>(grid)) {}
@@ -698,7 +698,7 @@ class GridHolder {
   }
 
   /// @brief Get the size of a specific axis.
-  /// @param dim Dimension index.
+  /// @param[in] dim Dimension index.
   /// @return Size of the axis.
   [[nodiscard]] auto axis_size(size_t dim) const -> int64_t {
     return std::visit([dim](const auto& g) { return g.axis_size(dim); },
@@ -706,7 +706,7 @@ class GridHolder {
   }
 
   /// @brief Check if a specific axis is periodic.
-  /// @param dim Dimension index.
+  /// @param[in] dim Dimension index.
   /// @return True if the axis is periodic, false otherwise.
   [[nodiscard]] auto axis_is_periodic(size_t dim) const -> bool {
     return std::visit([dim](const auto& g) { return g.axis_is_periodic(dim); },
@@ -720,7 +720,7 @@ class GridHolder {
   }
 
   /// @brief Get the pybind axis object at a specific dimension.
-  /// @param dim Dimension index.
+  /// @param[in] dim Dimension index.
   /// @return The axis as a nanobind::object.
   [[nodiscard]] auto pybind_axis_object(size_t dim) const -> nanobind::object {
     return std::visit(
@@ -890,61 +890,6 @@ auto grid_factory(detail::pybind_axes_tuple_t<MathAxes...>&& axes,
   }
 
   throw std::invalid_argument("Unsupported array dtype");
-}
-
-/// Helper to bind a grid class to Python.
-/// @tparam GridType The grid type to bind.
-/// @param m Nanobind module.
-/// @param name Python class name.
-/// @param docstring Class documentation.
-/// @return The `nanobind::class_` object for the bound class.
-template <typename GridType>
-auto bind_grid(nanobind::module_& m, std::string_view name,
-               std::string_view docstring) -> nanobind::class_<GridType> {
-  constexpr size_t N = GridType::kNDim;
-
-  auto cls = nanobind::class_<GridType>(m, name.data(), docstring.data());
-  // Bind common properties
-  cls.def_prop_ro("array", &GridType::array, "Gets the data array")
-      .def(
-          "__repr__",
-          [](const GridType& self) -> std::string { return std::string(self); },
-          "Return the string representation of this Grid.")
-      .def("__getstate__", &GridType::getstate, "Get the state for pickling.")
-      .def(
-          "__setstate__",
-          [](GridType& self, nanobind::tuple& state) {
-            return new (&self) GridType(std::move(GridType::setstate(state)));
-          },
-          nanobind::arg("state"), "Set the state for unpickling.");
-
-  // Bind axis accessors based on dimension
-  if constexpr (N >= 1) {
-    cls.def_prop_ro(
-        "x",
-        [](const GridType& self) { return self.template pybind_axis<0>(); },
-        "Gets the X-axis");
-  }
-  if constexpr (N >= 2) {
-    cls.def_prop_ro(
-        "y",
-        [](const GridType& self) { return self.template pybind_axis<1>(); },
-        "Gets the Y-axis");
-  }
-  if constexpr (N >= 3) {
-    cls.def_prop_ro(
-        "z",
-        [](const GridType& self) { return self.template pybind_axis<2>(); },
-        "Gets the Z-axis");
-  }
-  if constexpr (N >= 4) {
-    cls.def_prop_ro(
-        "u",
-        [](const GridType& self) { return self.template pybind_axis<3>(); },
-        "Gets the U-axis");
-  }
-
-  return cls;
 }
 
 /// Bind Grid classes to Python.

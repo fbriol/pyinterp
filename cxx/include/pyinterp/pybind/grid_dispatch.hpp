@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 
 #include "pyinterp/pybind/grid.hpp"
 
@@ -49,8 +50,7 @@ concept IsSpatialGrid = !GridType::kHasTemporalAxis;
 /// grid types.
 ///
 /// This class provides static methods to dispatch operations using std::visit
-/// on the underlying GridVariant. The visitor pattern replaces the previous
-/// dynamic_cast-based dispatch.
+/// on the underlying GridVariant.
 ///
 /// @tparam Point Point type template (e.g., geometry::SphericalPoint)
 template <template <class> class Point>
@@ -58,11 +58,11 @@ class GridDispatcher {
  public:
   /// @brief Determine the result type based on grid dtype.
   /// @param dtype_str The dtype string from the grid.
-  /// @return "float32" for float32 grids, "float64" for float64 grids,
-  ///         "float32" for integer grids (promoted for interpolation).
+  /// @return "float32" or "float64"
   [[nodiscard]] static constexpr auto result_dtype(std::string_view dtype_str)
       -> std::string_view {
-    if (dtype_str == "float64") {
+    if (dtype_str == "float64" || dtype_str == "int64" ||
+        dtype_str == "uint64") {
       return "float64";
     }
     // All other types (float32, integers) produce float32 results
@@ -84,8 +84,7 @@ class GridDispatcher {
   /// @param y Y coordinates.
   /// @param config Configuration object.
   /// @param func The interpolation function - should be callable as
-  ///             func.template operator()<DataType, ResultType>(grid, x, y,
-  ///             config)
+  /// func.template operator()<DataType, ResultType>(grid, x, y, config)
   /// @return nanobind::object containing the result vector.
   template <typename ConfigType, typename InterpolationFunc>
   static auto dispatch_bivariate(const GridHolder& grid,
@@ -106,10 +105,8 @@ class GridDispatcher {
         using ResultType = detail::InterpolationResultType<DataType>;
         return nanobind::cast(func.template operator()<DataType, ResultType>(
             concrete_grid, x, y, config));
-      } else {
-        // This branch should never be reached due to the ndim check above
-        throw std::invalid_argument("Grid is not 2D");
       }
+      std::unreachable();
     });
   }
 
@@ -124,8 +121,8 @@ class GridDispatcher {
   /// flexibility).
   /// @param config Configuration object.
   /// @param func The interpolation function - should be callable as
-  ///             func.template operator()<DataType, ResultType, ZType>(grid, x,
-  ///             y, z, config)
+  /// func.template operator()<DataType, ResultType, ZType>(
+  ///     grid, x, y, z, config)
   /// @return nanobind::object containing the result vector.
   template <typename ConfigType, typename InterpolationFunc>
   static auto dispatch_trivariate(const GridHolder& grid,
@@ -160,10 +157,8 @@ class GridDispatcher {
               func.template operator()<DataType, ResultType, double>(
                   concrete_grid, x, y, z, config));
         }
-      } else {
-        // This branch should never be reached due to the ndim check above
-        throw std::invalid_argument("Grid is not 3D");
       }
+      std::unreachable();
     });
   }
 
@@ -178,7 +173,9 @@ class GridDispatcher {
   /// flexibility).
   /// @param u U coordinates.
   /// @param config Configuration object.
-  /// @param func The interpolation function.
+  /// @param func The interpolation function - should be callable as
+  /// func.template operator()<DataType, ResultType, ZType>(
+  ///     grid, x, y, z, u, config)
   /// @return nanobind::object containing the result vector.
   template <typename ConfigType, typename InterpolationFunc>
   static auto dispatch_quadrivariate(const GridHolder& grid,
@@ -214,10 +211,8 @@ class GridDispatcher {
               func.template operator()<DataType, ResultType, double>(
                   concrete_grid, x, y, z, u, config));
         }
-      } else {
-        // This branch should never be reached due to the ndim check above
-        throw std::invalid_argument("Grid is not 4D");
       }
+      std::unreachable();
     });
   }
 };
