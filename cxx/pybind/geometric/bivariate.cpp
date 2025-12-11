@@ -23,6 +23,7 @@ struct BivariateInterpolator {
                   const Eigen::Ref<const Eigen::VectorXd>& y,
                   const config::geometric::Bivariate& config) const
       -> Vector<ResultType> {
+    nanobind::gil_scoped_release release;
     return bivariate<Point, DataType, ResultType>(grid, x, y, config);
   }
 };
