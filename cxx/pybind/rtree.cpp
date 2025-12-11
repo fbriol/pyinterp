@@ -4,10 +4,13 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 
 #include <string>
 #include <string_view>
+
+#include "pyinterp/pybind/dtype_to_str.hpp"
 
 namespace nb = nanobind;
 
@@ -339,9 +342,81 @@ void init_rtree_3d(nb::module_& m, std::string_view suffix) {
   implement_rtree_3d_methods(rtree3d);
 }
 
+/// @brief RTree3D factory function that accepts dtype parameter
+auto rtree_3d_factory(const std::optional<geodetic::Spheroid>& spheroid,
+                      const nb::object& dtype) -> nb::object {
+  auto dtype_str = dtype_to_str(dtype).value_or("float64");
+
+  // Create appropriate RTree3D based on dtype string
+  if (dtype_str == "float32") {
+    return nb::cast(RTree3D<float>(spheroid), nb::rv_policy::move);
+  }
+  if (dtype_str == "float64") {
+    return nb::cast(RTree3D<double>(spheroid), nb::rv_policy::move);
+  }
+  throw std::invalid_argument("dtype must be 'float32' or 'float64', got: " +
+                              dtype_str);
+}
+
+constexpr const char* const kRTree3DFactoryDoc =
+    R"(Spatial index for 3D point data with interpolation methods.
+
+Create a spatial R-tree index for 3D point data with support for various
+interpolation methods including k-nearest neighbor search, inverse distance
+weighting, kriging, radial basis functions, and window functions.
+
+Parameters:
+    spheroid: Optional spheroid for geodetic coordinate conversions.
+        If provided, input coordinates are assumed to be (lon, lat, alt) in
+        degrees/degrees/meters, and will be converted to ECEF internally.
+        If None, input coordinates are treated as Cartesian without any
+        transformation. These can represent ECEF coordinates, planar
+        coordinates (with Z=0), or any other Cartesian system.
+        Users must ensure unit consistency across all coordinates and values.
+        Defaults to None.
+    dtype: Data type for internal storage, either 'float32' or 'float64'.
+        Determines precision and memory usage. Defaults to 'float64'.
+
+Examples:
+    >>> import numpy as np
+    >>> import pyinterp
+
+    # Create RTree for Cartesian coordinates with float64 (default)
+    >>> coords = np.array([
+    ...     [0.0, 0.0, 0.0],
+    ...     [1.0, 1.0, 0.0]
+    ... ], dtype='float64')
+    >>> values = np.array([10.5, 20.3], dtype='float64')
+    >>> tree = pyinterp.RTree3D()
+    >>> tree.packing(coords, values)
+
+    # Create RTree with float32 for reduced memory usage
+    >>> coords_f32 = coords.astype('float32')
+    >>> values_f32 = values.astype('float32')
+    >>> tree_f32 = pyinterp.RTree3D(dtype='float32')
+    >>> tree_f32.packing(coords_f32, values_f32)
+
+    # Query k-nearest neighbors
+    >>> query_coords = np.array([[0.5, 0.5, 0.0]])
+    >>> distances, values = tree.query(query_coords, k=2)
+
+    # Create RTree with geodetic coordinates (lon, lat, alt)
+    >>> geodetic_coords = np.array([
+    ...     [0.0, 45.0, 100.0],
+    ...     [1.0, 46.0, 200.0]
+    ... ], dtype='float64')
+    >>> tree_geodetic = pyinterp.RTree3D(spheroid=pyinterp.Spheroid())
+    >>> tree_geodetic.packing(geodetic_coords, values)
+)";
+
 void init_rtree_3d(nanobind::module_& m) {
-  init_rtree_3d<double>(m, "Float64");
+  // Register the concrete RTree3D classes
   init_rtree_3d<float>(m, "Float32");
+  init_rtree_3d<double>(m, "Float64");
+
+  // Register the factory function
+  m.def("RTree3D", &rtree_3d_factory, kRTree3DFactoryDoc,
+        nb::arg("spheroid") = std::nullopt, nb::arg("dtype") = nb::none());
 }
 
 }  // namespace pyinterp::pybind
