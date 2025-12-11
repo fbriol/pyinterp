@@ -73,11 +73,94 @@ Args:
     weights: Weights of the new samples. Defaults to None.
 )";
 
+namespace detail {
+
+/// @brief Helper to bind common statistical methods
+/// @tparam BinningType Type of the binning class
+/// @tparam ClassType nanobind class type
+template <typename BinningType, typename ClassType>
+auto bind_statistics_methods(ClassType &cls) -> void {
+  cls.def("clear", &BinningType::clear,
+          "Reset the statistics and clear all bins.",
+          nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("count", &BinningType::count,
+           "Compute the count of points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("kurtosis", &BinningType::kurtosis,
+           "Compute the kurtosis of values for points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("max", &BinningType::max,
+           "Compute the maximum of values for points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("mean", &BinningType::mean,
+           "Compute the mean of values for points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("min", &BinningType::min,
+           "Compute the minimum of values for points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("sum", &BinningType::sum,
+           "Compute the sum of values for points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("sum_of_weights", &BinningType::sum_of_weights,
+           "Compute the sum of weights for points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("skewness", &BinningType::skewness,
+           "Compute the skewness of values for points within each bin.",
+           nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def("variance", &BinningType::variance, nanobind::arg("ddof") = 0,
+           kBinning2DVarianceDoc,
+           nanobind::call_guard<nanobind::gil_scoped_release>());
+}
+
+/// @brief Helper to bind pickle support
+/// @tparam BinningType Type of the binning class
+/// @tparam StateType Type of the state tuple
+/// @tparam ClassType nanobind class type
+template <typename BinningType, typename StateType, typename ClassType>
+auto bind_pickle_support(ClassType &cls) -> void {
+  cls.def(
+         "__copy__", [](const BinningType &self) { return BinningType(self); },
+         "Implement the shallow copy operation.",
+         nanobind::call_guard<nanobind::gil_scoped_release>())
+
+      .def(
+          "__getstate__",
+          [](const BinningType &self) {
+            nanobind::gil_scoped_release release;
+            return self.getstate();
+          },
+          "Get the state of the instance for pickling.")
+
+      .def(
+          "__setstate__",
+          [](BinningType &self, const StateType &state) {
+            nanobind::gil_scoped_release release;
+            return new (&self) BinningType(BinningType::setstate(state));
+          },
+          nanobind::arg("state"),
+          "Set the state of the instance from pickling.");
+}
+
+}  // namespace detail
+
 template <typename T>
 auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
   auto class_name = "Binning2D" + std::string(suffix);
 
-  nanobind::class_<Binning2D<T>>(m, class_name.c_str(), kBinning2DDoc)
+  // Bind Binning2D
+  auto binning2d_cls =
+      nanobind::class_<Binning2D<T>>(m, class_name.c_str(), kBinning2DDoc);
+
+  binning2d_cls
       .def(nanobind::init<Axis<double>, Axis<double>,
                           std::optional<geodetic::Spheroid>>(),
            nanobind::arg("x"), nanobind::arg("y"),
@@ -93,84 +176,30 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
           "spheroid", [](const Binning2D<T> &self) { return self.spheroid(); },
           "Get the spheroid used for geographic coordinates.")
 
-      .def("clear", &Binning2D<T>::clear,
-           "Reset the statistics and clear all bins.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("count", &Binning2D<T>::count,
-           "Compute the count of points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("kurtosis", &Binning2D<T>::kurtosis,
-           "Compute the kurtosis of values for points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("max", &Binning2D<T>::max,
-           "Compute the maximum of values for points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("mean", &Binning2D<T>::mean,
-           "Compute the mean of values for points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("min", &Binning2D<T>::min,
-           "Compute the minimum of values for points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
       .def("push", &Binning2D<T>::push, nanobind::arg("x"), nanobind::arg("y"),
            nanobind::arg("z"), nanobind::arg("simple") = true,
            kBinning2DPushDoc,
            nanobind::call_guard<nanobind::gil_scoped_release>())
 
-      .def("sum", &Binning2D<T>::sum,
-           "Compute the sum of values for points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("sum_of_weights", &Binning2D<T>::sum_of_weights,
-           "Compute the sum of weights for points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("skewness", &Binning2D<T>::skewness,
-           "Compute the skewness of values for points within each bin.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
-      .def("variance", &Binning2D<T>::variance, nanobind::arg("ddof") = 0,
-           kBinning2DVarianceDoc,
-           nanobind::call_guard<nanobind::gil_scoped_release>())
-
       .def("__iadd__", &Binning2D<T>::operator+=, nanobind::arg("other"),
            "Override the default behavior of the ``+=`` operator.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
+           nanobind::call_guard<nanobind::gil_scoped_release>());
 
-      .def(
-          "__copy__",
-          [](const Binning2D<T> &self) { return Binning2D<T>(self); },
-          "Implement the shallow copy operation.",
-          nanobind::call_guard<nanobind::gil_scoped_release>())
+  // Bind statistical methods
+  detail::bind_statistics_methods<Binning2D<T>>(binning2d_cls);
 
-      .def(
-          "__getstate__",
-          [](const Binning2D<T> &self) {
-            nanobind::gil_scoped_release release;
-            return self.getstate();
-          },
-          "Get the state of the instance for pickling.")
+  // Bind pickle support
+  using Binning2DStateType =
+      std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
+                 std::optional<geodetic::Spheroid>>;
+  detail::bind_pickle_support<Binning2D<T>, Binning2DStateType>(binning2d_cls);
 
-      .def(
-          "__setstate__",
-          [](Binning2D<T> &self,
-             const std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
-                              std::optional<geodetic::Spheroid>> &state) {
-            nanobind::gil_scoped_release release;
-            return new (&self) Binning2D<T>(Binning2D<T>::setstate(state));
-          },
-          nanobind::arg("state"),
-          "Set the state of the instance from pickling.");
-
+  // Bind Binning1D
   class_name = "Binning1D" + std::string(suffix);
-  nanobind::class_<Binning1D<T>, Binning2D<T>>(m, class_name.c_str(),
-                                               kBinning1DDoc)
+  auto binning1d_cls = nanobind::class_<Binning1D<T>, Binning2D<T>>(
+      m, class_name.c_str(), kBinning1DDoc);
 
+  binning1d_cls
       .def(nanobind::init<Axis<double>,
                           const std::optional<std::tuple<double, double>> &>(),
            nanobind::arg("x"), nanobind::arg("range") = std::nullopt)
@@ -180,27 +209,16 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
            nanobind::call_guard<nanobind::gil_scoped_release>())
 
       .def("range", &Binning1D<T>::range, "Get the range of the binning.",
-           nanobind::call_guard<nanobind::gil_scoped_release>())
+           nanobind::call_guard<nanobind::gil_scoped_release>());
 
-      .def(
-          "__getstate__",
-          [](const Binning1D<T> &self) {
-            nanobind::gil_scoped_release release;
-            return self.getstate();
-          },
-          "Get the state of the instance for pickling.")
+  // Bind statistical methods
+  detail::bind_statistics_methods<Binning1D<T>>(binning1d_cls);
 
-      .def(
-          "__setstate__",
-          [](Binning1D<T> &self,
-             const std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
-                              std::optional<geodetic::Spheroid>, double, double>
-                 &state) {
-            nanobind::gil_scoped_release release;
-            return new (&self) Binning1D<T>(Binning1D<T>::setstate(state));
-          },
-          nanobind::arg("state"),
-          "Set the state of the instance from pickling.");
+  // Bind pickle support for Binning1D
+  using Binning1DStateType =
+      std::tuple<Axis<double>, Vector<int8_t>,
+                 std::optional<geodetic::Spheroid>, double, double>;
+  detail::bind_pickle_support<Binning1D<T>, Binning1DStateType>(binning1d_cls);
 }
 
 /// @brief Binning2D factory function that accepts dtype parameter
@@ -281,6 +299,9 @@ Examples:
 
     >>> # Create with float32 for reduced memory usage
     >>> binning = pyinterp.Binning2D(x, y, dtype='float32')
+
+Returns:
+    Binning2D instance with the specified dtype.
 )";
 
 constexpr const char *kBinning1DFactoryDoc = R"(
@@ -304,6 +325,10 @@ Examples:
 
     >>> # Create with float32 for reduced memory usage
     >>> binning = pyinterp.Binning1D(x, dtype='float32')
+
+Returns:
+    Binning1D instance with the specified dtype. Statistical methods
+    return 1D numpy arrays instead of 2D arrays.
 )";
 
 auto init_binning(nanobind::module_ &m) -> void {

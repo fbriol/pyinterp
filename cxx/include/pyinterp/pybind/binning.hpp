@@ -99,63 +99,63 @@ class Binning2D {
   /// @brief Statistical computation methods
   /// @return Matrix of counts
   [[nodiscard]] auto count() const -> Matrix<uint64_t> {
-    return calculate_statistics<uint64_t>(
+    return generate_statistical_matrix<uint64_t>(
         [](const auto& stats) { return stats.count(); });
   }
 
   /// @brief Minimum value per bin
   /// @return Matrix of minimum values
   [[nodiscard]] auto min() const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [](const auto& stats) { return stats.min(); });
   }
 
   /// @brief Maximum value per bin
   /// @return Matrix of maximum values
   [[nodiscard]] auto max() const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [](const auto& stats) { return stats.max(); });
   }
 
   /// @brief Mean value per bin
   /// @return Matrix of mean values
   [[nodiscard]] auto mean() const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [](const auto& stats) { return stats.mean(); });
   }
 
   /// @brief Variance per bin
   /// @return Matrix of variance values
   [[nodiscard]] auto variance(const int ddof = 0) const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [ddof](const auto& stats) { return stats.variance(ddof); });
   }
 
   /// @brief Kurtosis per bin
   /// @return Matrix of kurtosis values
   [[nodiscard]] auto kurtosis() const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [](const auto& stats) { return stats.kurtosis(); });
   }
 
   /// @brief Skewness per bin
   /// @return Matrix of skewness values
   [[nodiscard]] auto skewness() const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [](const auto& stats) { return stats.skewness(); });
   }
 
   /// @brief Sum per bin
   /// @return Matrix of sum values
   [[nodiscard]] auto sum() const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [](const auto& stats) { return stats.sum(); });
   }
 
   /// @brief Sum of weights per bin
   /// @return Matrix of sum of weights values
   [[nodiscard]] auto sum_of_weights() const -> Matrix<T> {
-    return calculate_statistics<T>(
+    return generate_statistical_matrix<T>(
         [](const auto& stats) { return stats.sum_of_weights(); });
   }
 
@@ -326,7 +326,7 @@ class Binning2D {
   /// @param[in] func Callable to apply to each accumulator
   /// @return Matrix of results
   template <typename ResultType, typename Func>
-  [[nodiscard]] auto calculate_statistics(Func&& func) const
+  [[nodiscard]] auto generate_statistical_matrix(Func&& func) const
       -> Matrix<ResultType> {
     Matrix<ResultType> result(x_.size(), y_.size());
 
@@ -407,6 +407,7 @@ template <BinningValueType T>
 class Binning1D : public Binning2D<T> {
  public:
   using typename Binning2D<T>::value_type;
+  using typename Binning2D<T>::DescriptiveStatistics;
 
   /// @brief Constructor
   /// @param[in] x Definition of the bin centers for the X axis of the grid.
@@ -415,7 +416,7 @@ class Binning1D : public Binning2D<T> {
   explicit Binning1D(
       Axis<double> x,
       const std::optional<std::tuple<double, double>>& range = std::nullopt)
-      : Binning2D<T>(std::move(x), Axis<double>(), std::nullopt) {
+      : Binning2D<T>(std::move(x), Axis<double>(0, 1, 1, 0), std::nullopt) {
     if (range) {
       std::tie(x_min_, x_max_) = *range;
     } else {
@@ -441,12 +442,10 @@ class Binning1D : public Binning2D<T> {
 
     for (Eigen::Index idx = 0; idx < x.size(); ++idx) {
       const auto value = z(idx);
-
       if (!std::isnan(value)) {
         const auto xi = x(idx);
         if (xi >= x_min_ && xi <= x_max_) {
           const auto ix = x_axis.find_index(xi, true);
-
           if (ix != -1) {
             const auto weight = weights ? (*weights)(idx) : T{1};
             this->acc_(ix, 0)(value, weight);
@@ -456,55 +455,101 @@ class Binning1D : public Binning2D<T> {
     }
   }
 
+  /// @brief Statistical computation methods returning vectors
+  /// @return Vector of counts
+  [[nodiscard]] auto count() const -> Vector<uint64_t> {
+    return generate_statistical_vector<uint64_t>(
+        [](const auto& stats) { return stats.count(); });
+  }
+
+  /// @brief Minimum value per bin
+  /// @return Vector of minimum values
+  [[nodiscard]] auto min() const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [](const auto& stats) { return stats.min(); });
+  }
+
+  /// @brief Maximum value per bin
+  /// @return Vector of maximum values
+  [[nodiscard]] auto max() const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [](const auto& stats) { return stats.max(); });
+  }
+
+  /// @brief Mean value per bin
+  /// @return Vector of mean values
+  [[nodiscard]] auto mean() const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [](const auto& stats) { return stats.mean(); });
+  }
+
+  /// @brief Variance per bin
+  /// @return Vector of variance values
+  [[nodiscard]] auto variance(const int ddof = 0) const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [ddof](const auto& stats) { return stats.variance(ddof); });
+  }
+
+  /// @brief Kurtosis per bin
+  /// @return Vector of kurtosis values
+  [[nodiscard]] auto kurtosis() const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [](const auto& stats) { return stats.kurtosis(); });
+  }
+
+  /// @brief Skewness per bin
+  /// @return Vector of skewness values
+  [[nodiscard]] auto skewness() const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [](const auto& stats) { return stats.skewness(); });
+  }
+
+  /// @brief Sum per bin
+  /// @return Vector of sum values
+  [[nodiscard]] auto sum() const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [](const auto& stats) { return stats.sum(); });
+  }
+
+  /// @brief Sum of weights per bin
+  /// @return Vector of sum of weights values
+  [[nodiscard]] auto sum_of_weights() const -> Vector<T> {
+    return generate_statistical_vector<T>(
+        [](const auto& stats) { return stats.sum_of_weights(); });
+  }
+
   /// @brief Get the defined range
   /// @return Tuple of (min, max) defining the range
   [[nodiscard]] auto range() const noexcept -> std::tuple<double, double> {
     return {x_min_, x_max_};
   }
 
-  /// @brief Get statistics as 1D vector
-  /// @return Vector of counts
-  [[nodiscard]] auto statistics_vector() const -> Vector<T> {
-    Vector<T> result(this->x_->size());
-    for (Eigen::Index ix = 0; ix < this->acc_.rows(); ++ix) {
-      result(ix) = static_cast<T>(this->acc_(ix, 0).count());
-    }
-    return result;
-  }
-
   /// @brief Get a tuple that fully encodes the state of this instance.
   /// @return Tuple representing the state
   [[nodiscard]] auto getstate() const
-      -> std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
+      -> std::tuple<Axis<double>, Vector<int8_t>,
                     std::optional<geodetic::Spheroid>, double, double> {
-    Vector<int8_t> acc_view(
-        this->x_.size() * sizeof(typename Binning2D<T>::DescriptiveStatistics));
-    std::memcpy(
-        acc_view.data(), this->acc_.data(),
-        this->x_.size() * sizeof(typename Binning2D<T>::DescriptiveStatistics));
-    return std::make_tuple(this->x_, this->y_, acc_view, this->spheroid_,
-                           x_min_, x_max_);
+    Vector<int8_t> acc_view(this->x_.size() * sizeof(DescriptiveStatistics));
+    std::memcpy(acc_view.data(), this->acc_.data(),
+                this->x_.size() * sizeof(DescriptiveStatistics));
+    return std::make_tuple(this->x_, acc_view, this->spheroid_, x_min_, x_max_);
   }
 
   /// @brief Create an instance from a serialized state.
   /// @param[in] state Tuple representing the state
-  static auto setstate(
-      const std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
-                       std::optional<geodetic::Spheroid>, double, double>&
-          state) -> Binning1D {
+  static auto setstate(const std::tuple<Axis<double>, Vector<int8_t>,
+                                        std::optional<geodetic::Spheroid>,
+                                        double, double>& state) -> Binning1D {
     auto x_axis = std::get<0>(state);
-    auto acc_view = std::get<2>(state);
-    auto expected_size =
-        x_axis.size() * sizeof(typename Binning2D<T>::DescriptiveStatistics);
+    auto acc_view = std::get<1>(state);
+    auto expected_size = x_axis.size() * sizeof(DescriptiveStatistics);
     if (acc_view.size() != expected_size) {
       throw std::invalid_argument("Invalid state.");
     }
-    auto acc =
-        Matrix<typename Binning2D<T>::DescriptiveStatistics>(x_axis.size(), 1);
+    auto acc = Matrix<DescriptiveStatistics>(x_axis.size(), 1);
     std::memcpy(acc.data(), acc_view.data(), expected_size);
-    Binning1D binning(std::get<0>(state),
-                      std::make_optional<std::tuple<double, double>>(
-                          std::get<4>(state), std::get<5>(state)));
+    Binning1D binning(x_axis, std::make_optional<std::tuple<double, double>>(
+                                  std::get<3>(state), std::get<4>(state)));
     binning.acc_ = std::move(acc);
     return binning;
   }
@@ -512,6 +557,24 @@ class Binning1D : public Binning2D<T> {
  private:
   double x_min_;
   double x_max_;
+
+  /// @brief Calculate statistics using a generic callable (1D version)
+  /// @tparam ResultType The type of the result vector elements
+  /// @tparam Func Callable type that takes a DescriptiveStatistics object and
+  /// returns a ResultType
+  /// @param[in] func Callable to apply to each accumulator
+  /// @return Vector of results
+  template <typename ResultType, typename Func>
+  [[nodiscard]] auto generate_statistical_vector(Func&& func) const
+      -> Vector<ResultType> {
+    Vector<ResultType> result(this->x_.size());
+
+    for (Eigen::Index ix = 0; ix < this->acc_.rows(); ++ix) {
+      result(ix) = static_cast<ResultType>(func(this->acc_(ix, 0)));
+    }
+
+    return result;
+  }
 };
 
 /// Bindings for the binning module

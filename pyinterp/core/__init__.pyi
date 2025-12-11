@@ -81,7 +81,7 @@ _FloatDType = TypeVar("_FloatDType", np.float32, np.float64)
 
 class Binning2DHolder(Generic[_FloatDType]):
     def __init__(
-        self, x: Axis, y: Axis, wgs: geodetic.Spheroid | None = ...
+        self, x: Axis, y: Axis, spheroid: geodetic.Spheroid | None = ...
     ) -> None: ...
     def clear(self) -> None: ...
     def count(self) -> NDArray2DUInt64: ...
@@ -91,9 +91,9 @@ class Binning2DHolder(Generic[_FloatDType]):
     def min(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
     def push(
         self,
-        x: np.ndarray[OneDim, np.dtype[_FloatDType]],
-        y: np.ndarray[OneDim, np.dtype[_FloatDType]],
-        z: np.ndarray[OneDim, np.dtype[_FloatDType]],
+        x: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        y: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        z: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
         simple: bool = ...,
     ) -> None: ...
     def skewness(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
@@ -104,7 +104,7 @@ class Binning2DHolder(Generic[_FloatDType]):
     ) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
     def __copy__(self) -> Binning2DHolder[_FloatDType]: ...
     def __iadd__(
-        self, other: Binning2DHolder[_FloatDType]
+        self, other: Binning2DHolder[Any]
     ) -> Binning2DHolder[_FloatDType]: ...
     @property
     def spheroid(self) -> geodetic.Spheroid | None: ...
@@ -113,21 +113,161 @@ class Binning2DHolder(Generic[_FloatDType]):
     @property
     def y(self) -> Axis: ...
 
-class Binning1DHolder(Binning2DHolder[_FloatDType], Generic[_FloatDType]):
+class Binning1DHolder(Generic[_FloatDType]):
     def __init__(
         self, x: Axis, range: tuple[float, float] | None = ...
     ) -> None: ...
-    def push(  # type: ignore[override]
+    def clear(self) -> None: ...
+    def push(
         self,
-        x: np.ndarray[OneDim, np.dtype[_FloatDType]],
-        z: np.ndarray[OneDim, np.dtype[_FloatDType]],
-        weights: np.ndarray[OneDim, np.dtype[_FloatDType]] | None = ...,
+        x: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        z: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        weights: np.ndarray[OneDim, np.dtype[np.floating[Any]]] | None = ...,
     ) -> None: ...
+    def count(self) -> np.ndarray[OneDim, np.dtype[np.uint64]]: ...
+    def kurtosis(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def max(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def min(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def skewness(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def sum(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def variance(
+        self, ddof: int = ...
+    ) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
     def range(self) -> tuple[float, float]: ...
     def __copy__(self) -> Binning1DHolder[_FloatDType]: ...
     def __iadd__(
-        self, other: Binning2DHolder[_FloatDType]
+        self, other: Binning1DHolder[Any]
     ) -> Binning1DHolder[_FloatDType]: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def spheroid(self) -> geodetic.Spheroid | None: ...
+
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    spheroid: geodetic.Spheroid | None = ...,
+) -> Binning2DHolder[np.float64]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    *,
+    dtype: Literal["float32"],
+) -> Binning2DHolder[np.float32]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    *,
+    dtype: Literal["float64"],
+) -> Binning2DHolder[np.float64]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    *,
+    dtype: None,
+) -> Binning2DHolder[np.float64]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    *,
+    spheroid: geodetic.Spheroid | None = ...,
+    dtype: Literal["float32"],
+) -> Binning2DHolder[np.float32]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    *,
+    spheroid: geodetic.Spheroid | None = ...,
+    dtype: Literal["float64"],
+) -> Binning2DHolder[np.float64]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    *,
+    spheroid: geodetic.Spheroid | None = ...,
+    dtype: None,
+) -> Binning2DHolder[np.float64]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    spheroid: geodetic.Spheroid | None,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Binning2DHolder[_FloatDType]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Binning2DHolder[_FloatDType]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None = ...,
+) -> Binning1DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    *,
+    dtype: Literal["float32"],
+) -> Binning1DHolder[np.float32]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    *,
+    dtype: Literal["float64"],
+) -> Binning1DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    *,
+    dtype: None,
+) -> Binning1DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    *,
+    range: tuple[float, float] | None = ...,
+    dtype: Literal["float32"],
+) -> Binning1DHolder[np.float32]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    *,
+    range: tuple[float, float] | None = ...,
+    dtype: Literal["float64"],
+) -> Binning1DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    *,
+    range: tuple[float, float] | None = ...,
+    dtype: None,
+) -> Binning1DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Binning1DHolder[_FloatDType]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Binning1DHolder[_FloatDType]: ...
 
 Binning2DFloat32: TypeAlias = Binning2DHolder[np.float32]
 Binning2DFloat64: TypeAlias = Binning2DHolder[np.float64]
