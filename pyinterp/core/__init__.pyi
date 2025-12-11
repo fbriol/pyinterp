@@ -16,6 +16,8 @@ from ..type_hints import (
     NDArray2DUInt64,
     Vector3Float32,
     Vector3Float64,
+    TwoDims,
+    OneDim,
 )
 from . import geodetic
 from .config import geometric, rtree, windowed
@@ -246,75 +248,94 @@ class TemporalGrid4D(GridHolder):
     @property
     def u(self) -> Axis: ...
 
-_RTreeFloatType = TypeVar("_RTreeFloatType", np.float32, np.float64)
-_RTreeArray1D = TypeVar("_RTreeArray1D", NDArray1DFloat32, NDArray1DFloat64)
-_RTreeArray2D = TypeVar("_RTreeArray2D", NDArray2DFloat32, NDArray2DFloat64)
-_RTreeVector3 = TypeVar("_RTreeVector3", Vector3Float32, Vector3Float64)
+_FloatDType = TypeVar("_FloatDType", np.float32, np.float64)
 
-class _RTree3DModel(Generic[_RTreeArray1D, _RTreeArray2D, _RTreeVector3]):
+class RTree3DHolder(Generic[_FloatDType]):
     def __init__(self, spheroid: geodetic.Spheroid | None = ...) -> None: ...
-    def bounds(self) -> tuple[_RTreeVector3, _RTreeVector3] | None: ...
+
+    def bounds(
+        self,
+    ) -> tuple[
+        np.ndarray[tuple[Literal[3]], np.dtype[_FloatDType]],
+        np.ndarray[tuple[Literal[3]], np.dtype[_FloatDType]],
+    ] | None: ...
+
     def clear(self) -> None: ...
+
     def empty(self) -> bool: ...
-    def insert(self, coordinates: _RTreeArray2D, values: _RTreeArray1D) -> None: ...
+
+    def insert(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        values: np.ndarray[OneDim, np.dtype[_FloatDType]],
+    ) -> None: ...
+
     def inverse_distance_weighting(
         self,
-        coordinates: _RTreeArray2D,
+        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
         config: rtree.InverseDistanceWeighting | None = ...,
-    ) -> tuple[_RTreeArray1D, NDArray1DUInt32]: ...
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+
     def kriging(
-        self, coordinates: _RTreeArray2D, config: rtree.Kriging | None = ...
-    ) -> tuple[_RTreeArray1D, NDArray1DUInt32]: ...
-    def packing(self, coordinates: _RTreeArray2D, values: _RTreeArray1D) -> None: ...
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        config: rtree.Kriging | None = ...,
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+
+    def packing(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        values: np.ndarray[OneDim, np.dtype[_FloatDType]],
+    ) -> None: ...
+
     def query(
-        self, coordinates: _RTreeArray2D, config: rtree.Query | None = ...
-    ) -> tuple[_RTreeArray2D, _RTreeArray2D]: ...
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        config: rtree.Query | None = ...,
+    ) -> tuple[
+        np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        np.ndarray[TwoDims, np.dtype[_FloatDType]],
+    ]: ...
+
     def radial_basis_function(
         self,
-        coordinates: _RTreeArray2D,
+        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
         config: rtree.RadialBasisFunction | None = ...,
-    ) -> tuple[_RTreeArray1D, NDArray1DUInt32]: ...
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+
     def size(self) -> int: ...
+
     def window_function(
         self,
-        coordinates: _RTreeArray2D,
+        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
         config: rtree.InterpolationWindow | None = ...,
-    ) -> tuple[_RTreeArray1D, NDArray1DUInt32]: ...
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+
     @property
     def spheroid(self) -> geodetic.Spheroid | None: ...
-
-class RTree3DFloat32(
-    _RTree3DModel[NDArray1DFloat32, NDArray2DFloat32, Vector3Float32]
-): ...
-
-class RTree3DFloat64(
-    _RTree3DModel[NDArray1DFloat64, NDArray2DFloat64, Vector3Float64]
-): ...
 
 @overload
 def RTree3D(
     spheroid: geodetic.Spheroid | None = ...,
-) -> RTree3DFloat64: ...
+) -> RTree3DHolder[np.float64]: ...
 @overload
 def RTree3D(
     spheroid: geodetic.Spheroid | None,
     dtype: Literal["float64"],
-) -> RTree3DFloat64: ...
+) -> RTree3DHolder[np.float64]: ...
 @overload
 def RTree3D(
     spheroid: geodetic.Spheroid | None,
     dtype: Literal["float32"],
-) -> RTree3DFloat32: ...
+) -> RTree3DHolder[np.float32]: ...
 @overload
 def RTree3D(
     spheroid: geodetic.Spheroid | None,
-    dtype: type[np.float64] | np.dtype[np.float64],
-) -> RTree3DFloat64: ...
-@overload
-def RTree3D(
-    spheroid: geodetic.Spheroid | None,
-    dtype: type[np.float32] | np.dtype[np.float32],
-) -> RTree3DFloat32: ...
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> RTree3DHolder[_FloatDType]: ...
+
+RTree3DFloat64: TypeAlias = RTree3DHolder[np.float64]
+RTree3DFloat32: TypeAlias = RTree3DHolder[np.float32]
 
 _TemporalScalar = TypeVar("_TemporalScalar", np.datetime64, np.timedelta64)
 _TemporalArray = TypeVar(
