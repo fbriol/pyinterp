@@ -10,6 +10,7 @@
 #include <tuple>
 
 #include "pyinterp/pybind/axis.hpp"
+#include "pyinterp/pybind/dtype_to_str.hpp"
 
 namespace pyinterp::pybind {
 
@@ -22,10 +23,10 @@ Group a number of more or less continuous values into a smaller number of
 Args:
     x: Definition of the bin centers for the X axis of the grid.
     y: Definition of the bin centers for the Y axis of the grid.
-    wgs: WGS of the coordinate system used to manipulate geographic coordinates.
-        If this parameter is not set, the handled coordinates will be considered
-        as Cartesian coordinates. Otherwise, ``x`` and ``y`` are considered to
-        represents the longitudes and latitudes.
+    spheroid: Spheroid of the coordinate system used to manipulate geographic
+        coordinates. If this parameter is not set, the handled coordinates will
+        be considered as Cartesian coordinates. Otherwise, ``x`` and ``y`` are
+        considered to represents the longitudes and latitudes.
 )";
 
 constexpr auto kBinning2DPushDoc = R"(
@@ -73,14 +74,14 @@ Args:
 )";
 
 template <typename T>
-auto bind_binning(nanobind::module_ &m, std::string_view suffix) -> void {
+auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
   auto class_name = "Binning2D" + std::string(suffix);
 
   nanobind::class_<Binning2D<T>>(m, class_name.c_str(), kBinning2DDoc)
       .def(nanobind::init<Axis<double>, Axis<double>,
                           std::optional<geodetic::Spheroid>>(),
            nanobind::arg("x"), nanobind::arg("y"),
-           nanobind::arg("wgs") = std::nullopt)
+           nanobind::arg("spheroid") = std::nullopt)
 
       .def_prop_ro("x", &Binning2D<T>::x,
                    "Get the bin centers for the X Axis of the grid.")
@@ -202,9 +203,123 @@ auto bind_binning(nanobind::module_ &m, std::string_view suffix) -> void {
           "Set the state of the instance from pickling.");
 }
 
+/// @brief Binning2D factory function that accepts dtype parameter
+/// @param[in] x Definition of the bin centers for the X axis of the grid.
+/// @param[in] y Definition of the bin centers for the Y axis of the grid.
+/// @param[in] spheroid WGS of the coordinate system used to manipulate
+/// geographic coordinates. If this parameter is not set, the handled
+/// coordinates will be considered as Cartesian coordinates. Otherwise, ``x``
+/// and ``y`` are considered to represents the longitudes and latitudes.
+/// @param[in] dtype Data type for internal storage, either 'float32' or
+/// 'float64'. Determines precision and memory usage. Defaults to 'float64'.
+/// @return nanobind::object containing the Binning2D instance.
+auto binning_2d_factory(const Axis<double> &x, const Axis<double> &y,
+                        const std::optional<geodetic::Spheroid> &spheroid,
+                        const nanobind::object &dtype) -> nanobind::object {
+  auto dtype_str = dtype_to_str(dtype).value_or("float64");
+
+  // Create appropriate Binning2D based on dtype string
+  if (dtype_str == "float32") {
+    return nanobind::cast(Binning2D<float>(x, y, spheroid),
+                          nanobind::rv_policy::move);
+  }
+  if (dtype_str == "float64") {
+    return nanobind::cast(Binning2D<double>(x, y, spheroid),
+                          nanobind::rv_policy::move);
+  }
+  throw std::invalid_argument("dtype must be 'float32' or 'float64', got: " +
+                              dtype_str);
+}
+
+/// @brief Binning1D factory function that accepts dtype parameter
+/// @param[in] x Definition of the bin centers for the X Axis.
+/// @param[in] range Range of the binning. If not provided, range is simply
+/// ``(x.min_value(), x.max_value())``.
+/// @param[in] dtype Data type for internal storage, either 'float32' or
+/// 'float64'. Determines precision and memory usage. Defaults to 'float64'.
+/// @return nanobind::object containing the Binning1D instance.
+auto binning_1d_factory(const Axis<double> &x,
+                        const std::optional<std::tuple<double, double>> &range,
+                        const nanobind::object &dtype) -> nanobind::object {
+  auto dtype_str = dtype_to_str(dtype).value_or("float64");
+
+  // Create appropriate Binning1D based on dtype string
+  if (dtype_str == "float32") {
+    return nanobind::cast(Binning1D<float>(x, range),
+                          nanobind::rv_policy::move);
+  }
+  if (dtype_str == "float64") {
+    return nanobind::cast(Binning1D<double>(x, range),
+                          nanobind::rv_policy::move);
+  }
+  throw std::invalid_argument("dtype must be 'float32' or 'float64', got: " +
+                              dtype_str);
+}
+
+constexpr const char *kBinning2DFactoryDoc = R"(
+Create a 2D binning for grouping values into bins on a grid.
+
+Group a number of more or less continuous values into a smaller number of
+"bins" located on a grid.
+
+Args:
+    x: Definition of the bin centers for the X axis of the grid.
+    y: Definition of the bin centers for the Y axis of the grid.
+    spheroid: Spheroid of the coordinate system used to manipulate geographic
+        coordinates. If this parameter is not set, the handled coordinates will
+        be considered as Cartesian coordinates. Otherwise, ``x`` and ``y`` are
+        considered to represents the longitudes and latitudes.
+    dtype: Data type for internal storage, either 'float32' or 'float64'.
+        Determines precision and memory usage. Defaults to 'float64'.
+
+Examples:
+    >>> import pyinterp
+    >>> import numpy as np
+    >>> x = pyinterp.Axis(np.arange(0, 360, 1), is_circle=True)
+    >>> y = pyinterp.Axis(np.arange(-90, 90, 1))
+    >>> binning = pyinterp.Binning2D(x, y)
+
+    >>> # Create with float32 for reduced memory usage
+    >>> binning = pyinterp.Binning2D(x, y, dtype='float32')
+)";
+
+constexpr const char *kBinning1DFactoryDoc = R"(
+Create a 1D binning for grouping values into bins on a vector.
+
+Group a number of more or less continuous values into a smaller number of
+"bins" located on a vector.
+
+Args:
+    x: Definition of the bin centers for the X Axis.
+    range: Range of the binning. If not provided, range is simply
+        ``(x.min_value(), x.max_value())``.
+    dtype: Data type for internal storage, either 'float32' or 'float64'.
+        Determines precision and memory usage. Defaults to 'float64'.
+
+Examples:
+    >>> import pyinterp
+    >>> import numpy as np
+    >>> x = pyinterp.Axis(np.arange(0, 10, 0.1))
+    >>> binning = pyinterp.Binning1D(x)
+
+    >>> # Create with float32 for reduced memory usage
+    >>> binning = pyinterp.Binning1D(x, dtype='float32')
+)";
+
 auto init_binning(nanobind::module_ &m) -> void {
-  bind_binning<float>(m, "Float32");
-  bind_binning<double>(m, "Float64");
+  // Register the concrete Binning2D and Binning1D classes
+  init_binning<float>(m, "Float32");
+  init_binning<double>(m, "Float64");
+
+  // Register the factory functions
+  m.def("Binning2D", &binning_2d_factory, kBinning2DFactoryDoc,
+        nanobind::arg("x"), nanobind::arg("y"),
+        nanobind::arg("spheroid") = std::nullopt,
+        nanobind::arg("dtype") = nanobind::none());
+
+  m.def("Binning1D", &binning_1d_factory, kBinning1DFactoryDoc,
+        nanobind::arg("x"), nanobind::arg("range") = std::nullopt,
+        nanobind::arg("dtype") = nanobind::none());
 }
 
 }  // namespace pyinterp::pybind
