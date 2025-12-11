@@ -1,3 +1,4 @@
+from __future__ import annotations
 import typing
 from typing import Any, Generic, Literal, TypeAlias, TypeVar, overload
 
@@ -151,12 +152,15 @@ class Binning1DHolder(Generic[_FloatDType]):
 def Binning2D(
     x: Axis,
     y: Axis,
-    spheroid: geodetic.Spheroid | None = ...,
+    spheroid: geodetic.Spheroid | None = None,
+    *,
+    dtype: None = None,
 ) -> Binning2DHolder[np.float64]: ...
 @overload
 def Binning2D(
     x: Axis,
     y: Axis,
+    spheroid: geodetic.Spheroid | None = None,
     *,
     dtype: Literal["float32"],
 ) -> Binning2DHolder[np.float32]: ...
@@ -164,6 +168,7 @@ def Binning2D(
 def Binning2D(
     x: Axis,
     y: Axis,
+    spheroid: geodetic.Spheroid | None = None,
     *,
     dtype: Literal["float64"],
 ) -> Binning2DHolder[np.float64]: ...
@@ -171,103 +176,53 @@ def Binning2D(
 def Binning2D(
     x: Axis,
     y: Axis,
+    spheroid: geodetic.Spheroid | None = None,
     *,
-    dtype: None,
-) -> Binning2DHolder[np.float64]: ...
-@overload
-def Binning2D(
-    x: Axis,
-    y: Axis,
-    *,
-    spheroid: geodetic.Spheroid | None = ...,
-    dtype: Literal["float32"],
-) -> Binning2DHolder[np.float32]: ...
-@overload
-def Binning2D(
-    x: Axis,
-    y: Axis,
-    *,
-    spheroid: geodetic.Spheroid | None = ...,
-    dtype: Literal["float64"],
-) -> Binning2DHolder[np.float64]: ...
-@overload
-def Binning2D(
-    x: Axis,
-    y: Axis,
-    *,
-    spheroid: geodetic.Spheroid | None = ...,
-    dtype: None,
-) -> Binning2DHolder[np.float64]: ...
-@overload
-def Binning2D(
-    x: Axis,
-    y: Axis,
-    spheroid: geodetic.Spheroid | None,
     dtype: type[_FloatDType] | np.dtype[_FloatDType],
 ) -> Binning2DHolder[_FloatDType]: ...
 @overload
 def Binning2D(
     x: Axis,
     y: Axis,
+    spheroid: geodetic.Spheroid | None = None,
     *,
-    dtype: type[_FloatDType] | np.dtype[_FloatDType],
-) -> Binning2DHolder[_FloatDType]: ...
+    dtype: str,
+) -> Binning2DHolder[np.float32] | Binning2DHolder[np.float64]: ...
 @overload
 def Binning1D(
     x: Axis,
-    range: tuple[float, float] | None = ...,
+    range: tuple[float, float] | None = None,
+    *,
+    dtype: None = None,
 ) -> Binning1DHolder[np.float64]: ...
 @overload
 def Binning1D(
     x: Axis,
+    range: tuple[float, float] | None = None,
     *,
     dtype: Literal["float32"],
 ) -> Binning1DHolder[np.float32]: ...
 @overload
 def Binning1D(
     x: Axis,
+    range: tuple[float, float] | None = None,
     *,
     dtype: Literal["float64"],
 ) -> Binning1DHolder[np.float64]: ...
 @overload
 def Binning1D(
     x: Axis,
-    *,
-    dtype: None,
-) -> Binning1DHolder[np.float64]: ...
-@overload
-def Binning1D(
-    x: Axis,
-    *,
-    range: tuple[float, float] | None = ...,
-    dtype: Literal["float32"],
-) -> Binning1DHolder[np.float32]: ...
-@overload
-def Binning1D(
-    x: Axis,
-    *,
-    range: tuple[float, float] | None = ...,
-    dtype: Literal["float64"],
-) -> Binning1DHolder[np.float64]: ...
-@overload
-def Binning1D(
-    x: Axis,
-    *,
-    range: tuple[float, float] | None = ...,
-    dtype: None,
-) -> Binning1DHolder[np.float64]: ...
-@overload
-def Binning1D(
-    x: Axis,
-    range: tuple[float, float] | None,
-    dtype: type[_FloatDType] | np.dtype[_FloatDType],
-) -> Binning1DHolder[_FloatDType]: ...
-@overload
-def Binning1D(
-    x: Axis,
+    range: tuple[float, float] | None = None,
     *,
     dtype: type[_FloatDType] | np.dtype[_FloatDType],
 ) -> Binning1DHolder[_FloatDType]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None = None,
+    *,
+    dtype: str,
+) -> Binning1DHolder[np.float32] | Binning1DHolder[np.float64]: ...
 
 Binning2DFloat32: TypeAlias = Binning2DHolder[np.float32]
 Binning2DFloat64: TypeAlias = Binning2DHolder[np.float64]
@@ -356,8 +311,8 @@ class RTree3DHolder(Generic[_FloatDType]):
         self,
     ) -> (
         tuple[
-            np.ndarray[tuple[Literal[3]], np.dtype[_FloatDType]],
-            np.ndarray[tuple[Literal[3]], np.dtype[_FloatDType]],
+            np.ndarray[tuple[Literal[3]], np.dtype[Any]],
+            np.ndarray[tuple[Literal[3]], np.dtype[Any]],
         ]
         | None
     ): ...
@@ -365,27 +320,27 @@ class RTree3DHolder(Generic[_FloatDType]):
     def empty(self) -> bool: ...
     def insert(
         self,
-        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
-        values: np.ndarray[OneDim, np.dtype[_FloatDType]],
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        values: np.ndarray[OneDim, np.dtype[Any]],
     ) -> None: ...
     def inverse_distance_weighting(
         self,
-        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
         config: rtree.InverseDistanceWeighting | None = ...,
     ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
     def kriging(
         self,
-        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
         config: rtree.Kriging | None = ...,
     ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
     def packing(
         self,
-        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
-        values: np.ndarray[OneDim, np.dtype[_FloatDType]],
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        values: np.ndarray[OneDim, np.dtype[Any]],
     ) -> None: ...
     def query(
         self,
-        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
         config: rtree.Query | None = ...,
     ) -> tuple[
         np.ndarray[TwoDims, np.dtype[_FloatDType]],
@@ -393,13 +348,13 @@ class RTree3DHolder(Generic[_FloatDType]):
     ]: ...
     def radial_basis_function(
         self,
-        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
         config: rtree.RadialBasisFunction | None = ...,
     ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
     def size(self) -> int: ...
     def window_function(
         self,
-        coordinates: np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
         config: rtree.InterpolationWindow | None = ...,
     ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
     @property
@@ -407,23 +362,34 @@ class RTree3DHolder(Generic[_FloatDType]):
 
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None = ...,
+    spheroid: geodetic.Spheroid | None = None,
+    *,
+    dtype: None = None,
 ) -> RTree3DHolder[np.float64]: ...
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None,
-    dtype: Literal["float64"],
-) -> RTree3DHolder[np.float64]: ...
-@overload
-def RTree3D(
-    spheroid: geodetic.Spheroid | None,
+    spheroid: geodetic.Spheroid | None = None,
+    *,
     dtype: Literal["float32"],
 ) -> RTree3DHolder[np.float32]: ...
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None,
+    spheroid: geodetic.Spheroid | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> RTree3DHolder[np.float64]: ...
+@overload
+def RTree3D(
+    spheroid: geodetic.Spheroid | None = None,
+    *,
     dtype: type[_FloatDType] | np.dtype[_FloatDType],
 ) -> RTree3DHolder[_FloatDType]: ...
+@overload
+def RTree3D(
+    spheroid: geodetic.Spheroid | None = None,
+    *,
+    dtype: str,
+) -> RTree3DHolder[np.float32] | RTree3DHolder[np.float64]: ...
 
 RTree3DFloat64: TypeAlias = RTree3DHolder[np.float64]
 RTree3DFloat32: TypeAlias = RTree3DHolder[np.float32]
