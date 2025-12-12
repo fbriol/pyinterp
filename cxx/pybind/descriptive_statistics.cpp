@@ -12,6 +12,7 @@
 #include <optional>
 #include <stdexcept>
 
+#include "pyinterp/pybind/dtype_to_str.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 #include "pyinterp/tensor.hpp"
 
@@ -266,9 +267,88 @@ auto bind_descriptive_statistics(nb::module_& m, std::string_view suffix)
           "Create a copy of this object.");
 }
 
+/// @brief DescriptiveStatistics factory function that accepts dtype parameter
+auto descriptive_statistics_factory(
+    const nb::object& values_obj, const std::optional<nb::object>& weights_obj,
+    const std::optional<std::vector<int64_t>>& axis, const nb::object& dtype)
+    -> nb::object {
+  auto dtype_str = dtype_to_str(dtype).value_or("float64");
+
+  // Create appropriate DescriptiveStatistics based on dtype string
+  if (dtype_str == "float32") {
+    auto values_f32 = nb::cast<nb::ndarray<float, nb::device::cpu>>(values_obj);
+    std::optional<nb::ndarray<float, nb::device::cpu>> weights_f32;
+    if (weights_obj) {
+      weights_f32 = nb::cast<nb::ndarray<float, nb::device::cpu>>(*weights_obj);
+    }
+    return nb::cast(
+        PyDescriptiveStatistics<float>(values_f32, weights_f32, axis),
+        nb::rv_policy::move);
+  }
+  if (dtype_str == "float64") {
+    auto values_f64 =
+        nb::cast<nb::ndarray<double, nb::device::cpu>>(values_obj);
+    std::optional<nb::ndarray<double, nb::device::cpu>> weights_f64;
+    if (weights_obj) {
+      weights_f64 =
+          nb::cast<nb::ndarray<double, nb::device::cpu>>(*weights_obj);
+    }
+    return nb::cast(
+        PyDescriptiveStatistics<double>(values_f64, weights_f64, axis),
+        nb::rv_policy::move);
+  }
+  throw std::invalid_argument("dtype must be 'float32' or 'float64', got: " +
+                              dtype_str);
+}
+
+constexpr const char* const kDescriptiveStatisticsFactoryDoc = R"doc(
+Univariate descriptive statistics.
+
+Computes statistics using numerically stable algorithms that support
+parallel and online computation with arbitrary weights.
+
+Reference: https://doi.org/10.1007/s00180-015-0637-z
+
+Parameters:
+    values: Input array of values.
+    weights: Optional array of weights (same shape as values).
+    axis: Optional axis or axes along which to compute statistics.
+    dtype: Data type for internal storage, either 'float32' or 'float64'.
+        Determines precision and memory usage. Defaults to 'float64'.
+
+Examples:
+    >>> import numpy as np
+    >>> import pyinterp
+
+    # Compute statistics for a 1D array with float64 (default)
+    >>> data = np.random.randn(100)
+    >>> stats = pyinterp.DescriptiveStatistics(data)
+    >>> print(f"Mean: {stats.mean()}, Std: {np.sqrt(stats.variance())}")
+
+    # Compute statistics with float32 for reduced memory usage
+    >>> data = data.astype('float32')
+    >>> stats = pyinterp.DescriptiveStatistics(data, dtype='float32')
+
+    # Compute along a specific axis
+    >>> data = np.random.randn(100, 50)
+    >>> stats_axis = pyinterp.DescriptiveStatistics(data, axis=[0])
+    >>> print(f"Means shape: {stats_axis.mean().shape}")
+
+    # Compute with weights
+    >>> weights = np.random.rand(100, 50)
+    >>> stats_weighted = pyinterp.DescriptiveStatistics(data, weights=weights)
+)doc";
+
 auto init_descriptive_statistics(nb::module_& m) -> void {
+  // Register the concrete DescriptiveStatistics classes
   bind_descriptive_statistics<double>(m, "Float64");
   bind_descriptive_statistics<float>(m, "Float32");
+
+  // Register the factory function
+  m.def("DescriptiveStatistics", &descriptive_statistics_factory,
+        kDescriptiveStatisticsFactoryDoc, nb::arg("values"),
+        nb::arg("weights") = std::nullopt, nb::arg("axis") = nb::none(),
+        nb::arg("dtype") = nb::none());
 }
 
 // /////////////////////////////////////////////////////////////////////////////
