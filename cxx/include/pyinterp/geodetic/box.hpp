@@ -23,15 +23,33 @@ class Box {
   constexpr Box(const Point& min_corner, const Point& max_corner) noexcept
       : min_corner_(min_corner), max_corner_(max_corner) {}
 
-  /// @brief Get the min corner of this box
+  /// @brief Returns the global bounding box covering the entire Earth
+  [[nodiscard]]
+  static constexpr auto global_bounding_box() -> Box {
+    return {{-180, -90}, {180, 90}};
+  }
+
+  /// @brief Get the min corner of this box (const)
   /// @return Minimum corner point (lon, lat)
   [[nodiscard]] constexpr auto min_corner() const noexcept -> Point {
     return min_corner_;
   }
 
-  /// @brief Get the max corner of this box
+  /// @brief Get the max corner of this box (const)
   /// @return Maximum corner point (lon, lat)
   [[nodiscard]] constexpr auto max_corner() const noexcept -> Point {
+    return max_corner_;
+  }
+
+  /// @brief Get the min corner of this box (mutable)
+  /// @return Reference to minimum corner point (lon, lat)
+  [[nodiscard]] constexpr auto min_corner() noexcept -> Point& {
+    return min_corner_;
+  }
+
+  /// @brief Get the max corner of this box (mutable)
+  /// @return Reference to maximum corner point (lon, lat)
+  [[nodiscard]] constexpr auto max_corner() noexcept -> Point& {
     return max_corner_;
   }
 

@@ -55,9 +55,9 @@ class Point {
 
  private:
   /// @brief Longitude in degrees
-  double lon_{std::numeric_limits<double>::quiet_NaN()};
+  double lon_{};
   /// @brief Latitude in degrees
-  double lat_{std::numeric_limits<double>::quiet_NaN()};
+  double lat_{};
 };
 
 }  // namespace pyinterp::geodetic
