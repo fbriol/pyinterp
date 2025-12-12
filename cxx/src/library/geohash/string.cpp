@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <boost/geometry.hpp>
 #include <ranges>
-#include <set>
 #include <string>
+#include <unordered_set>
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/eigen.hpp"
@@ -289,13 +289,20 @@ auto zoom_in(const EncodedHashes& hash, uint32_t to_precision)
 /// @brief Zoom out from higher to lower precision
 auto zoom_out(const EncodedHashes& hash, uint32_t to_precision)
     -> EncodedHashes {
-  auto zoom_out_codes = std::set<std::string>();
+  // Use unordered_set for O(1) insertions instead of O(log n) with std::set
+  auto zoom_out_codes = std::unordered_set<uint64_t>();
+  zoom_out_codes.reserve(hash.count);  // Reserve space to avoid rehashing
+
+  auto to_bits = to_precision * 5;
+  auto from_bits = hash.precision * 5;
+  auto shift = from_bits - to_bits;
 
   for (const auto& hash_span : hash) {
-    auto point = decode(hash_span, false);
-    auto current_code = std::vector<char>(to_precision);
-    encode(point, current_code);
-    zoom_out_codes.emplace(current_code.begin(), current_code.end());
+    // Decode to integer, shift right to reduce precision, and collect unique
+    // values
+    auto [integer_hash, chars] = encoder.decode(hash_span);
+    auto zoomed_out = integer_hash >> shift;
+    zoom_out_codes.insert(zoomed_out);
   }
 
   auto result = EncodedHashes{
@@ -305,8 +312,8 @@ auto zoom_out(const EncodedHashes& hash, uint32_t to_precision)
   };
 
   size_t ix = 0;
-  for (const auto& code : zoom_out_codes) {
-    std::copy(code.begin(), code.end(), result.get(ix++).begin());
+  for (auto code : zoom_out_codes) {
+    encoder.encode(code, result.get(ix++));
   }
 
   return result;

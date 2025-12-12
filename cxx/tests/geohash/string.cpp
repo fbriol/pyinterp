@@ -574,7 +574,8 @@ TEST_F(GeoHashStringTest, TransformZoomOut) {
   auto result = transform(encoded, 3);
 
   EXPECT_EQ(result.precision, 3);
-  EXPECT_LE(result.count, encoded.count);  // Zoom out can reduce count
+  EXPECT_LE(result.count, 1);
+  EXPECT_EQ(span_to_string(result.get(0)), "s00");
 }
 
 TEST_F(GeoHashStringTest, TransformZoomIn) {
@@ -587,7 +588,13 @@ TEST_F(GeoHashStringTest, TransformZoomIn) {
   auto result = transform(encoded, 6);
 
   EXPECT_EQ(result.precision, 6);
-  EXPECT_GE(result.count, encoded.count);  // Zoom in increases count
+  EXPECT_GE(result.count, 32768);  // 32^3 = 32768
+  EXPECT_EQ(span_to_string(result.get(0)), "s00000");
+  EXPECT_EQ(span_to_string(result.get(1)), "s00002");
+  EXPECT_EQ(span_to_string(result.get(2)), "s00008");
+  EXPECT_EQ(span_to_string(result.get(32765)), "s00zzr");
+  EXPECT_EQ(span_to_string(result.get(32766)), "s00zzx");
+  EXPECT_EQ(span_to_string(result.get(32767)), "s00zzz");
 }
 
 TEST_F(GeoHashStringTest, TransformZoomInThenOut) {

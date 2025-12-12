@@ -41,7 +41,7 @@ inline auto has_bmi2() noexcept -> bool {
 
 // Spread out the 32 bits of x into 64 bits, where the bits of x occupy even
 // bit positions.
-constexpr auto spread(const uint32_t x) -> uint64_t {
+constexpr auto spread(const uint32_t x) noexcept -> uint64_t {
   auto result = static_cast<uint64_t>(x);
   result = (result | (result << 16U)) & 0X0000FFFF0000FFFFUL;
   result = (result | (result << 8U)) & 0X00FF00FF00FF00FFUL;
@@ -53,7 +53,7 @@ constexpr auto spread(const uint32_t x) -> uint64_t {
 
 // Squash the even bitlevels of X into a 32-bit word. Odd bitlevels of X are
 // ignored, and may take any value.
-constexpr auto squash(uint64_t x) -> uint32_t {
+constexpr auto squash(uint64_t x) noexcept -> uint32_t {
   x &= 0x5555555555555555UL;
   x = (x | (x >> 1U)) & 0X3333333333333333UL;
   x = (x | (x >> 2U)) & 0X0F0F0F0F0F0F0F0FUL;
@@ -65,13 +65,15 @@ constexpr auto squash(uint64_t x) -> uint32_t {
 
 // Interleave the bits of x and y. In the result, x and y occupy even and odd
 // bitlevels, respectively.
-constexpr auto interleave(const uint32_t x, const uint32_t y) -> uint64_t {
+constexpr auto interleave(const uint32_t x, const uint32_t y) noexcept
+    -> uint64_t {
   return spread(x) | (spread(y) << 1U);
 }
 
 // Deinterleave the bits of x into 32-bit words containing the even and odd
 // bitlevels of x, respectively.
-inline auto deinterleave(const uint64_t x) -> std::tuple<uint32_t, uint32_t> {
+constexpr auto deinterleave(const uint64_t x) noexcept
+    -> std::tuple<uint32_t, uint32_t> {
   return {squash(x), squash(x >> 1U)};
 }
 
@@ -85,7 +87,8 @@ constexpr auto encode_range(const double x, const double r) -> uint32_t {
 }
 
 // Decode the 32-bit range encoding X back to a value in the range -r to +r.
-constexpr auto decode_range(const uint32_t x, const double r) -> double {
+constexpr auto decode_range(const uint32_t x, const double r) noexcept
+    -> double {
   if (x == std::numeric_limits<uint32_t>::max()) {
     return r;
   }
@@ -102,7 +105,8 @@ constexpr auto encode(const double lat, const double lon) -> uint64_t {
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("bmi2")))
 #endif
-inline auto encode_bmi2(const double lat, const double lon) -> uint64_t {
+inline auto encode_bmi2(const double lat, const double lon) noexcept
+    -> uint64_t {
   auto shrq = [](const double val) {
     return std::bit_cast<uint64_t>(val) >> 20U;
   };
@@ -130,7 +134,7 @@ inline auto encode_bmi2(const double lat, const double lon) -> uint64_t {
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("bmi2")))
 #endif
-inline auto deinterleave_bmi2(const uint64_t x)
+inline auto deinterleave_bmi2(const uint64_t x) noexcept
     -> std::tuple<uint32_t, uint32_t> {
   // The explicit _pext_u64 calls require BMI2 support.
   auto lat = _pext_u64(x, 0x5555555555555555UL);
@@ -190,7 +194,7 @@ auto encode(const geodetic::Point &point, const uint32_t precision)
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto bounding_box(const uint64_t hash, const uint32_t precision)
+auto bounding_box(const uint64_t hash, const uint32_t precision) noexcept
     -> geodetic::Box {
   auto full_hash = hash << (64U - precision);
   auto [x_err, y_err] = error_with_precision(precision);
@@ -213,23 +217,27 @@ auto neighbors(const uint64_t hash, const uint32_t precision)
   auto lat = center.lat();
   auto [lon_delta, lat_delta] = box.delta(false);
 
-  return NeighborHashes(
-      {// N
-       encode({lon, lat + lat_delta}, precision),
-       // NE,
-       encode({lon + lon_delta, lat + lat_delta}, precision),
-       // E,
-       encode({lon + lon_delta, lat}, precision),
-       // SE,
-       encode({lon + lon_delta, lat - lat_delta}, precision),
-       // S,
-       encode({lon, lat - lat_delta}, precision),
-       // SW,
-       encode({lon - lon_delta, lat - lat_delta}, precision),
-       // W,
-       encode({lon - lon_delta, lat}, precision),
-       // NW
-       encode({lon - lon_delta, lat + lat_delta}, precision)});
+  auto lon_inc = lon + lon_delta;
+  auto lon_dec = lon - lon_delta;
+  auto lat_inc = lat + lat_delta;
+  auto lat_dec = lat - lat_delta;
+
+  return NeighborHashes({// N
+                         encode({lon, lat_inc}, precision),
+                         // NE,
+                         encode({lon_inc, lat_inc}, precision),
+                         // E,
+                         encode({lon_inc, lat}, precision),
+                         // SE,
+                         encode({lon_inc, lat_dec}, precision),
+                         // S,
+                         encode({lon, lat_dec}, precision),
+                         // SW,
+                         encode({lon_dec, lat_dec}, precision),
+                         // W,
+                         encode({lon_dec, lat}, precision),
+                         // NW
+                         encode({lon_dec, lat_inc}, precision)});
 }
 
 // ---------------------------------------------------------------------------

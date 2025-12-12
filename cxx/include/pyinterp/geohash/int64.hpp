@@ -20,8 +20,8 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
 /// precision
 /// @param[in] precision Geohash precision (number of bits)
 /// @return A tuple containing the longitude and latitude error in degrees
-[[nodiscard]] constexpr auto error_with_precision(const uint32_t precision)
-    -> std::tuple<double, double> {
+[[nodiscard]] constexpr auto error_with_precision(
+    const uint32_t precision) noexcept -> std::tuple<double, double> {
   auto lat_bits = static_cast<int32_t>(precision >> 1U);
   auto lng_bits = static_cast<int32_t>(precision - lat_bits);
 
@@ -55,7 +55,7 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
 /// @param[in] hash Integer geohash
 /// @param[in] precision Geohash precision (number of bits)
 /// @return Bounding box representing the region encoded by the geohash
-[[nodiscard]] auto bounding_box(uint64_t hash, uint32_t precision)
+[[nodiscard]] auto bounding_box(uint64_t hash, uint32_t precision) noexcept
     -> geodetic::Box;
 
 /// @brief Decode the geohash into a point (centroid or rounded corner)
