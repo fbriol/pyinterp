@@ -229,6 +229,81 @@ Binning2DFloat64: TypeAlias = Binning2DHolder[np.float64]
 Binning1DFloat32: TypeAlias = Binning1DHolder[np.float32]
 Binning1DFloat64: TypeAlias = Binning1DHolder[np.float64]
 
+class DescriptiveStatisticsHolder(Generic[_FloatDType]):
+    def __init__(
+        self,
+        values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+        weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = ...,
+        axis: list[int] | None = ...,
+    ) -> None: ...
+    def count(self) -> np.ndarray[Any, np.dtype[np.uint64]]: ...
+    def min(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def max(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def variance(
+        self,
+        ddof: int = ...,
+    ) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def skewness(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def kurtosis(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def sum(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def __copy__(self) -> DescriptiveStatisticsHolder[_FloatDType]: ...
+    def __iadd__(
+        self, other: DescriptiveStatisticsHolder[Any]
+    ) -> DescriptiveStatisticsHolder[_FloatDType]: ...
+
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: None = None,
+) -> DescriptiveStatisticsHolder[np.float64]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: Literal["float32"],
+) -> DescriptiveStatisticsHolder[np.float32]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> DescriptiveStatisticsHolder[np.float64]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> DescriptiveStatisticsHolder[_FloatDType]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: str,
+) -> (
+    DescriptiveStatisticsHolder[np.float32]
+    | DescriptiveStatisticsHolder[np.float64]
+): ...
+
+DescriptiveStatisticsFloat32: TypeAlias = DescriptiveStatisticsHolder[
+    np.float32
+]
+DescriptiveStatisticsFloat64: TypeAlias = DescriptiveStatisticsHolder[
+    np.float64
+]
+
 class GridHolder:
     def __getstate__(self) -> tuple: ...
     def __repr__(self) -> str: ...
