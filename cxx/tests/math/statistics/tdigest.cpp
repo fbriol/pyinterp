@@ -12,7 +12,6 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
 namespace pyinterp::math {
@@ -179,7 +178,7 @@ TEST(MathTDigest, Quantile) {
     values.push_back(value);
   }
 
-  std::sort(values.begin(), values.end());
+  std::ranges::sort(values);
 
   // Test various quantiles
   for (auto q : {0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99}) {
@@ -302,7 +301,7 @@ TEST(MathTDigest, Merge) {
     values.push_back(value);
   }
 
-  std::sort(values.begin(), values.end());
+  std::ranges::sort(values);
 
   // Merge digest2 into digest1
   digest1 += digest2;
@@ -368,7 +367,7 @@ TEST(MathTDigest, TailAccuracy) {
     values.push_back(value);
   }
 
-  std::sort(values.begin(), values.end());
+  std::ranges::sort(values);
 
   // T-digest should be especially accurate at tails
   for (auto q : {0.001, 0.01, 0.99, 0.999}) {
@@ -396,7 +395,7 @@ TEST(MathTDigest, UniformDistribution) {
     values.push_back(value);
   }
 
-  std::sort(values.begin(), values.end());
+  std::ranges::sort(values);
 
   // Check median
   auto expected = quantile(values, 0.5);
@@ -422,7 +421,7 @@ TEST(MathTDigest, ExponentialDistribution) {
     values.push_back(value);
   }
 
-  std::sort(values.begin(), values.end());
+  std::ranges::sort(values);
 
   // Check lower quantiles (exponential is skewed)
   for (auto q : {0.1, 0.25, 0.5}) {
