@@ -94,7 +94,7 @@ constexpr auto remainder(const T &x, const T &y) noexcept -> T {
 template <std::floating_point T>
 constexpr auto remainder(const T &x, const T &y) noexcept -> T {
   auto result = std::remainder(x, y);
-  if (result < T(0)) {
+  if (result != T{0} && std::signbit(result) != std::signbit(y)) {
     result += y;
   }
   return result;
@@ -176,6 +176,62 @@ template <std::floating_point T>
 constexpr auto is_almost_zero(
     T a, T epsilon = std::numeric_limits<T>::epsilon()) noexcept -> bool {
   return std::abs(a) <= epsilon;
+}
+
+/// @brief Concept for types that support power operations.
+template <typename T>
+concept Squarable = requires(T a) {
+  { a * a } -> std::convertible_to<T>;
+};
+
+/// @brief Calculate x^N at compile time using binary exponentiation.
+///
+/// @tparam N The power to raise the number to.
+/// @tparam T The type of the number (must satisfy Squarable).
+/// @param[in] x The number to raise to the power.
+/// @return The result of x^N.
+template <unsigned N, Squarable T>
+constexpr auto pow(const T &x) -> T {
+  if constexpr (N == 0) {
+    return T{1};
+  } else if constexpr (N == 1) {
+    return x;
+  } else if constexpr (N % 2 == 0) {
+    const auto half = pow<N / 2>(x);
+    return half * half;
+  } else {
+    const auto half = pow<N / 2>(x);
+    return half * half * x;
+  }
+}
+
+/// @brief Fast calculation of 2^n
+/// @param[in] exponent Exponent value
+/// @return 2 raised to the power of exponent
+constexpr auto power2(std::int32_t exponent) noexcept -> double {
+  return std::ldexp(1.0, exponent);
+}
+
+/// @brief Fast calculation of 10^n using exponentiation by squaring
+/// @param[in] exponent Exponent value
+/// @return 10 raised to the power of exponent
+constexpr auto power10(std::int32_t exponent) noexcept -> double {
+  if (exponent == 0) {
+    return 1.0;
+  }
+  const bool negative = exponent < 0;
+  auto exp = negative ? -exponent : exponent;
+  auto result = 1.0;
+  auto base = 10.0;
+
+  while (exp != 0) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+  return negative ? 1.0 / result : result;
 }
 
 }  // namespace pyinterp::math

@@ -24,6 +24,13 @@ add_testcase(dateutils "${CMAKE_CURRENT_SOURCE_DIR}/dateutils.cpp")
 # serialization_buffer
 add_testcase(serialization_buffer
              "${CMAKE_CURRENT_SOURCE_DIR}/serialization_buffer.cpp")
+
+# parallel_for
+add_testcase(parallel_for "${CMAKE_CURRENT_SOURCE_DIR}/parallel_for.cpp")
+
+# math
+add_testcase(math "${CMAKE_CURRENT_SOURCE_DIR}/math.cpp")
+
 # axis
 file(GLOB_RECURSE axis_src "${CMAKE_CURRENT_SOURCE_DIR}/math/axis/*.cpp")
 add_testcase(axis "${axis_src}")
@@ -37,9 +44,6 @@ add_testcase(interpolate "${interpolate_src}" BLAS::BLAS)
 file(GLOB_RECURSE statistics_src
      "${CMAKE_CURRENT_SOURCE_DIR}/math/statistics/*.cpp")
 add_testcase(statistics "${statistics_src}")
-
-# parallel_for
-add_testcase(parallel_for "${CMAKE_CURRENT_SOURCE_DIR}/parallel_for.cpp")
 
 # geometry
 file(GLOB_RECURSE geometry_src "${CMAKE_CURRENT_SOURCE_DIR}/geometry/*.cpp")
