@@ -268,6 +268,7 @@ auto bind_descriptive_statistics(nb::module_& m, std::string_view suffix)
 
 auto init_descriptive_statistics(nb::module_& m) -> void {
   bind_descriptive_statistics<double>(m, "Float64");
+  bind_descriptive_statistics<float>(m, "Float32");
 }
 
 // /////////////////////////////////////////////////////////////////////////////
