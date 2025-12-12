@@ -22,27 +22,12 @@
 #include <variant>
 #include <vector>
 
+#include "pyinterp/format_byte.hpp"
 #include "pyinterp/pybind/axis.hpp"
 #include "pyinterp/pybind/temporal_axis.hpp"
 
 namespace pyinterp::pybind {
 namespace detail {
-
-/// Format a number of bytes into a human-readable string.
-/// @param nbytes Number of bytes.
-/// @return Formatted string.
-[[nodiscard]] inline auto format_bytes(size_t nbytes) -> std::string {
-  constexpr auto units =
-      std::array<std::string_view, 5>{"B", "KB", "MB", "GB", "TB"};
-  constexpr size_t kBytesPerKilobyte = 1024;
-  for (const auto& unit : units) {
-    if (nbytes < kBytesPerKilobyte) {
-      return std::format("{} {}", nbytes, unit);
-    }
-    nbytes /= kBytesPerKilobyte;
-  }
-  return std::format("{} PB", nbytes);
-}
 
 /// Dtype name traits.
 /// @tparam T Data type.
@@ -439,7 +424,7 @@ class Grid {
     return std::format("{}Grid{}(shape={}, dtype={}, nbytes={})", prefix,
                        dim_names[kNDim - 1],
                        detail::array_shape_str<kNDim>(array_), dtype_str(),
-                       detail::format_bytes(array_.nbytes()));
+                       format_bytes(array_.nbytes()));
   }
 
   /// @brief Check if this grid has a temporal axis.

@@ -209,7 +209,7 @@ constexpr auto pow(const T &x) -> T {
 /// @param[in] exponent Exponent value
 /// @return 2 raised to the power of exponent
 constexpr auto power2(std::int32_t exponent) noexcept -> double {
-  return std::ldexp(1.0, exponent);
+  return std::exp2(static_cast<double>(exponent));
 }
 
 /// @brief Fast calculation of 10^n using exponentiation by squaring

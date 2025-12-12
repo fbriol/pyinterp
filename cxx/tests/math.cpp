@@ -357,8 +357,7 @@ TEST(MathEdgeCaseTest, SincEdgeCases) {
 
 TEST(MathEdgeCaseTest, NormalizePeriodEdgeCases) {
   // Test with very large values
-  EXPECT_NEAR(normalize_period(1e6, 0.0, 360.0),
-              std::fmod(1e6, 360.0), 1e-6);
+  EXPECT_NEAR(normalize_period(1e6, 0.0, 360.0), std::fmod(1e6, 360.0), 1e-6);
 
   // Test boundary values
   EXPECT_NEAR(normalize_period(359.999, 0.0, 360.0), 359.999, 1e-10);

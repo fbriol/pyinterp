@@ -366,7 +366,8 @@ add_subdirectory(cxx)
 # ##############################################################################
 # External dependencies
 # ##############################################################################
-find_package(Boost 1.79 REQUIRED)
+find_package(Boost 1.80 REQUIRED)
+target_include_directories(pyinterp SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(core SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 # ##############################################################################
