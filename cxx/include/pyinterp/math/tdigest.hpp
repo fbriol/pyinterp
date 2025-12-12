@@ -92,7 +92,7 @@ class TDigest {
       return;
     }
 
-    count_ += static_cast<uint64_t>(weight);
+    count_ += 1;
     min_ = std::min(min_, value);
     max_ = std::max(max_, value);
 
