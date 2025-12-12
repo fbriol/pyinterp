@@ -3,6 +3,7 @@
 #include "pyinterp/pybind/axis.hpp"
 #include "pyinterp/pybind/binning.hpp"
 #include "pyinterp/pybind/config.hpp"
+#include "pyinterp/pybind/descriptive_statistics.hpp"
 #include "pyinterp/pybind/geodetic.hpp"
 #include "pyinterp/pybind/geometric.hpp"
 #include "pyinterp/pybind/grid.hpp"
@@ -22,4 +23,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_geodetic(m);
   pyinterp::pybind::init_rtree_3d(m);
   pyinterp::pybind::init_binning(m);
+  pyinterp::pybind::init_descriptive_statistics(m);
 }
