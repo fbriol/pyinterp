@@ -8,6 +8,7 @@
 #include "pyinterp/pybind/geometric.hpp"
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/rtree.hpp"
+#include "pyinterp/pybind/tdigest.hpp"
 #include "pyinterp/pybind/windowed.hpp"
 
 NB_MODULE(core, m) {
@@ -24,4 +25,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_rtree_3d(m);
   pyinterp::pybind::init_binning(m);
   pyinterp::pybind::init_descriptive_statistics(m);
+  pyinterp::pybind::init_tdigest(m);
 }

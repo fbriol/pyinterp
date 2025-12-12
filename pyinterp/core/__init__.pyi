@@ -304,6 +304,79 @@ DescriptiveStatisticsFloat64: TypeAlias = DescriptiveStatisticsHolder[
     np.float64
 ]
 
+class TDigestHolder(Generic[_FloatDType]):
+    def __init__(
+        self,
+        values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+        weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = ...,
+        axis: list[int] | None = ...,
+        compression: int = ...,
+    ) -> None: ...
+    def count(self) -> np.ndarray[Any, np.dtype[np.uint64]]: ...
+    def min(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def max(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    @overload
+    def quantile(self, q: float) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    @overload
+    def quantile(
+        self, quantiles: np.ndarray[OneDim, np.dtype[np.floating[Any]]]
+    ) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def __copy__(self) -> TDigestHolder[_FloatDType]: ...
+    def __iadd__(
+        self, other: TDigestHolder[Any]
+    ) -> TDigestHolder[_FloatDType]: ...
+
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: None = None,
+) -> TDigestHolder[np.float64]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: Literal["float32"],
+) -> TDigestHolder[np.float32]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: Literal["float64"],
+) -> TDigestHolder[np.float64]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> TDigestHolder[_FloatDType]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: str,
+) -> TDigestHolder[np.float32] | TDigestHolder[np.float64]: ...
+
+TDigestFloat32: TypeAlias = TDigestHolder[np.float32]
+TDigestFloat64: TypeAlias = TDigestHolder[np.float64]
+
 class GridHolder:
     def __getstate__(self) -> tuple: ...
     def __repr__(self) -> str: ...
