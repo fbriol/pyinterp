@@ -111,11 +111,13 @@ TEST_F(GeoHashInt64Test, EncodeKnownPoints) {
   };
 
   const std::array<TestCase, 5> test_cases = {
-      TestCase{0.0, 0.0, 32},       // Origin
-      TestCase{180.0, 90.0, 32},    // North-East extreme
-      TestCase{-180.0, -90.0, 32},  // South-West extreme
-      TestCase{-0.1, 51.5, 32},     // London
-      TestCase{2.3, 48.9, 32},      // Paris
+      TestCase{.lon = 0.0, .lat = 0.0, .precision = 32},  // Origin
+      TestCase{
+          .lon = 180.0, .lat = 90.0, .precision = 32},  // North-East extreme
+      TestCase{
+          .lon = -180.0, .lat = -90.0, .precision = 32},  // South-West extreme
+      TestCase{.lon = -0.1, .lat = 51.5, .precision = 32},  // London
+      TestCase{.lon = 2.3, .lat = 48.9, .precision = 32},   // Paris
   };
 
   for (const auto& test : test_cases) {
