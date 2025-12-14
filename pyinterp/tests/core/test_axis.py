@@ -317,7 +317,6 @@ def test_axis_pickle() -> None:
     # Regular axis
     lon = np.linspace(0, 359, 360, dtype=np.float64)
     a = core.Axis(lon, epsilon=1e-6)
-    print(a.__getstate__())
     b = pickle.loads(pickle.dumps(a))
     assert a == b
     assert a.is_regular() == b.is_regular()
