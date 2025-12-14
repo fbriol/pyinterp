@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "pyinterp/geodetic/point.hpp"
+#include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -84,7 +85,36 @@ class LineString {
     return points_.end();
   }
 
+  /// @brief Serialize the ring state for storage or transmission.
+  /// @return Serialized state as a vector of points.
+  [[nodiscard]] constexpr auto pack() const -> serialization::Writer {
+    serialization::Writer writer;
+    writer.write(kMagicNumber);
+    writer.write(points_);
+    return writer;
+  }
+
+  /// @brief Deserialize a ring from serialized state.
+  /// @param[in] state Reference to serialization Reader containing encoded ring
+  /// data.
+  /// @return New Ring instance with restored points.
+  /// @throw std::invalid_argument If the state is invalid or empty.
+  [[nodiscard]] static auto unpack(serialization::Reader& state) -> LineString {
+    if (state.size() == 0) {
+      throw std::invalid_argument("Cannot restore ring from empty state.");
+    }
+    auto magic_number = state.read<uint32_t>();
+    if (magic_number != kMagicNumber) {
+      throw std::invalid_argument("Invalid ring state (bad magic number).");
+    }
+    auto points = state.read_vector<Point>();
+    return LineString(std::move(points));
+  }
+
  private:
+  /// @brief Magic number for serialization validation
+  static constexpr uint32_t kMagicNumber = 0x4c535452;  // "LSTR"
+  /// @brief Underlying container of points
   container_type points_;
 };
 

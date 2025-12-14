@@ -17,6 +17,10 @@ auto init_box(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_ring(nanobind::module_& m) -> void;
 
+/// @brief Initialize LineString bindings
+/// @param[in,out] m Python module
+auto init_line_string(nanobind::module_& m) -> void;
+
 /// @brief Initialize Spheroid bindings
 /// @param[in,out] m Python module
 auto init_spheroid(nanobind::module_& m) -> void;
