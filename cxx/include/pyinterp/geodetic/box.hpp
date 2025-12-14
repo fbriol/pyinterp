@@ -2,9 +2,7 @@
 
 #include <boost/geometry.hpp>
 
-#include "pyinterp/geodetic/algorithm/area.hpp"
 #include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/spheroid.hpp"
 #include "pyinterp/math.hpp"
 
 namespace pyinterp::geodetic {
