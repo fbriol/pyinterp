@@ -7,11 +7,9 @@
 #include <unordered_set>
 
 #include "pyinterp/broadcast.hpp"
-#include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geohash/base32.hpp"
 #include "pyinterp/math.hpp"
-#include "pyinterp/parallel_for.hpp"
 
 namespace pyinterp::geohash {
 

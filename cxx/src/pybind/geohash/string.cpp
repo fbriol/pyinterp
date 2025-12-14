@@ -12,6 +12,7 @@
 #include <nanobind/stl/unordered_map.h>
 
 #include <Eigen/Core>
+#include <utility>
 
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/multipolygon.hpp"
@@ -81,6 +82,7 @@ inline auto get_array_info(const nb::object& hash) -> ArrayInfo<NDIM> {
 // (zero-copy)
 template <size_t NDIM>
 static auto from_numpy(const nb::object& hash) -> EncodedHashesView {
+  static_assert(NDIM == 1 || NDIM == 2, "NDIM must be 1 or 2");
   auto info = get_array_info<NDIM>(hash);
   if constexpr (NDIM == 1) {
     // 1D string array - precision is the stride
@@ -99,8 +101,7 @@ static auto from_numpy(const nb::object& hash) -> EncodedHashesView {
         .precision = precision,
         .count = info.shape[0],
     };
-  }
-  if (NDIM == 2) {
+  } else if constexpr (NDIM == 2) {
     if (info.strides[0] != info.shape[1] * info.strides[1]) {
       throw std::invalid_argument("hash must be an array of strings");
     }
@@ -119,7 +120,6 @@ static auto from_numpy(const nb::object& hash) -> EncodedHashesView {
         .count = static_cast<size_t>(info.shape[0]),
     };
   }
-  throw std::invalid_argument("hash must be a one or two-dimensional array");
 }
 
 constexpr const char* const kEncodeDoc = R"__doc__(
@@ -281,7 +281,7 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "decode",
-      [](nb::object hash, bool round) {
+      [](const nb::object& hash, bool round) {
         auto hashes = from_numpy<1>(hash);
         return geohash::decode(hashes, round);
       },
@@ -289,7 +289,7 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "area",
-      [](nb::object hash, const std::optional<geodetic::Spheroid>& wgs) {
+      [](const nb::object& hash, const std::optional<geodetic::Spheroid>& wgs) {
         auto hashes = from_numpy<1>(hash);
         return geohash::area(hashes, wgs);
       },
@@ -329,7 +329,7 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "where",
-      [](nb::object hash, size_t rows, size_t cols) {
+      [](const nb::object& hash, size_t rows, size_t cols) {
         auto hashes = from_numpy<2>(hash);
         auto result_map = geohash::where(hashes, rows, cols);
 
@@ -344,7 +344,7 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "transform",
-      [](nb::object hash, uint32_t precision) {
+      [](const nb::object& hash, uint32_t precision) {
         check_range(precision);
         auto hashes = from_numpy<1>(hash);
         auto result = geohash::transform(hashes, precision);
