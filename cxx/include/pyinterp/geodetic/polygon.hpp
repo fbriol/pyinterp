@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
 #include "pyinterp/geodetic/ring.hpp"
+#include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -55,8 +57,32 @@ class Polygon {
     return interiors_;
   }
 
+  /// @brief Serialize the polygon state for storage or transmission.
+  /// @return Serialized state as a vector of points.
+  [[nodiscard]] constexpr auto pack() const -> serialization::Writer {
+    serialization::Writer writer;
+    writer.write(kMagicNumber);
+    writer.write(exterior_.pack());
+    writer.write(interiors_.size());
+    for (const auto& ring : interiors_) {
+      writer.write(ring.pack());
+    }
+    return writer;
+  }
+
+  /// @brief Deserialize a polygon from serialized state.
+  /// @param[in] state Reference to serialization Reader containing encoded
+  /// polygon data.
+  /// @return New Polygon instance with restored rings.
+  /// @throw std::invalid_argument If the state is invalid or empty.
+  [[nodiscard]] static auto unpack(serialization::Reader& state) -> Polygon;
+
  private:
+  /// @brief Magic number for validation
+  static constexpr uint32_t kMagicNumber = 0x504f4c59;  // "POLY"
+  /// @brief Exterior ring.
   Ring exterior_{};
+  /// @brief Interior rings (holes).
   inner_container_type interiors_{};
 };
 

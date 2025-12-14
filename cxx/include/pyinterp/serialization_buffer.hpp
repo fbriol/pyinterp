@@ -29,6 +29,13 @@ class Writer {
   /// Default constructor initializes an empty buffer
   Writer() = default;
 
+  /// Write an other Writer's contents into this buffer
+  /// @param[in,out] other The other Writer to append
+  void write(Writer&& other) {
+    auto other_buffer = std::move(other).release();
+    write(other_buffer);
+  }
+
   /// Write trivially copyable types
   /// @tparam T Type of the value (must satisfy TriviallyCopyable concept)
   /// @param[in] value The value to write to the buffer
