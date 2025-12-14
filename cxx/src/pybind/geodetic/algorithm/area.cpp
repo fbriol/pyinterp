@@ -2,10 +2,11 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+#include "pyinterp/geodetic/algorithms/area.hpp"
+
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 
-#include "pyinterp/geodetic/algorithms/area.hpp"
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/line_string.hpp"
 #include "pyinterp/geodetic/multipolygon.hpp"
@@ -31,10 +32,10 @@ Args:
     wgs: Optional spheroid for geodetic calculations. If not provided, uses
         WGS84 ellipsoid.
     strategy: Calculation strategy. Options:
-        - 'andoyer': Andoyer method (fast, less accurate)
-        - 'karney': Karney method (most accurate, slower)
-        - 'thomas': Thomas method (balanced)
-        - 'vincenty': Vincenty method (default, good balance)
+        - 'ANDOYER': Andoyer method (fast, less accurate)
+        - 'KARNEY': Karney method (most accurate, slower)
+        - 'THOMAS': Thomas method (balanced)
+        - 'VINCENTY': Vincenty method (default, good balance)
 
 Returns:
     Area in square meters.
@@ -53,10 +54,10 @@ constexpr auto kStrategyDoc = R"doc(
 Geodetic calculation strategy.
 
 Available strategies:
-    - andoyer: Andoyer method - fast but less accurate
-    - karney: Karney method - most accurate but slower
-    - thomas: Thomas method - balanced accuracy and performance
-    - vincenty: Vincenty method - good balance (default)
+    - ANDOYER: Andoyer method - fast but less accurate
+    - KARNEY: Karney method - most accurate but slower
+    - THOMAS: Thomas method - balanced accuracy and performance
+    - VINCENTY: Vincenty method - good balance (default)
 )doc";
 
 auto init_algorithms(nb::module_& m) -> void {
