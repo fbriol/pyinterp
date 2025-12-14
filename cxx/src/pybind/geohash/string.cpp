@@ -238,12 +238,10 @@ constexpr const char* const kWhereDoc = R"__doc__(
 Get the start and end indexes for successive geohash codes.
 
 Returns a dictionary mapping successive identical geohash codes to their
-start and end positions in the input 2D array.
+start and end positions in the input numpy string array.
 
 Args:
     hash: Array of GeoHash codes (numpy string array).
-    rows: Number of rows in the 2D grid.
-    cols: Number of columns in the 2D grid.
 
 Returns:
     Dictionary where keys are geohash codes (as bytes) and values are tuples
@@ -274,7 +272,11 @@ auto init_geohash_string(nb::module_& m) -> void {
       [](const Eigen::Ref<const Eigen::VectorXd>& lon,
          const Eigen::Ref<const Eigen::VectorXd>& lat, uint32_t precision) {
         check_range(precision);
-        auto result = geohash::encode(lon, lat, precision);
+        EncodedHashes result;
+        {
+          nb::gil_scoped_release release;
+          result = geohash::encode(lon, lat, precision);
+        }
         return to_numpy(std::move(result));
       },
       nb::arg("lon"), nb::arg("lat"), nb::arg("precision") = 12, kEncodeDoc);
@@ -283,7 +285,10 @@ auto init_geohash_string(nb::module_& m) -> void {
       "decode",
       [](const nb::object& hash, bool round) {
         auto hashes = from_numpy<1>(hash);
-        return geohash::decode(hashes, round);
+        {
+          nb::gil_scoped_release release;
+          return geohash::decode(hashes, round);
+        }
       },
       nb::arg("hash"), nb::arg("round") = false, kDecodeDoc);
 
@@ -291,7 +296,10 @@ auto init_geohash_string(nb::module_& m) -> void {
       "area",
       [](const nb::object& hash, const std::optional<geodetic::Spheroid>& wgs) {
         auto hashes = from_numpy<1>(hash);
-        return geohash::area(hashes, wgs);
+        {
+          nb::gil_scoped_release release;
+          return geohash::area(hashes, wgs);
+        }
       },
       nb::arg("hash"), nb::arg("wgs") = nb::none(), kAreaDoc);
 
@@ -299,7 +307,11 @@ auto init_geohash_string(nb::module_& m) -> void {
       "bounding_boxes",
       [](const std::optional<geodetic::Box>& box, uint32_t precision) {
         check_range(precision);
-        auto result = geohash::bounding_boxes(box, precision);
+        EncodedHashes result;
+        {
+          nb::gil_scoped_release release;
+          result = geohash::bounding_boxes(box, precision);
+        }
         return to_numpy(std::move(result));
       },
       nb::arg("box") = nb::none(), nb::arg("precision") = 1,
@@ -310,7 +322,11 @@ auto init_geohash_string(nb::module_& m) -> void {
       [](const geodetic::Polygon& polygon, uint32_t precision,
          size_t num_threads) {
         check_range(precision);
-        auto result = geohash::bounding_boxes(polygon, precision, num_threads);
+        EncodedHashes result;
+        {
+          nb::gil_scoped_release release;
+          result = geohash::bounding_boxes(polygon, precision, num_threads);
+        }
         return to_numpy(std::move(result));
       },
       nb::arg("polygon"), nb::arg("precision") = 1, nb::arg("num_threads") = 0,
@@ -321,7 +337,11 @@ auto init_geohash_string(nb::module_& m) -> void {
       [](const geodetic::MultiPolygon& polygons, uint32_t precision,
          size_t num_threads) {
         check_range(precision);
-        auto result = geohash::bounding_boxes(polygons, precision, num_threads);
+        EncodedHashes result;
+        {
+          nb::gil_scoped_release release;
+          result = geohash::bounding_boxes(polygons, precision, num_threads);
+        }
         return to_numpy(std::move(result));
       },
       nb::arg("polygons"), nb::arg("precision") = 1, nb::arg("num_threads") = 0,
@@ -329,9 +349,13 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "where",
-      [](const nb::object& hash, size_t rows, size_t cols) {
+      [](const nb::object& hash) {
         auto hashes = from_numpy<2>(hash);
-        auto result_map = geohash::where(hashes, rows, cols);
+        HashRegionBounds result_map;
+        {
+          nb::gil_scoped_release release;
+          result_map = geohash::where(hashes, hashes.count, hashes.precision);
+        }
 
         // Convert to dict with bytes keys
         auto result = nb::dict();
@@ -340,14 +364,18 @@ auto init_geohash_string(nb::module_& m) -> void {
         }
         return result;
       },
-      nb::arg("hash"), nb::arg("rows"), nb::arg("cols"), kWhereDoc);
+      nb::arg("hash"), kWhereDoc);
 
   m.def(
       "transform",
       [](const nb::object& hash, uint32_t precision) {
         check_range(precision);
         auto hashes = from_numpy<1>(hash);
-        auto result = geohash::transform(hashes, precision);
+        EncodedHashes result;
+        {
+          nb::gil_scoped_release release;
+          result = geohash::transform(hashes, precision);
+        }
         return to_numpy(std::move(result));
       },
       nb::arg("hash"), nb::arg("precision") = 1, kTransformDoc);

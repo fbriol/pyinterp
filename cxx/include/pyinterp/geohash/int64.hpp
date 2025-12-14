@@ -107,7 +107,7 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
     -> NeighborHashes;
 
 /// @brief Returns the property of the grid covering the given box
-/// @param[in] box Geodetic box to cover
+/// @param[in] box Geodetic box to cover (longitudes must be in [-180, 180])
 /// @param[in] precision Geohash precision (number of bits)
 /// @return A tuple containing the geohash of the minimum corner point, the
 /// number of boxes in longitudes and latitudes

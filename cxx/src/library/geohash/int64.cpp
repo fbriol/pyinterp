@@ -336,13 +336,41 @@ static auto select_cell(double lng_err, double lat_err,
   return result;
 }
 
+// Helper to safely compute envelope, correcting boost's anti-meridian
+// normalization
+template <typename Geometry>
+auto safe_envelope(const Geometry &geometry) -> geodetic::Box {
+  if constexpr (std::is_same_v<Geometry, geodetic::Box>) {
+    return geometry;  // Use box directly
+  } else {
+    geodetic::Box envelope;
+    boost::geometry::envelope(geometry, envelope);
+
+    // Check if boost incorrectly normalized the envelope
+    // This happens when boost wraps longitudes > 180
+    // (e.g., -180 becomes 180, -135 becomes 225)
+    auto &lon_min = envelope.min_corner().lon();
+    auto &lon_max = envelope.max_corner().lon();
+
+    if (lon_max > 180.0) {
+      // Boost incorrectly normalized.
+      // Correct it by wrapping back to [-180, 180].
+      // If max > 180, both min and max should be wrapped
+      // e.g., (180, ...) to (225, ...) should become (-180, ...) to (-135, ...)
+      lon_min -= 360.0;
+      lon_max -= 360.0;
+    }
+
+    return envelope;
+  }
+}
+
 // Common implementation for bounding_boxes with geometry
 template <typename Geometry>
 auto bounding_boxes_impl(const Geometry &geometry, uint32_t precision,
                          size_t num_threads) -> Vector<uint64_t> {
-  // Bounding box of the grid to be created
-  geodetic::Box envelope;
-  boost::geometry::envelope(geometry, envelope);
+  // Compute envelope safely, handling anti-meridian cases
+  auto envelope = safe_envelope(geometry);
 
   // Grid resolution in degrees
   const auto [lng_err, lat_err] = error_with_precision(precision);
@@ -352,14 +380,10 @@ auto bounding_boxes_impl(const Geometry &geometry, uint32_t precision,
   const auto point_sw = decode(hash_sw, precision, false);
 
   Matrix<bool> mask;
-  std::cout << "???" << std::endl;
   if constexpr (std::is_same_v<Geometry, geodetic::Box>) {
     // If the geometry is a box, all cells are selected
     mask = Matrix<bool>(lon_step, lat_step);
     mask.setConstant(true);
-    printf("lon_step: %zu, lat_step: %zu\n", lon_step, lat_step);
-    printf("mask.size(): %zu x %zu\n", mask.rows(), mask.cols());
-    printf("mask.data(): %p\n", mask.data());
   } else {
     // Otherwise, calculates the intersection mask between the geometry and the
     // GeoHash grid

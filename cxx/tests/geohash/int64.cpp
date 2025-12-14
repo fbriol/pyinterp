@@ -583,6 +583,32 @@ TEST_F(GeoHashInt64Test, AreaNearPole) {
 // Tests for bounding_boxes()
 // ============================================================================
 
+TEST_F(GeoHashInt64Test, BoundingBoxesPointZero) {
+  auto box = geodetic::Box(make_point(-180, -90.0), make_point(-135.0, -45.0));
+  auto boxes = bounding_boxes(box, 10);
+
+  EXPECT_EQ(boxes.size(), 32);
+}
+
+TEST_F(GeoHashInt64Test, BoundingBoxesPolygonAntiMeridian) {
+  // Create a polygon covering the same region as BoundingBoxesPointZero
+  // This tests that safe_envelope() properly handles polygons at the
+  // anti-meridian
+  geodetic::Polygon polygon;
+
+  // Create outer ring for polygon from (-180, -90) to (-135, -45)
+  polygon.outer().push_back(make_point(-180.0, -90.0));
+  polygon.outer().push_back(make_point(-135.0, -90.0));
+  polygon.outer().push_back(make_point(-135.0, -45.0));
+  polygon.outer().push_back(make_point(-180.0, -45.0));
+  polygon.outer().push_back(make_point(-180.0, -90.0));  // Close the ring
+
+  auto boxes = bounding_boxes(polygon, 10);
+
+  // Should return the same number of boxes as the equivalent Box test
+  EXPECT_EQ(boxes.size(), 32);
+}
+
 TEST_F(GeoHashInt64Test, BoundingBoxesBasic) {
   auto box = geodetic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
   auto boxes = bounding_boxes(box, kDefaultPrecision);
