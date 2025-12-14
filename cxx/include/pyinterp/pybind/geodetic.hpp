@@ -5,6 +5,10 @@
 namespace pyinterp {
 namespace geodetic::pybind {
 
+/// @brief Initialize Point bindings
+/// @param[in,out] m Python module
+auto init_point(nanobind::module_& m) -> void;
+
 /// @brief Initialize Spheroid bindings
 /// @param[in,out] m Python module
 auto init_spheroid(nanobind::module_& m) -> void;
