@@ -1,7 +1,5 @@
 #pragma once
 
-#include <sys/stat.h>
-
 #include <boost/geometry.hpp>
 
 #include "pyinterp/geodetic/algorithm.hpp"
