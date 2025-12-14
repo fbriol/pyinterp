@@ -253,6 +253,53 @@ struct EncodedHashes {
   }
 };
 
+/// @brief Non-owning view over encoded geohash data.
+///
+/// `EncodedHashesView` provides a read-only view into geohash data
+/// without owning the underlying buffer. This is useful for zero-copy
+/// interoperability with external data sources like numpy arrays.
+struct EncodedHashesView {
+  /// @brief Pointer to the geohash character data (non-owning).
+  const char* data;
+
+  /// @brief Number of characters used to encode each geohash (precision).
+  uint32_t precision;
+
+  /// @brief Number of geohashes in the view.
+  size_t count;
+
+  /// @brief Get the `i`-th geohash as a `std::span<const char>`.
+  /// @param ix Index of the geohash.
+  /// @returns A view over the characters representing the `i`-th geohash.
+  [[nodiscard]] constexpr auto get(size_t ix) const noexcept
+      -> std::span<const char> {
+    return {data + ix * precision, precision};
+  }
+
+  /// @brief Reuse const_iterator from EncodedHashes for iteration.
+  using const_iterator = EncodedHashes::const_iterator;
+
+  /// @brief Return const iterator to the first encoded geohash.
+  [[nodiscard]] constexpr auto begin() const noexcept -> const_iterator {
+    return {.ptr = data, .precision = precision};
+  }
+
+  /// @brief Return const iterator to past-the-end.
+  [[nodiscard]] constexpr auto end() const noexcept -> const_iterator {
+    return {.ptr = data + count * precision, .precision = precision};
+  }
+
+  /// @brief Return const iterator to the first encoded geohash.
+  [[nodiscard]] constexpr auto cbegin() const noexcept -> const_iterator {
+    return begin();
+  }
+
+  /// @brief Return const iterator to past-the-end.
+  [[nodiscard]] constexpr auto cend() const noexcept -> const_iterator {
+    return end();
+  }
+};
+
 /// @brief Encode a geographic point into a geohash string.
 ///
 /// Encodes `point` into a geohash string written into `buffer`.
@@ -315,6 +362,26 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
   return {lon, lat};
 }
 
+/// @brief Decode a set of geohash strings into geographic points (view
+/// overload).
+/// @param[in] hash EncodedHashesView providing a non-owning view over geohash
+/// strings.
+/// @param[in] round If `true`, the decoded points are rounded to the center
+/// of the bounding box represented by each geohash.
+/// @returns Tuple of (longitudes, latitudes) as Eigen vectors.
+[[nodiscard]] inline auto decode(const EncodedHashesView& hash, bool round)
+    -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
+  Eigen::VectorXd lon(hash.count);
+  Eigen::VectorXd lat(hash.count);
+
+  for (auto [lon_item, lat_item, hash_span] : std::views::zip(lon, lat, hash)) {
+    auto point = decode(hash_span, round);
+    lon_item = point.lon();
+    lat_item = point.lat();
+  }
+  return {lon, lat};
+}
+
 /// @brief Returns the 8 neighboring geohashes in clockwise order starting at
 /// north.
 ///
@@ -349,6 +416,23 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// @returns Areas in square meters for each geohash in `hash`.
 [[nodiscard]] inline auto area(
     const EncodedHashes& hash,
+    const std::optional<geodetic::Spheroid>& spheroid) -> Eigen::VectorXd {
+  Eigen::VectorXd areas(hash.count);
+  for (auto [area_item, hash_span] : std::views::zip(areas, hash)) {
+    area_item = area(hash_span, spheroid);
+  }
+  return areas;
+}
+
+/// @brief Compute area covered by each geohash in `hash` (view overload).
+///
+/// @param[in] hash EncodedHashesView providing a non-owning view over geohash
+/// strings.
+/// @param[in] spheroid Optional spheroid used for ellipsoidal area
+/// computation. If not provided, a default spheroid is used.
+/// @returns Areas in square meters for each geohash in `hash`.
+[[nodiscard]] inline auto area(
+    const EncodedHashesView& hash,
     const std::optional<geodetic::Spheroid>& spheroid) -> Eigen::VectorXd {
   Eigen::VectorXd areas(hash.count);
   for (auto [area_item, hash_span] : std::views::zip(areas, hash)) {
@@ -395,6 +479,11 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
                                   uint32_t precision, size_t num_threads = 0)
     -> EncodedHashes;
 
+/// @brief Type alias for bounding region of geohash areas
+using HashRegionBounds =
+    std::unordered_map<std::string, std::tuple<std::tuple<int64_t, int64_t>,
+                                               std::tuple<int64_t, int64_t>>>;
+
 /// @brief Find bounding regions for contiguous geohash areas in a 2D grid
 /// @param hash EncodedHashes containing a 2D grid of geohashes with shape
 /// (rows, cols)
@@ -403,15 +492,32 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// @return Map from geohash string to tuple of ((min_row, max_row), (min_col,
 /// max_col))
 [[nodiscard]] auto where(const EncodedHashes& hash, size_t rows, size_t cols)
-    -> std::unordered_map<
-        std::string,
-        std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>;
+    -> HashRegionBounds;
+
+/// @brief Find bounding regions for contiguous geohash areas in a 2D grid
+/// (view overload)
+/// @param hash EncodedHashesView providing a non-owning view over geohash
+/// strings
+/// @param rows Number of rows in the grid
+/// @param cols Number of columns in the grid
+/// @return Map from geohash string to tuple of ((min_row, max_row), (min_col,
+/// max_col))
+[[nodiscard]] auto where(const EncodedHashesView& hash, size_t rows,
+                         size_t cols) -> HashRegionBounds;
 
 /// @brief Transform geohashes to a different precision level
 /// @param hash EncodedHashes to transform
 /// @param precision Target precision level
 /// @return EncodedHashes at the target precision (zoomed in or out as needed)
 [[nodiscard]] auto transform(const EncodedHashes& hash, uint32_t precision)
+    -> EncodedHashes;
+
+/// @brief Transform geohashes to a different precision level (view overload)
+/// @param hash EncodedHashesView providing a non-owning view over geohash
+/// strings
+/// @param precision Target precision level
+/// @return EncodedHashes at the target precision (zoomed in or out as needed)
+[[nodiscard]] auto transform(const EncodedHashesView& hash, uint32_t precision)
     -> EncodedHashes;
 
 }  // namespace pyinterp::geohash

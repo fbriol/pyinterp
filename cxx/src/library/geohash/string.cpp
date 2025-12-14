@@ -8,6 +8,7 @@
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/eigen.hpp"
+#include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geohash/base32.hpp"
 #include "pyinterp/math.hpp"
 #include "pyinterp/parallel_for.hpp"
@@ -36,6 +37,8 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
   return result;
 }
 
+// /////////////////////////////////////////////////////////////////////////////
+
 auto bounding_box(std::span<const char> geohash, uint32_t* precision)
     -> geodetic::Box {
   auto [integer_encoded, chars] = encoder.decode(geohash);
@@ -44,6 +47,8 @@ auto bounding_box(std::span<const char> geohash, uint32_t* precision)
   }
   return int64::bounding_box(integer_encoded, 5 * chars);
 }
+
+// /////////////////////////////////////////////////////////////////////////////
 
 auto neighbors(std::span<const char> hash) -> EncodedHashes {
   auto [integer_encoded, precision] = encoder.decode(hash);
@@ -61,151 +66,55 @@ auto neighbors(std::span<const char> hash) -> EncodedHashes {
   return result;
 }
 
-auto bounding_boxes(const std::optional<geodetic::Box>& box,
-                    const uint32_t precision) -> EncodedHashes {
-  // Number of bits
-  auto bits = precision * 5;
+// /////////////////////////////////////////////////////////////////////////////
 
-  // Grid resolution in degrees
-  const auto [lng_err, lat_err] = int64::error_with_precision(bits);
-
-  // Property of the grid
-  auto [hash_sw, lon_step, lat_step] = int64::grid_properties(
-      box.value_or(geodetic::Box::global_bounding_box()), bits);
-
-  // Prepare result
-  auto result = EncodedHashes{
-      .buffer = std::vector<char>(lon_step * lat_step * precision),
-      .precision = precision,
-      .count = static_cast<size_t>(lon_step * lat_step),
-  };
-
-  // Setup starting point (south-west corner)
-  const auto point_sw = int64::decode(hash_sw, bits, false);
-
-  // Fill the grid
-  size_t ix = 0;
-  for (size_t lat = 0; lat < lat_step; ++lat) {
-    auto point =
-        geodetic::Point(0, point_sw.lat() + static_cast<double>(lat) * lat_err);
-
-    for (size_t lon = 0; lon < lon_step; ++lon) {
-      point.lon() = point_sw.lon() + static_cast<double>(lon) * lng_err;
-
-      Base32::encode(int64::encode(point, bits), result.get(ix++));
-    }
-  }
-  return result;
-}
-
-namespace {
-
-/// @brief Calculates a grid containing for each cell a boolean indicating if
-/// the cell of the grid is enclosed or not in the geometry.
-template <typename Geometry>
-auto mask_cell(const geodetic::Box& envelope, const Geometry& geometry,
-               double lng_err, double lat_err, const geodetic::Point& point_sw,
-               size_t lon_step, size_t lat_step, uint32_t bits,
-               size_t num_threads) -> Matrix<bool> {
-  // Allocate the grid result
-  auto result = Matrix<bool>(lon_step, lat_step);
-
-  parallel_for(
-      static_cast<int64_t>(lat_step),
-      [&](int64_t start, int64_t end) {
-        for (auto lat = start; lat < end; ++lat) {
-          auto point = geodetic::Point(
-              0, point_sw.lat() + static_cast<double>(lat) * lat_err);
-
-          for (size_t lon = 0; lon < lon_step; ++lon) {
-            point.lon() = point_sw.lon() + static_cast<double>(lon) * lng_err;
-            result(lon, lat) = boost::geometry::intersects(
-                int64::bounding_box(int64::encode(point, bits), bits),
-                geometry);
-          }
-        }
-      },
-      static_cast<int64_t>(num_threads));
-
-  return result;
-}
-
-/// @brief Return all GeoHash codes selected by the mask.
-auto select_cell(double lng_err, double lat_err,
-                 const geodetic::Point& point_sw, size_t lon_step,
-                 size_t lat_step, uint32_t bits, uint32_t precision,
-                 const Matrix<bool>& mask) -> EncodedHashes {
-  // Count the number of cells that are enclosed by the polygon
-  auto size = std::count(mask.data(), mask.data() + mask.size(), true);
-
-  // Allocates the result
-  auto result = EncodedHashes{
-      .buffer = std::vector<char>(size * precision),
-      .precision = precision,
-      .count = static_cast<size_t>(size),
-  };
-
-  // For each cell of the grid, if it is selected, we add the code to the
-  // result
-  size_t result_ix = 0;
-  for (size_t lat = 0; lat < lat_step; ++lat) {
-    auto point =
-        geodetic::Point(0, point_sw.lat() + static_cast<double>(lat) * lat_err);
-
-    for (size_t lon = 0; lon < lon_step; ++lon) {
-      if (mask(lon, lat)) {
-        point.lon() = point_sw.lon() + static_cast<double>(lon) * lng_err;
-        Base32::encode(int64::encode(point, bits), result.get(result_ix++));
-      }
-    }
-  }
-
-  return result;
-}
-
-/// @brief Common implementation for bounding_boxes with geometry
 template <typename Geometry>
 auto bounding_boxes_impl(const Geometry& geometry, uint32_t precision,
                          size_t num_threads) -> EncodedHashes {
-  // Number of bits
+  // Delegate heavy computation to int64 implementation
   auto bits = precision * 5;
+  auto int64_hashes = int64::bounding_boxes(geometry, bits, num_threads);
 
-  // Bounding box of the grid to be created
-  geodetic::Box envelope;
-  boost::geometry::envelope(geometry, envelope);
+  // Convert int64 hashes to base32 strings
+  auto result = EncodedHashes{
+      .buffer = std::vector<char>(int64_hashes.size() * precision),
+      .precision = precision,
+      .count = static_cast<size_t>(int64_hashes.size()),
+  };
 
-  // Grid resolution in degrees
-  const auto [lng_err, lat_err] = int64::error_with_precision(bits);
-
-  // Property of the grid
-  auto [hash_sw, lon_step, lat_step] = int64::grid_properties(envelope, bits);
-  const auto point_sw = int64::decode(hash_sw, bits, false);
-
-  // Calculates the intersection mask between the geometry and the GeoHash grid
-  auto mask = mask_cell(envelope, geometry, lng_err, lat_err, point_sw,
-                        lon_step, lat_step, bits, num_threads);
-
-  // Finally, selects the geohashes that are enclosed in the geometry
-  return select_cell(lng_err, lat_err, point_sw, lon_step, lat_step, bits,
-                     precision, mask);
+  for (size_t ix = 0; ix < int64_hashes.size(); ++ix) {
+    Base32::encode(int64_hashes(ix), result.get(ix));
+  }
+  return result;
 }
 
-}  // anonymous namespace
+// /////////////////////////////////////////////////////////////////////////////
+
+auto bounding_boxes(const std::optional<geodetic::Box>& box,
+                    const uint32_t precision) -> EncodedHashes {
+  return bounding_boxes_impl(box.value_or(geodetic::Box::global_bounding_box()),
+                             precision, 1);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
 
 auto bounding_boxes(const geodetic::Polygon& polygon, uint32_t precision,
                     size_t num_threads) -> EncodedHashes {
   return bounding_boxes_impl(polygon, precision, num_threads);
 }
 
+// /////////////////////////////////////////////////////////////////////////////
+
 auto bounding_boxes(const geodetic::MultiPolygon& multipolygon,
                     uint32_t precision, size_t num_threads) -> EncodedHashes {
   return bounding_boxes_impl(multipolygon, precision, num_threads);
 }
 
-auto where(const EncodedHashes& hash, size_t rows, size_t cols)
-    -> std::unordered_map<std::string,
-                          std::tuple<std::tuple<int64_t, int64_t>,
-                                     std::tuple<int64_t, int64_t>>> {
+// /////////////////////////////////////////////////////////////////////////////
+
+template <typename HashContainer>
+auto where_impl(const HashContainer& hash, size_t rows, size_t cols)
+    -> HashRegionBounds {
   // Index shifts of neighboring pixels
   static constexpr auto shift_row =
       std::array<int64_t, 8>{-1, -1, -1, 0, 1, 0, 1, 1};
@@ -255,10 +164,11 @@ auto where(const EncodedHashes& hash, size_t rows, size_t cols)
   return result;
 }
 
-namespace {
+// /////////////////////////////////////////////////////////////////////////////
 
-/// @brief Zoom in from lower to higher precision
-auto zoom_in(const EncodedHashes& hash, uint32_t to_precision)
+// Zoom in from lower to higher precision
+template <typename HashContainer>
+auto zoom_in(const HashContainer& hash, uint32_t to_precision)
     -> EncodedHashes {
   // Number of bits need to zoom in
   auto bits = to_precision * 5;
@@ -286,8 +196,11 @@ auto zoom_in(const EncodedHashes& hash, uint32_t to_precision)
   return result;
 }
 
-/// @brief Zoom out from higher to lower precision
-auto zoom_out(const EncodedHashes& hash, uint32_t to_precision)
+// /////////////////////////////////////////////////////////////////////////////
+
+// Zoom out from higher to lower precision
+template <typename HashContainer>
+auto zoom_out(const HashContainer& hash, uint32_t to_precision)
     -> EncodedHashes {
   // Use unordered_set for O(1) insertions instead of O(log n) with std::set
   auto zoom_out_codes = std::unordered_set<uint64_t>();
@@ -319,16 +232,55 @@ auto zoom_out(const EncodedHashes& hash, uint32_t to_precision)
   return result;
 }
 
-}  // anonymous namespace
+// /////////////////////////////////////////////////////////////////////////////
 
-auto transform(const EncodedHashes& hash, uint32_t precision) -> EncodedHashes {
-  if (hash.precision == precision) {
-    return hash;
-  }
+template <typename HashContainer>
+auto transform_impl(const HashContainer& hash, uint32_t precision)
+    -> EncodedHashes {
   if (hash.precision > precision) {
     return zoom_out(hash, precision);
   }
   return zoom_in(hash, precision);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+auto transform(const EncodedHashesView& hash, uint32_t precision)
+    -> EncodedHashes {
+  if (hash.precision == precision) {
+    // No transformation needed, create a copy
+    return EncodedHashes{
+        .buffer = std::vector<char>(hash.data,
+                                    hash.data + hash.count * hash.precision),
+        .precision = hash.precision,
+        .count = hash.count,
+    };
+  }
+  return transform_impl(hash, precision);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+auto transform(const EncodedHashes& hash, uint32_t precision) -> EncodedHashes {
+  if (hash.precision == precision) {
+    // No transformation needed, return the original
+    return hash;
+  }
+  return transform_impl(hash, precision);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+auto where(const EncodedHashes& hash, size_t rows, size_t cols)
+    -> HashRegionBounds {
+  return where_impl(hash, rows, cols);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+auto where(const EncodedHashesView& hash, size_t rows, size_t cols)
+    -> HashRegionBounds {
+  return where_impl(hash, rows, cols);
 }
 
 }  // namespace pyinterp::geohash

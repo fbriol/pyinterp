@@ -1,4 +1,6 @@
+#include <cstdint>
 #include <stdexcept>
+#include <type_traits>
 
 #include "pyinterp/geodetic/box.hpp"
 #if defined(__x86_64__) || defined(_M_X64)
@@ -13,6 +15,7 @@
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/format_byte.hpp"
 #include "pyinterp/geohash/int64.hpp"
+#include "pyinterp/parallel_for.hpp"
 
 // Ref: https://mmcloughlin.com/posts/geohash-assembly
 namespace pyinterp::geohash::int64 {
@@ -209,6 +212,7 @@ auto bounding_box(const uint64_t hash, const uint32_t precision) noexcept
 }
 
 // /////////////////////////////////////////////////////////////////////////////
+
 auto neighbors(const uint64_t hash, const uint32_t precision)
     -> NeighborHashes {
   auto box = bounding_box(hash, precision);
@@ -240,7 +244,8 @@ auto neighbors(const uint64_t hash, const uint32_t precision)
                          encode({lon_dec, lat_inc}, precision)});
 }
 
-// ---------------------------------------------------------------------------
+// /////////////////////////////////////////////////////////////////////////////
+
 auto grid_properties(const geodetic::Box &box, const uint32_t precision)
     -> std::tuple<uint64_t, size_t, size_t> {
   auto hash_sw = encode(box.min_corner(), precision);
@@ -266,29 +271,119 @@ auto grid_properties(const geodetic::Box &box, const uint32_t precision)
   return {hash_sw, lon_step + lon_offset, lat_step + lat_offset};
 }
 
-// ---------------------------------------------------------------------------
-auto bounding_boxes(const geodetic::Box &box, const uint32_t precision)
-    -> Vector<uint64_t> {
-  // Grid resolution in degrees
-  const auto [lng_err, lat_err] = error_with_precision(precision);
+// /////////////////////////////////////////////////////////////////////////////
 
-  // Allocation of the vector storing the different codes of the matrix created
-  auto [hash_sw, lon_step, lat_step] = grid_properties(box, precision);
-  auto result = allocate_array(lon_step * lat_step);
-  auto ix = static_cast<int64_t>(0);
+// Calculate the intersection mask between the geometry and the GeoHash grid.
+template <typename Geometry>
+auto mask_cell(const geodetic::Box &envelope, const Geometry &geometry,
+               double lng_err, double lat_err, const geodetic::Point &point_sw,
+               size_t lon_step, size_t lat_step, uint32_t bits,
+               size_t num_threads) -> Matrix<bool> {
+  // Allocate the grid result
+  auto result = Matrix<bool>(lon_step, lat_step);
 
-  auto point_sw = decode(hash_sw, precision, false);
+  parallel_for(
+      static_cast<int64_t>(lat_step),
+      [&](int64_t start, int64_t end) {
+        for (auto lat = start; lat < end; ++lat) {
+          auto point = geodetic::Point(
+              0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
+          for (size_t lon = 0; lon < lon_step; ++lon) {
+            point.lon() = point_sw.lon() + static_cast<double>(lon) * lng_err;
+            result(lon, lat) = boost::geometry::intersects(
+                bounding_box(encode(point, bits), bits), geometry);
+          }
+        }
+      },
+      static_cast<int64_t>(num_threads));
+
+  return result;
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+
+// Return all GeoHash codes selected by the mask.
+static auto select_cell(double lng_err, double lat_err,
+                        const geodetic::Point &point_sw, size_t lon_step,
+                        size_t lat_step, uint32_t bits, uint32_t precision,
+                        const Matrix<bool> &mask) -> Vector<uint64_t> {
+  // Count the number of cells that are enclosed by the polygon
+  auto size = mask.cast<uint64_t>().sum();
+
+  // Allocates the result
+  auto result = allocate_array(size);
+
+  // For each cell of the grid, if it is selected, we add the code to the
+  // result
+  size_t result_ix = 0;
   for (size_t lat = 0; lat < lat_step; ++lat) {
     auto point =
         geodetic::Point(0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
     for (size_t lon = 0; lon < lon_step; ++lon) {
-      point.lon() = point_sw.lon() + static_cast<double>(lon) * lng_err;
-      result(ix++) = encode(point, precision);
+      if (mask(lon, lat)) {
+        point.lon() = point_sw.lon() + static_cast<double>(lon) * lng_err;
+        result(result_ix++) = int64::encode(point, bits);
+      }
     }
   }
+
   return result;
+}
+
+// Common implementation for bounding_boxes with geometry
+template <typename Geometry>
+auto bounding_boxes_impl(const Geometry &geometry, uint32_t precision,
+                         size_t num_threads) -> Vector<uint64_t> {
+  // Bounding box of the grid to be created
+  geodetic::Box envelope;
+  boost::geometry::envelope(geometry, envelope);
+
+  // Grid resolution in degrees
+  const auto [lng_err, lat_err] = error_with_precision(precision);
+
+  // Property of the grid
+  auto [hash_sw, lon_step, lat_step] = grid_properties(envelope, precision);
+  const auto point_sw = decode(hash_sw, precision, false);
+
+  Matrix<bool> mask;
+  if constexpr (std::is_same_v<Geometry, geodetic::Box>) {
+    // If the geometry is a box, all cells are selected
+    mask = Matrix<bool>(lon_step, lat_step);
+    mask.setConstant(true);
+  } else {
+    // Otherwise, calculates the intersection mask between the geometry and the
+    // GeoHash grid
+    mask = mask_cell(envelope, geometry, lng_err, lat_err, point_sw, lon_step,
+                     lat_step, precision, num_threads);
+  }
+
+  // Finally, selects the geohashes that are enclosed in the geometry
+  return select_cell(lng_err, lat_err, point_sw, lon_step, lat_step, precision,
+                     precision, mask);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+auto bounding_boxes(const geodetic::Box &box, const uint32_t precision,
+                    const size_t num_threads) -> Vector<uint64_t> {
+  return bounding_boxes_impl(box, precision, num_threads);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+auto bounding_boxes(const geodetic::Polygon &polygon, const uint32_t precision,
+                    const size_t num_threads) -> Vector<uint64_t> {
+  return bounding_boxes_impl(polygon, precision, num_threads);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+
+auto bounding_boxes(const geodetic::MultiPolygon &polygons,
+                    const uint32_t precision, const size_t num_threads)
+    -> Vector<uint64_t> {
+  return bounding_boxes_impl(polygons, precision, num_threads);
 }
 
 }  // namespace pyinterp::geohash::int64

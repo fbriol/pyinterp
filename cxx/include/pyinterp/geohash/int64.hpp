@@ -8,6 +8,8 @@
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/box.hpp"
+#include "pyinterp/geodetic/multipolygon.hpp"
+#include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/spheroid.hpp"
 #include "pyinterp/math.hpp"
 
@@ -28,7 +30,10 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
   return {360 * math::power2(-lng_bits), 180 * math::power2(-lat_bits)};
 }
 
-// Encode a point into geohash with the given precision
+/// @brief Encode a geographic point into an integer geohash
+/// @param[in] point Geodetic point (longitude, latitude)
+/// @param[in] precision Geohash precision (number of bits)
+/// @return Encoded integer geohash
 [[nodiscard]] auto encode(const geodetic::Point &point, uint32_t precision)
     -> uint64_t;
 
@@ -121,8 +126,30 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
   return bounding_box(hash, precision).area(wgs);
 }
 
-// Returns all the GeoHash codes within the box.
-[[nodiscard]] auto bounding_boxes(const geodetic::Box &box, uint32_t precision)
+/// @brief Returns all the GeoHash codes within the box.
+/// @param[in] box Geodetic box to cover
+/// @param[in] precision Geohash precision (number of bits)
+/// @param[in] num_threads Number of threads to use for parallel computation
+/// @return Vector of integer geohashes covering the box
+[[nodiscard]] auto bounding_boxes(const geodetic::Box &box, uint32_t precision,
+                                  size_t num_threads = 1) -> Vector<uint64_t>;
+
+/// @brief Returns all the GeoHash codes within the polygon.
+/// @param[in] polygon Geodetic polygon to cover
+/// @param[in] precision Geohash precision (number of bits)
+/// @param[in] num_threads Number of threads to use for parallel computation
+/// @return Vector of integer geohashes covering the polygon
+[[nodiscard]] auto bounding_boxes(const geodetic::Polygon &polygon,
+                                  uint32_t precision, size_t num_threads = 1)
+    -> Vector<uint64_t>;
+
+/// @brief Returns all the GeoHash codes within the multipolygon.
+/// @param[in] multipolygon Geodetic multipolygon to cover
+/// @param[in] precision Geohash precision (number of bits)
+/// @param[in] num_threads Number of threads to use for parallel computation
+/// @return Vector of integer geohashes covering the multipolygon
+[[nodiscard]] auto bounding_boxes(const geodetic::MultiPolygon &multipolygon,
+                                  uint32_t precision, size_t num_threads = 1)
     -> Vector<uint64_t>;
 
 }  // namespace pyinterp::geohash::int64
