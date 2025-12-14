@@ -7,6 +7,7 @@
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/eigen.hpp"
+#include "pyinterp/geodetic/algorithm/area.hpp"
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/multipolygon.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
@@ -122,7 +123,8 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
 [[nodiscard]] inline auto area(uint64_t hash, uint32_t precision,
                                const std::optional<geodetic::Spheroid> &wgs)
     -> double {
-  return bounding_box(hash, precision).area(wgs);
+  return geodetic::area<geodetic::Box, geodetic::StrategyMethod::kVincenty>(
+      bounding_box(hash, precision), wgs);
 }
 
 /// @brief Returns all the GeoHash codes within the box.

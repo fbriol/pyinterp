@@ -404,7 +404,8 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 [[nodiscard]] inline auto area(
     std::span<const char> hash,
     const std::optional<geodetic::Spheroid>& spheroid) -> double {
-  return bounding_box(hash).area(spheroid);
+  return geodetic::area<geodetic::Box, geodetic::StrategyMethod::kVincenty>(
+      bounding_box(hash), spheroid);
 }
 
 /// @brief Compute area covered by each geohash in `hash`.

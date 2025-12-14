@@ -2,7 +2,7 @@
 
 #include <boost/geometry.hpp>
 
-#include "pyinterp/geodetic/algorithm.hpp"
+#include "pyinterp/geodetic/algorithm/area.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/spheroid.hpp"
 #include "pyinterp/math.hpp"
@@ -80,18 +80,6 @@ class Box {
     return {std::ceil(min_corner_.lon() / x) * x,
             std::ceil(min_corner_.lat() / y) * y};
   }
-
-  /// @brief Calculate the area
-  /// @param[in] wgs Optional Spheroid for geodetic calculations
-  /// @param[in] strategy Strategy method to use
-  /// @return Calculated area
-  [[nodiscard]] auto area(const std::optional<Spheroid>& wgs,
-                          const StrategyMethod strategy) const -> double;
-
-  /// @brief Calculate the area using default strategy (Andoyer)
-  /// @param[in] wgs Optional Spheroid for geodetic calculations
-  /// @return Calculated area
-  [[nodiscard]] auto area(const std::optional<Spheroid>& wgs) const -> double;
 
   /// @brief Check if two boxes are equal
   /// @param[in] other Other box to compare with
