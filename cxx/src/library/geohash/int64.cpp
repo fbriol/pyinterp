@@ -188,7 +188,12 @@ static auto allocate_array(const size_t size) -> Vector<uint64_t> {
 
 auto encode(const geodetic::Point &point, const uint32_t precision)
     -> uint64_t {
-  auto result = encoder(point.lat(), point.lon());
+  auto lon = point.lon();
+  if (lon < -180.0 || lon > 180.0) {
+    // GeoHash longitude must be in the interval [-180, 180]
+    lon = math::normalize_period(lon, -180.0, 360.0);
+  }
+  auto result = encoder(point.lat(), lon);
   if (precision != 64) {
     result >>= (64 - precision);
   }
@@ -328,7 +333,6 @@ static auto select_cell(double lng_err, double lat_err,
       }
     }
   }
-
   return result;
 }
 
@@ -348,10 +352,14 @@ auto bounding_boxes_impl(const Geometry &geometry, uint32_t precision,
   const auto point_sw = decode(hash_sw, precision, false);
 
   Matrix<bool> mask;
+  std::cout << "???" << std::endl;
   if constexpr (std::is_same_v<Geometry, geodetic::Box>) {
     // If the geometry is a box, all cells are selected
     mask = Matrix<bool>(lon_step, lat_step);
     mask.setConstant(true);
+    printf("lon_step: %zu, lat_step: %zu\n", lon_step, lat_step);
+    printf("mask.size(): %zu x %zu\n", mask.rows(), mask.cols());
+    printf("mask.data(): %p\n", mask.data());
   } else {
     // Otherwise, calculates the intersection mask between the geometry and the
     // GeoHash grid

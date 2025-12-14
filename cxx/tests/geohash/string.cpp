@@ -185,6 +185,16 @@ TEST_F(GeoHashStringTest, EncodeVectorsLongitudeNormalization) {
 // Tests for bounding_box(geohash, precision)
 // ============================================================================
 
+TEST_F(GeoHashStringTest, BoundingBoxZeroPoint) {
+  std::array<char, 1> hash{'0'};
+  auto bbox = bounding_box(hash);
+
+  EXPECT_EQ(bbox.min_corner().lon(), -180.0);
+  EXPECT_EQ(bbox.max_corner().lon(), -135.0);
+  EXPECT_EQ(bbox.min_corner().lat(), -90.0);
+  EXPECT_EQ(bbox.max_corner().lat(), -45.0);
+}
+
 TEST_F(GeoHashStringTest, BoundingBoxBasic) {
   std::array<char, 5> hash{'s', '0', '0', '0', '0'};
   auto bbox = bounding_box(hash);

@@ -102,6 +102,19 @@ TEST_F(GeoHashInt64Test, EncodeOrigin) {
   EXPECT_GT(hash, 0u) << "Hash of origin should be non-zero";
 }
 
+TEST_F(GeoHashInt64Test, EncodeLongitudeNormalization) {
+  // Test longitude normalization
+  auto hash1 =
+      encode(make_point(190.0, 0.0), kDefaultPrecision);  // 190 -> -170
+  auto hash2 = encode(make_point(-170.0, 0.0), kDefaultPrecision);
+  EXPECT_EQ(hash1, hash2) << "Longitude normalization failed for 190 degrees";
+
+  auto hash3 =
+      encode(make_point(-190.0, 0.0), kDefaultPrecision);  // -190 -> 170
+  auto hash4 = encode(make_point(170.0, 0.0), kDefaultPrecision);
+  EXPECT_EQ(hash3, hash4) << "Longitude normalization failed for -190 degrees";
+}
+
 TEST_F(GeoHashInt64Test, EncodeKnownPoints) {
   // Test specific known points
   struct TestCase {

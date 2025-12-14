@@ -49,8 +49,7 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
   auto size = lon.size();
   auto result = Vector<uint64_t>(size);
   for (Eigen::Index ix = 0; ix < size; ++ix) {
-    result(ix) = encode(
-        {math::normalize_period(lon[ix], -180.0, 360.0), lat[ix]}, precision);
+    result(ix) = encode({lon[ix], lat[ix]}, precision);
   }
   return result;
 }
