@@ -15,7 +15,7 @@
 #include <utility>
 
 #include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/multipolygon.hpp"
+#include "pyinterp/geodetic/multi_polygon.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 
 namespace nb = nanobind;

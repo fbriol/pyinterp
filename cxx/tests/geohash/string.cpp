@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/multipolygon.hpp"
+#include "pyinterp/geodetic/multi_polygon.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/ring.hpp"

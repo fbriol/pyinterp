@@ -1,4 +1,4 @@
-#include "pyinterp/geodetic/multipolygon.hpp"
+#include "pyinterp/geodetic/multi_polygon.hpp"
 
 namespace pyinterp::geodetic {
 

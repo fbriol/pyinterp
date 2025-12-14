@@ -9,7 +9,7 @@
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/algorithms/area.hpp"
 #include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/multipolygon.hpp"
+#include "pyinterp/geodetic/multi_polygon.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/spheroid.hpp"
 #include "pyinterp/math.hpp"

@@ -99,7 +99,8 @@ class MultiPolygon {
   /// @param[in] state Reference to serialization Reader containing encoded
   /// multipolygon data.
   /// @return New MultiPolygon instance with restored polygons.
-  [[nodiscard]] static auto unpack(serialization::Reader& state) -> MultiPolygon;
+  [[nodiscard]] static auto unpack(serialization::Reader& state)
+      -> MultiPolygon;
 
  private:
   /// @brief Magic number for validation
