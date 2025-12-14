@@ -9,6 +9,10 @@ namespace geodetic::pybind {
 /// @param[in,out] m Python module
 auto init_point(nanobind::module_& m) -> void;
 
+/// @brief Initialize Box bindings
+/// @param[in,out] m Python module
+auto init_box(nanobind::module_& m) -> void;
+
 /// @brief Initialize Spheroid bindings
 /// @param[in,out] m Python module
 auto init_spheroid(nanobind::module_& m) -> void;
