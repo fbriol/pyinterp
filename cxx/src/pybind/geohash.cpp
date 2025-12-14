@@ -8,6 +8,7 @@ namespace pyinterp::pybind {
 
 void init_geohash(nanobind::module_& m) {
   auto geohash_module = m.def_submodule("geohash", "GeoHash encoding/decoding");
+  geohash::pybind::init_geohash_class(geohash_module);
   geohash::pybind::init_geohash_string(geohash_module);
 }
 

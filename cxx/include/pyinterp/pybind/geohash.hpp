@@ -13,6 +13,10 @@ namespace geohash::pybind {
 /// @param[in,out] m Python module
 auto init_geohash_string(nanobind::module_& m) -> void;
 
+/// @brief Initialize GeoHash class bindings
+/// @param[in,out] m Python module
+auto init_geohash_class(nanobind::module_& m) -> void;
+
 }  // namespace geohash::pybind
 
 namespace pybind {
