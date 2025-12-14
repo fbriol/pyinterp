@@ -1,6 +1,6 @@
 import collections.abc
 from typing import Iterator, overload
-from ..type_hints import NDArray1DFloat64
+from ...type_hints import NDArray1DFloat64
 
 class Box:
     @overload

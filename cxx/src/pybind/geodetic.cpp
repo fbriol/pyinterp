@@ -4,6 +4,8 @@ namespace pyinterp::pybind {
 
 void init_geodetic(nanobind::module_& m) {
   auto geodetic_module = m.def_submodule("geodetic", "Geodetic calculations");
+  auto algorithms_module =
+      geodetic_module.def_submodule("algorithms", "Geodetic algorithms");
   geodetic::pybind::init_point(geodetic_module);
   geodetic::pybind::init_box(geodetic_module);
   geodetic::pybind::init_line_string(geodetic_module);
@@ -12,6 +14,7 @@ void init_geodetic(nanobind::module_& m) {
   geodetic::pybind::init_multipolygon(geodetic_module);
   geodetic::pybind::init_spheroid(geodetic_module);
   geodetic::pybind::init_coordinates(geodetic_module);
+  geodetic::pybind::init_algorithms(algorithms_module);
 }
 
 }  // namespace pyinterp::pybind

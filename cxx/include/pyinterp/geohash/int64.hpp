@@ -7,7 +7,7 @@
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/eigen.hpp"
-#include "pyinterp/geodetic/algorithm/area.hpp"
+#include "pyinterp/geodetic/algorithms/area.hpp"
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/multipolygon.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
