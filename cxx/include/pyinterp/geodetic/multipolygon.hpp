@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -82,7 +83,28 @@ class MultiPolygon {
     return polygons_.end();
   }
 
+  /// @brief Serialize the multipolygon state for storage or transmission.
+  /// @return Serialized state as a vector of points.
+  [[nodiscard]] constexpr auto pack() const -> serialization::Writer {
+    serialization::Writer writer;
+    writer.write(kMagicNumber);
+    writer.write(polygons_.size());
+    for (const auto& polygon : polygons_) {
+      writer.write(polygon.pack());
+    }
+    return writer;
+  }
+
+  /// @brief Deserialize a multipolygon from serialized state.
+  /// @param[in] state Reference to serialization Reader containing encoded
+  /// multipolygon data.
+  /// @return New MultiPolygon instance with restored polygons.
+  [[nodiscard]] static auto unpack(serialization::Reader& state) -> MultiPolygon;
+
  private:
+  /// @brief Magic number for validation
+  static constexpr uint32_t kMagicNumber = 0x4d554c54;  // "MULT"
+  /// @brief Container of polygons.
   container_type polygons_;
 };
 
