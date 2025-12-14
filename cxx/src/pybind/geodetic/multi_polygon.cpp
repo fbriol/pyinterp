@@ -16,6 +16,7 @@
 #include <stdexcept>
 
 #include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/pybind/geodetic/container_view.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 
 namespace nb = nanobind;
@@ -40,26 +41,35 @@ Args:
     polygons: Optional sequence of `Polygon` objects.
 )doc";
 
-// Proxy view exposing the underlying polygon container with Python semantics.
-struct PolygonsView {
-  MultiPolygon* mp;
-  explicit PolygonsView(MultiPolygon* p) : mp(p) {}
+// Traits for PolygonsView
+struct PolygonsTraits {
+  static auto size_getter(MultiPolygon* mp) -> size_t { return mp->size(); }
 
-  auto size() const -> size_t { return mp->size(); }
-  auto get(Eigen::Index idx) -> Polygon& {
-    if (idx < 0 || idx >= static_cast<Eigen::Index>(mp->size())) {
-      throw std::out_of_range("MultiPolygon index out of range");
-    }
-    return (*mp)[static_cast<size_t>(idx)];
+  static auto element_getter(MultiPolygon* mp, size_t idx) -> Polygon& {
+    return (*mp)[idx];
   }
-  void set(Eigen::Index idx, const Polygon& poly) {
-    if (idx < 0 || idx >= static_cast<Eigen::Index>(mp->size())) {
-      throw std::out_of_range("MultiPolygon index out of range");
-    }
-    (*mp)[static_cast<size_t>(idx)] = poly;
+
+  static void element_setter(MultiPolygon* mp, size_t idx,
+                             const Polygon& poly) {
+    (*mp)[idx] = poly;
   }
-  void append(const Polygon& poly) { mp->push_back(poly); }
-  void clear() { mp->clear(); }
+
+  static void appender(MultiPolygon* mp, const Polygon& poly) {
+    mp->push_back(poly);
+  }
+
+  static void clearer(MultiPolygon* mp) { mp->clear(); }
+};
+
+// Poxy view over the polygons container.
+class PolygonsView
+    : public ContainerView<MultiPolygon, Polygon, PolygonsTraits> {
+ public:
+  using ContainerView<MultiPolygon, Polygon, PolygonsTraits>::ContainerView;
+
+  explicit PolygonsView(MultiPolygon* owner)
+      : ContainerView<MultiPolygon, Polygon, PolygonsTraits>(
+            owner, "MultiPolygon index out of range") {}
 };
 
 auto init_multipolygon(nb::module_& m) -> void {
@@ -179,29 +189,7 @@ auto init_multipolygon(nb::module_& m) -> void {
       });
 
   // Bind view class
-  nb::class_<PolygonsView>(m, "_PolygonsView")
-      .def("__len__", &PolygonsView::size, "Number of polygons.")
-      .def(
-          "__getitem__",
-          [](PolygonsView& view, Eigen::Index idx) -> Polygon& {
-            return view.get(idx);
-          },
-          nb::rv_policy::reference_internal, "Get polygon at index.")
-      .def(
-          "__setitem__",
-          [](PolygonsView& view, Eigen::Index idx, const Polygon& poly) {
-            view.set(idx, poly);
-          },
-          "Set polygon at index.")
-      .def("append", &PolygonsView::append, "Add a polygon.")
-      .def("clear", &PolygonsView::clear, "Remove all polygons.")
-      .def("__iter__", [](PolygonsView& view) {
-        nb::list items;
-        for (size_t i = 0; i < view.size(); ++i) {
-          items.append(view.get(static_cast<Eigen::Index>(i)));
-        }
-        return items.attr("__iter__")();
-      });
+  bind_container_view<PolygonsView, Polygon>(m, "_PolygonsView", "polygon");
 }
 
 }  // namespace pyinterp::geodetic::pybind

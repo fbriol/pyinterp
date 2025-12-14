@@ -16,6 +16,7 @@
 #include <stdexcept>
 
 #include "pyinterp/geodetic/ring.hpp"
+#include "pyinterp/pybind/geodetic/container_view.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 
 namespace nb = nanobind;
@@ -52,30 +53,35 @@ Args:
     interiors: Optional sequence of interior rings (holes).
 )doc";
 
-// A proxy view to expose interior rings as a Python container.
-struct InnerRingsView {
-  Polygon* poly;
-  explicit InnerRingsView(Polygon* p) : poly(p) {}
-
-  auto size() const -> size_t { return poly->inners().size(); }
-
-  auto get(Eigen::Index idx) -> Ring& {
-    if (idx < 0 || idx >= static_cast<Eigen::Index>(poly->inners().size())) {
-      throw std::out_of_range("Interior ring index out of range");
-    }
-    return poly->inners()[static_cast<size_t>(idx)];
+// Traits for InnerRingsView
+struct InnerRingsTraits {
+  static auto size_getter(Polygon* poly) -> size_t {
+    return poly->inners().size();
   }
 
-  void set(Eigen::Index idx, const Ring& ring) {
-    if (idx < 0 || idx >= static_cast<Eigen::Index>(poly->inners().size())) {
-      throw std::out_of_range("Interior ring index out of range");
-    }
-    poly->inners()[static_cast<size_t>(idx)] = ring;
+  static auto element_getter(Polygon* poly, size_t idx) -> Ring& {
+    return poly->inners()[idx];
   }
 
-  void append(const Ring& ring) { poly->inners().push_back(ring); }
+  static void element_setter(Polygon* poly, size_t idx, const Ring& ring) {
+    poly->inners()[idx] = ring;
+  }
 
-  void clear() { poly->inners().clear(); }
+  static void appender(Polygon* poly, const Ring& ring) {
+    poly->inners().push_back(ring);
+  }
+
+  static void clearer(Polygon* poly) { poly->inners().clear(); }
+};
+
+// Proxy view over the interior rings container.
+class InnerRingsView : public ContainerView<Polygon, Ring, InnerRingsTraits> {
+ public:
+  using ContainerView<Polygon, Ring, InnerRingsTraits>::ContainerView;
+
+  explicit InnerRingsView(Polygon* owner)
+      : ContainerView<Polygon, Ring, InnerRingsTraits>(
+            owner, "Interior ring index out of range") {}
 };
 
 auto init_polygon(nb::module_& m) -> void {
@@ -178,30 +184,10 @@ auto init_polygon(nb::module_& m) -> void {
           new (self) Polygon(Polygon::unpack(reader));
         }
       });
+
   // Bind the view class
-  nb::class_<InnerRingsView>(m, "_InnerRingsView")
-      .def("__len__", &InnerRingsView::size, "Number of interior rings.")
-      .def(
-          "__getitem__",
-          [](InnerRingsView& view, Eigen::Index idx) -> Ring& {
-            return view.get(idx);
-          },
-          nb::rv_policy::reference_internal, "Get interior ring at index.")
-      .def(
-          "__setitem__",
-          [](InnerRingsView& view, Eigen::Index idx, const Ring& ring) {
-            view.set(idx, ring);
-          },
-          "Set interior ring at index.")
-      .def("append", &InnerRingsView::append, "Add an interior ring.")
-      .def("clear", &InnerRingsView::clear, "Remove all interior rings.")
-      .def("__iter__", [](InnerRingsView& view) {
-        nb::list rings;
-        for (size_t i = 0; i < view.size(); ++i) {
-          rings.append(view.get(static_cast<Eigen::Index>(i)));
-        }
-        return rings.attr("__iter__")();
-      });
+  bind_container_view<InnerRingsView, Ring>(m, "_InnerRingsView",
+                                            "interior ring");
 }
 
 }  // namespace pyinterp::geodetic::pybind
