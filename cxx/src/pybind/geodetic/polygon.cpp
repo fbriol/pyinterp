@@ -39,7 +39,7 @@ Examples:
   >>> import numpy as np
   >>> from pyinterp.geodetic import Ring, Polygon
   >>> outer = Ring(np.array([0.0, 10.0, 10.0, 0.0, 0.0]),
-  ...             np.array([0.0, 0.0, 10.0, 10.0, 0.0]))
+  ...              np.array([0.0, 0.0, 10.0, 10.0, 0.0]))
   >>> poly = Polygon(outer)
   >>> len(poly)
   1
