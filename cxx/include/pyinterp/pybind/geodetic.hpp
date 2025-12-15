@@ -20,6 +20,9 @@ auto init_ring(nanobind::module_& m) -> void;
 /// @brief Initialize LineString bindings
 /// @param[in,out] m Python module
 auto init_linestring(nanobind::module_& m) -> void;
+/// @brief Initialize Segment bindings
+/// @param[in,out] m Python module
+auto init_segment(nanobind::module_& m) -> void;
 
 /// @brief Initialize Polygon bindings
 /// @param[in,out] m Python module
