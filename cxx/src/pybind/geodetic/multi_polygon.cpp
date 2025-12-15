@@ -45,12 +45,11 @@ Args:
 struct PolygonsTraits {
   static auto size_getter(MultiPolygon* mp) -> size_t { return mp->size(); }
 
-  static auto element_getter(MultiPolygon* mp, size_t idx) -> Polygon& {
+  static auto item_getter(MultiPolygon* mp, size_t idx) -> Polygon& {
     return (*mp)[idx];
   }
 
-  static void element_setter(MultiPolygon* mp, size_t idx,
-                             const Polygon& poly) {
+  static void item_setter(MultiPolygon* mp, size_t idx, const Polygon& poly) {
     (*mp)[idx] = poly;
   }
 

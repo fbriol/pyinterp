@@ -59,11 +59,11 @@ struct InnerRingsTraits {
     return poly->inners().size();
   }
 
-  static auto element_getter(Polygon* poly, size_t idx) -> Ring& {
+  static auto item_getter(Polygon* poly, size_t idx) -> Ring& {
     return poly->inners()[idx];
   }
 
-  static void element_setter(Polygon* poly, size_t idx, const Ring& ring) {
+  static void item_setter(Polygon* poly, size_t idx, const Ring& ring) {
     poly->inners()[idx] = ring;
   }
 

@@ -26,9 +26,8 @@ namespace pyinterp::geodetic::pybind {
 /// @tparam ElementType The type of elements in the container
 /// @tparam Traits A struct/class providing the access interface with methods:
 /// - size_getter: returns size_t given ContainerOwner*
-/// - element_getter: returns ElementType& given ContainerOwner* and size_t
-///   index
-/// - element_setter: sets element at given ContainerOwner* and size_t index
+/// - item_getter: returns ElementType& given ContainerOwner* and size_t index
+/// - item_setter: sets element at given ContainerOwner* and size_t index
 /// - appender: appends element to ContainerOwner*
 /// - clearer: clears container in ContainerOwner*
 template <typename ContainerOwner, typename ElementType, typename Traits>
@@ -60,7 +59,7 @@ class ContainerView {
       throw std::out_of_range(std::string(error_msg_));
     }
 
-    return Traits::element_getter(owner_, static_cast<size_t>(idx));
+    return Traits::item_getter(owner_, static_cast<size_t>(idx));
   }
 
   /// @brief Set element at index.
@@ -78,7 +77,7 @@ class ContainerView {
       throw std::out_of_range(std::string(error_msg_));
     }
 
-    Traits::element_setter(owner_, static_cast<size_t>(idx), element);
+    Traits::item_setter(owner_, static_cast<size_t>(idx), element);
   }
 
   /// @brief Append an element to the container.
