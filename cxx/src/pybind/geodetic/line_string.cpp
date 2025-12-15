@@ -2,8 +2,6 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/geodetic/line_string.hpp"
-
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
@@ -17,6 +15,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "pyinterp/geodetic/linestring.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 
@@ -56,7 +55,7 @@ Raises:
     ValueError: If lon and lat arrays have different sizes.
 )doc";
 
-auto init_line_string(nb::module_& m) -> void {
+auto init_linestring(nb::module_& m) -> void {
   nb::class_<LineString>(m, "LineString", kLineStringClassDoc)
       .def(nb::init<>(), "Construct an empty linestring.")
 

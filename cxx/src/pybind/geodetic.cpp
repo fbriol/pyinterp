@@ -8,7 +8,8 @@ void init_geodetic(nanobind::module_& m) {
       geodetic_module.def_submodule("algorithms", "Geodetic algorithms");
   geodetic::pybind::init_point(geodetic_module);
   geodetic::pybind::init_box(geodetic_module);
-  geodetic::pybind::init_line_string(geodetic_module);
+  geodetic::pybind::init_linestring(geodetic_module);
+  geodetic::pybind::init_multilinestring(geodetic_module);
   geodetic::pybind::init_ring(geodetic_module);
   geodetic::pybind::init_polygon(geodetic_module);
   geodetic::pybind::init_multipoint(geodetic_module);

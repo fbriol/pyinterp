@@ -8,7 +8,7 @@
 #include <nanobind/stl/optional.h>
 
 #include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/line_string.hpp"
+#include "pyinterp/geodetic/linestring.hpp"
 #include "pyinterp/geodetic/multi_polygon.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"

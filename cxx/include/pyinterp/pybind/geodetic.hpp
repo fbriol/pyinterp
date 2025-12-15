@@ -19,7 +19,7 @@ auto init_ring(nanobind::module_& m) -> void;
 
 /// @brief Initialize LineString bindings
 /// @param[in,out] m Python module
-auto init_line_string(nanobind::module_& m) -> void;
+auto init_linestring(nanobind::module_& m) -> void;
 
 /// @brief Initialize Polygon bindings
 /// @param[in,out] m Python module
@@ -32,6 +32,10 @@ auto init_multipoint(nanobind::module_& m) -> void;
 /// @brief Initialize MultiPolygon bindings
 /// @param[in,out] m Python module
 auto init_multipolygon(nanobind::module_& m) -> void;
+
+/// @brief Initialize MultiLineString bindings
+/// @param[in,out] m Python module
+auto init_multilinestring(nanobind::module_& m) -> void;
 
 /// @brief Initialize Spheroid bindings
 /// @param[in,out] m Python module
