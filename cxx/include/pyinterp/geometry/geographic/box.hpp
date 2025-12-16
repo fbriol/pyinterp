@@ -2,51 +2,21 @@
 
 #include <boost/geometry.hpp>
 
+#include "pyinterp/geometry/box.hpp"
 #include "pyinterp/geometry/geographic/point.hpp"
 #include "pyinterp/math.hpp"
 
 namespace pyinterp::geometry::geographic {
 
 /// @brief Type representing a bounding box in geographic coordinates
-class Box {
+class Box : public pyinterp::geometry::Box<Point> {
  public:
-  /// @brief Default constructor creating an empty box
-  constexpr Box() noexcept = default;
-
-  /// @brief Constructor from corner points
-  /// @param[in] min_corner Minimum corner point (lon, lat)
-  /// @param[in] max_corner Maximum corner point (lon, lat)
-  constexpr Box(const Point& min_corner, const Point& max_corner) noexcept
-      : min_corner_(min_corner), max_corner_(max_corner) {}
+  using pyinterp::geometry::Box<Point>::Box;
 
   /// @brief Returns the global bounding box covering the entire Earth
   [[nodiscard]]
   static constexpr auto global_bounding_box() -> Box {
     return {{-180, -90}, {180, 90}};
-  }
-
-  /// @brief Get the min corner of this box (const)
-  /// @return Minimum corner point (lon, lat)
-  [[nodiscard]] constexpr auto min_corner() const noexcept -> Point {
-    return min_corner_;
-  }
-
-  /// @brief Get the max corner of this box (const)
-  /// @return Maximum corner point (lon, lat)
-  [[nodiscard]] constexpr auto max_corner() const noexcept -> Point {
-    return max_corner_;
-  }
-
-  /// @brief Get the min corner of this box (mutable)
-  /// @return Reference to minimum corner point (lon, lat)
-  [[nodiscard]] constexpr auto min_corner() noexcept -> Point& {
-    return min_corner_;
-  }
-
-  /// @brief Get the max corner of this box (mutable)
-  /// @return Reference to maximum corner point (lon, lat)
-  [[nodiscard]] constexpr auto max_corner() noexcept -> Point& {
-    return max_corner_;
   }
 
   /// @brief Returns the center of the box.
@@ -55,16 +25,23 @@ class Box {
     return boost::geometry::return_centroid<Point, Box>(*this);
   }
 
+  /// @brief Check if two boxes are equal
+  /// @param[in] other Other box to compare with
+  /// @return True if the boxes are equal, false otherwise
+  [[nodiscard]] constexpr auto operator==(const Box& other) const noexcept {
+    return boost::geometry::equals(*this, other);
+  }
+
   /// @brief Returns the delta of the box in latitude and longitude.
   /// @param[in] round If true, rounds the delta to the nearest power of 10.
   /// @return A tuple containing the delta in longitude and latitude.
-  [[nodiscard]] constexpr auto delta(bool round) const
+  [[nodiscard]] constexpr auto delta(bool round_val) const
       -> std::tuple<double, double> {
-    auto x = max_corner_.lon() - min_corner_.lon();
-    auto y = max_corner_.lat() - min_corner_.lat();
-    if (round) {
-      x = Box::max_decimal_power(x);
-      y = Box::max_decimal_power(y);
+    auto x = max_corner().template get<0>() - min_corner().template get<0>();
+    auto y = max_corner().template get<1>() - min_corner().template get<1>();
+    if (round_val) {
+      x = max_decimal_power(x);
+      y = max_decimal_power(y);
     }
     return {x, y};
   }
@@ -75,22 +52,11 @@ class Box {
     const auto xy = delta(true);
     const auto x = std::get<0>(xy);
     const auto y = std::get<1>(xy);
-    return {std::ceil(min_corner_.lon() / x) * x,
-            std::ceil(min_corner_.lat() / y) * y};
-  }
-
-  /// @brief Check if two boxes are equal
-  /// @param[in] other Other box to compare with
-  /// @return True if the boxes are equal, false otherwise
-  [[nodiscard]] constexpr auto operator==(const Box& other) const noexcept
-      -> bool {
-    return boost::geometry::equals(*this, other);
+    return {std::ceil(min_corner().template get<0>() / x) * x,
+            std::ceil(min_corner().template get<1>() / y) * y};
   }
 
  private:
-  Point min_corner_{};
-  Point max_corner_{};
-
   /// @brief Returns the maximum power of 10 from a number (x > 0)
   /// @param[in] x Input number
   /// @return Maximum power of 10 less than or equal to x

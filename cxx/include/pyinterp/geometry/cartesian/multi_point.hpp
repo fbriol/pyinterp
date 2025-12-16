@@ -1,9 +1,9 @@
 #pragma once
 
-#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/geometry/multi_point.hpp"
 
-namespace pyinterp::geometry::geographic {
+namespace pyinterp::geometry::cartesian {
 
 /// @brief MultiPoint: collection of points.
 ///
@@ -12,12 +12,12 @@ namespace pyinterp::geometry::geographic {
 /// points.
 using MultiPoint = pyinterp::geometry::MultiPoint<Point>;
 
-}  // namespace pyinterp::geometry::geographic
+}  // namespace pyinterp::geometry::cartesian
 
 namespace boost::geometry::traits {
 
 template <>
-struct tag<pyinterp::geometry::geographic::MultiPoint> {
+struct tag<pyinterp::geometry::cartesian::MultiPoint> {
   using type = multi_point_tag;
 };
 

@@ -2,10 +2,10 @@
 
 #include <iterator>
 
-#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/geometry/ring.hpp"
 
-namespace pyinterp::geometry::geographic {
+namespace pyinterp::geometry::cartesian {
 
 /// @brief Ring: closed linestring (for polygon boundaries).
 ///
@@ -14,18 +14,18 @@ namespace pyinterp::geometry::geographic {
 /// iterator support.
 using Ring = pyinterp::geometry::Ring<Point>;
 
-}  // namespace pyinterp::geometry::geographic
+}  // namespace pyinterp::geometry::cartesian
 
 namespace boost::geometry::traits {
 
 template <>
-struct tag<pyinterp::geometry::geographic::Ring> {
+struct tag<pyinterp::geometry::cartesian::Ring> {
   using type = ring_tag;
 };
 
 template <>
-struct point_type<pyinterp::geometry::geographic::Ring> {
-  using type = pyinterp::geometry::geographic::Point;
+struct point_type<pyinterp::geometry::cartesian::Ring> {
+  using type = pyinterp::geometry::cartesian::Point;
 };
 
 }  // namespace boost::geometry::traits
@@ -33,9 +33,8 @@ struct point_type<pyinterp::geometry::geographic::Ring> {
 // Make Ring compatible with boost::geometry range utilities
 namespace std {
 template <>
-class back_insert_iterator<pyinterp::geometry::geographic::Ring>
-    : public back_insert_iterator_ring<
-          pyinterp::geometry::geographic::Ring,
-          pyinterp::geometry::geographic::Point> {};
+class back_insert_iterator<pyinterp::geometry::cartesian::Ring>
+    : public back_insert_iterator_ring<pyinterp::geometry::cartesian::Ring,
+                                       pyinterp::geometry::cartesian::Point> {};
 
 }  // namespace std

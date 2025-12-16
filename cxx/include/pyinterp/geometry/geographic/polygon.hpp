@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
 #include <vector>
 
+#include "pyinterp/geometry/geographic/point.hpp"
 #include "pyinterp/geometry/geographic/ring.hpp"
-#include "pyinterp/serialization_buffer.hpp"
+#include "pyinterp/geometry/polygon.hpp"
 
 namespace pyinterp::geometry::geographic {
 
@@ -13,78 +13,7 @@ namespace pyinterp::geometry::geographic {
 /// The `Polygon` class represents a polygon defined by an exterior ring and
 /// optional interior rings (holes). It provides accessors for the exterior
 /// ring and the interior rings.
-class Polygon {
- public:
-  /// @brief Alias for ring type.
-  using ring_type = Ring;
-
-  /// @brief Alias for container of interior rings.
-  using inner_container_type = std::vector<Ring>;
-
-  /// @brief Default constructor.
-  constexpr Polygon() = default;
-
-  /// @brief Construct a polygon with an exterior ring only.
-  /// @param[in] exterior Exterior ring for the polygon.
-  constexpr explicit Polygon(Ring exterior) : exterior_{std::move(exterior)} {}
-
-  /// @brief Construct a polygon with exterior and interior rings.
-  /// @param[in] exterior Exterior ring for the polygon.
-  /// @param[in] interiors Interior rings (holes).
-  constexpr Polygon(Ring exterior, std::vector<Ring> interiors)
-      : exterior_{std::move(exterior)}, interiors_{std::move(interiors)} {}
-
-  /// @brief Get the exterior ring (const).
-  /// @returns Const reference to the exterior ring.
-  [[nodiscard]] constexpr auto outer() const noexcept -> const Ring& {
-    return exterior_;
-  }
-
-  /// @brief Get the exterior ring (mutable).
-  /// @returns Reference to the exterior ring.
-  [[nodiscard]] constexpr auto outer() noexcept -> Ring& { return exterior_; }
-
-  /// @brief Get the interior rings (const).
-  /// @returns Const reference to the container of interior rings.
-  [[nodiscard]] constexpr auto inners() const noexcept
-      -> const inner_container_type& {
-    return interiors_;
-  }
-
-  /// @brief Get the interior rings (mutable).
-  /// @returns Reference to the container of interior rings.
-  [[nodiscard]] constexpr auto inners() noexcept -> inner_container_type& {
-    return interiors_;
-  }
-
-  /// @brief Serialize the polygon state for storage or transmission.
-  /// @return Serialized state as a vector of points.
-  [[nodiscard]] constexpr auto pack() const -> serialization::Writer {
-    serialization::Writer writer;
-    writer.write(kMagicNumber);
-    writer.write(exterior_.pack());
-    writer.write(interiors_.size());
-    for (const auto& ring : interiors_) {
-      writer.write(ring.pack());
-    }
-    return writer;
-  }
-
-  /// @brief Deserialize a polygon from serialized state.
-  /// @param[in] state Reference to serialization Reader containing encoded
-  /// polygon data.
-  /// @return New Polygon instance with restored rings.
-  /// @throw std::invalid_argument If the state is invalid or empty.
-  [[nodiscard]] static auto unpack(serialization::Reader& state) -> Polygon;
-
- private:
-  /// @brief Magic number for validation
-  static constexpr uint32_t kMagicNumber = 0x504f4c59;  // "POLY"
-  /// @brief Exterior ring.
-  Ring exterior_{};
-  /// @brief Interior rings (holes).
-  inner_container_type interiors_{};
-};
+using Polygon = pyinterp::geometry::Polygon<Point>;
 
 }  // namespace pyinterp::geometry::geographic
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/geometry/multi_linestring.hpp"
 
-namespace pyinterp::geometry::geographic {
+namespace pyinterp::geometry::cartesian {
 
 /// @brief MultiLineString: collection of linestrings.
 ///
@@ -12,12 +12,12 @@ namespace pyinterp::geometry::geographic {
 /// over linestrings.
 using MultiLineString = pyinterp::geometry::MultiLineString<Point>;
 
-}  // namespace pyinterp::geometry::geographic
+}  // namespace pyinterp::geometry::cartesian
 
 namespace boost::geometry::traits {
 
 template <>
-struct tag<pyinterp::geometry::geographic::MultiLineString> {
+struct tag<pyinterp::geometry::cartesian::MultiLineString> {
   using type = multi_linestring_tag;
 };
 

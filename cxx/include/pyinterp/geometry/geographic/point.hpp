@@ -4,7 +4,7 @@
 
 namespace pyinterp::geometry::geographic {
 
-/// @brief Type representing a point in geodetic coordinates
+/// @brief Type representing a point in geographic coordinates
 class Point {
  public:
   /// @brief Build an undefined point
