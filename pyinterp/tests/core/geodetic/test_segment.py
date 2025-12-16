@@ -11,7 +11,7 @@ def test_segment_construction() -> None:
     s_empty = Segment()
     assert len(s_empty) == 2
 
-    s = Segment(Point(0.0, 0.0), Point(10.0, 5.0))
+    s = Segment((0.0, 0.0), (10.0, 5.0))
     assert len(s) == 2
     assert s[0].lon == 0.0 and s[0].lat == 0.0
     assert s[1].lon == 10.0 and s[1].lat == 5.0
@@ -19,7 +19,7 @@ def test_segment_construction() -> None:
 
 def test_segment_indexing_and_setting() -> None:
     """Test Segment indexing get and set operations."""
-    s = Segment(Point(0.0, 0.0), Point(10.0, 10.0))
+    s = Segment((0.0, 0.0), (10.0, 10.0))
 
     a = s[0]
     b = s[1]
@@ -49,13 +49,13 @@ def test_segment_bool() -> None:
     empty = Segment()
     assert not bool(empty)
 
-    nonempty = Segment(Point(0.0, 0.0), Point(1.0, 1.0))
+    nonempty = Segment((0.0, 0.0), (1.0, 1.0))
     assert bool(nonempty)
 
 
 def test_segment_iteration() -> None:
     """Test iteration over segment endpoints."""
-    s = Segment(Point(0.0, 1.0), Point(2.0, 3.0))
+    s = Segment((0.0, 1.0), (2.0, 3.0))
     pts = list(s)
     assert len(pts) == 2
     assert pts[0] == Point(0.0, 1.0)
@@ -64,9 +64,9 @@ def test_segment_iteration() -> None:
 
 def test_segment_equality() -> None:
     """Test Segment equality and inequality."""
-    s1 = Segment(Point(0.0, 0.0), Point(5.0, 5.0))
-    s2 = Segment(Point(0.0, 0.0), Point(5.0, 5.0))
-    s3 = Segment(Point(0.0, 0.0), Point(1.0, 1.0))
+    s1 = Segment((0.0, 0.0), (5.0, 5.0))
+    s2 = Segment((0.0, 0.0), (5.0, 5.0))
+    s3 = Segment((0.0, 0.0), (1.0, 1.0))
 
     assert s1 == s2
     assert s1 != s3
@@ -74,7 +74,7 @@ def test_segment_equality() -> None:
 
 def test_segment_repr_and_str() -> None:
     """Test string representations."""
-    s = Segment(Point(0.0, 0.0), Point(10.0, 5.0))
+    s = Segment((0.0, 0.0), (10.0, 5.0))
     r = repr(s)
     st = str(s)
     assert "Segment" in r and "a=" in r and "b=" in r
@@ -83,7 +83,7 @@ def test_segment_repr_and_str() -> None:
 
 def test_segment_pickle() -> None:
     """Test pickle support restores endpoints."""
-    original = Segment(Point(0.0, 0.0), Point(10.0, 5.0))
+    original = Segment((0.0, 0.0), (10.0, 5.0))
     pickled = pickle.dumps(original)
     restored = pickle.loads(pickled)
 

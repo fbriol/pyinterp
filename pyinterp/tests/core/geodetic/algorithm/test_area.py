@@ -1,7 +1,6 @@
 """Tests for geodetic algorithm functions."""
 
 import numpy as np
-import pytest
 
 from pyinterp.core.geodetic import (
     Box,
@@ -10,6 +9,10 @@ from pyinterp.core.geodetic import (
     Polygon,
     Ring,
     Spheroid,
+    LineString,
+    MultiPoint,
+    MultiLineString,
+    Segment,
 )
 from pyinterp.core.geodetic.algorithms import area, Strategy
 
@@ -246,5 +249,77 @@ def test_area_zero_size_geometries() -> None:
     assert area(empty_polygon) == 0.0
 
 
-if __name__ == "__main__":
-    pytest.main([__file__])
+def test_area_segment() -> None:
+    """Test area calculation for a segment."""
+    # Create a segment between two points
+    segment = Segment((0.0, 0.0), (10.0, 10.0))
+    result = area(segment)
+
+    # Area of a segment should be zero
+    assert result == 0.0
+
+    # Test with different strategies
+    assert area(segment, strategy=Strategy.ANDOYER) == 0.0
+    assert area(segment, strategy=Strategy.KARNEY) == 0.0
+    assert area(segment, strategy=Strategy.THOMAS) == 0.0
+    assert area(segment, strategy=Strategy.VINCENTY) == 0.0
+
+
+def test_area_linestring() -> None:
+    """Test area calculation for a linestring."""
+    # Create a linestring with multiple points
+    lon = np.array([0.0, 5.0, 10.0])
+    lat = np.array([0.0, 5.0, 0.0])
+    linestring = LineString(lon, lat)
+    result = area(linestring)
+
+    # Area of a linestring should be zero
+    assert result == 0.0
+
+    # Test with different strategies
+    assert area(linestring, strategy=Strategy.ANDOYER) == 0.0
+    assert area(linestring, strategy=Strategy.KARNEY) == 0.0
+    assert area(linestring, strategy=Strategy.THOMAS) == 0.0
+    assert area(linestring, strategy=Strategy.VINCENTY) == 0.0
+
+
+def test_area_multipoint() -> None:
+    """Test area calculation for a multipoint."""
+    # Create multiple points
+    point1 = Point(0.0, 0.0)
+    point2 = Point(10.0, 10.0)
+    multipoint = MultiPoint([point1, point2])
+    result = area(multipoint)
+
+    # Area of a multipoint should be zero
+    assert result == 0.0
+
+    # Test with different strategies
+    assert area(multipoint, strategy=Strategy.ANDOYER) == 0.0
+    assert area(multipoint, strategy=Strategy.KARNEY) == 0.0
+    assert area(multipoint, strategy=Strategy.THOMAS) == 0.0
+    assert area(multipoint, strategy=Strategy.VINCENTY) == 0.0
+
+
+def test_area_multilinestring() -> None:
+    """Test area calculation for a multilinestring."""
+    # Create multiple linestrings
+    lon1 = np.array([0.0, 5.0])
+    lat1 = np.array([0.0, 5.0])
+    linestring1 = LineString(lon1, lat1)
+
+    lon2 = np.array([5.0, 10.0])
+    lat2 = np.array([5.0, 0.0])
+    linestring2 = LineString(lon2, lat2)
+
+    multilinestring = MultiLineString([linestring1, linestring2])
+    result = area(multilinestring)
+
+    # Area of a multilinestring should be zero
+    assert result == 0.0
+
+    # Test with different strategies
+    assert area(multilinestring, strategy=Strategy.ANDOYER) == 0.0
+    assert area(multilinestring, strategy=Strategy.KARNEY) == 0.0
+    assert area(multilinestring, strategy=Strategy.THOMAS) == 0.0
+    assert area(multilinestring, strategy=Strategy.VINCENTY) == 0.0
