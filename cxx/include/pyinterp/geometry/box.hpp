@@ -2,8 +2,6 @@
 
 #include <boost/geometry.hpp>
 
-#include "pyinterp/math.hpp"
-
 namespace pyinterp::geometry {
 
 /// @brief Type representing a bounding box in geographic coordinates
