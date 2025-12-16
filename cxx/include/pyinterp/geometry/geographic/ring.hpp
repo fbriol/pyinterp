@@ -34,8 +34,8 @@ struct point_type<pyinterp::geometry::geographic::Ring> {
 namespace std {
 template <>
 class back_insert_iterator<pyinterp::geometry::geographic::Ring>
-    : public back_insert_iterator_ring<
-          pyinterp::geometry::geographic::Ring,
-          pyinterp::geometry::geographic::Point> {};
+    : public back_insert_iterator_ring<pyinterp::geometry::geographic::Ring,
+                                       pyinterp::geometry::geographic::Point> {
+};
 
 }  // namespace std
