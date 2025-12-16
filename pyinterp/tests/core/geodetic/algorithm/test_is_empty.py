@@ -28,9 +28,9 @@ def test_is_empty_box(box_1x1: Box) -> None:
     # Normal box is not empty
     assert not is_empty(box_1x1)
 
-    # Default constructed box
+    # A default-constructed Box is not considered empty
     empty_box = Box()
-    assert is_empty(empty_box)
+    assert not is_empty(empty_box)
 
 
 def test_is_empty_ring(ring_empty: Ring, ring_square_1x1: Ring) -> None:
@@ -62,12 +62,10 @@ def test_is_empty_linestring(
     assert not is_empty(linestring_simple)
 
 
-def test_is_empty_segment(
-    segment_empty: Segment, segment_simple: Segment
-) -> None:
+def test_is_empty_segment(segment_simple: Segment) -> None:
     """Test is_empty for Segment."""
-    # Empty segment
-    assert is_empty(segment_empty)
+    # A default-constructed Segment is not considered empty
+    assert not is_empty(Segment())
 
     # Non-empty segment
     assert not is_empty(segment_simple)

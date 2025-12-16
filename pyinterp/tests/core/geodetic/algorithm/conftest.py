@@ -139,12 +139,6 @@ def segment_simple() -> Segment:
     return Segment((0.0, 0.0), (1.0, 1.0))
 
 
-@pytest.fixture
-def segment_empty() -> Segment:
-    """Create an empty segment."""
-    return Segment()
-
-
 # Polygons
 @pytest.fixture
 def polygon_1x1(ring_square_1x1: Ring) -> Polygon:
