@@ -16,27 +16,22 @@ from pyinterp.core.geodetic import (
 from pyinterp.core.geodetic.algorithms import is_simple
 
 
-def test_is_simple_point() -> None:
+def test_is_simple_point(point_basic: Point) -> None:
     """Test is_simple for Point."""
     # Points are always simple
-    point = Point(1.0, 2.0)
-    assert is_simple(point)
+    assert is_simple(point_basic)
 
 
-def test_is_simple_box() -> None:
+def test_is_simple_box(box_1x1: Box) -> None:
     """Test is_simple for Box."""
     # Boxes are always simple
-    box = Box((0.0, 0.0), (1.0, 1.0))
-    assert is_simple(box)
+    assert is_simple(box_1x1)
 
 
-def test_is_simple_ring_valid() -> None:
+def test_is_simple_ring_valid(ring_square_1x1: Ring) -> None:
     """Test is_simple for a simple (non-self-intersecting) ring."""
     # Simple square ring
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    ring = Ring(lon, lat)
-    assert is_simple(ring)
+    assert is_simple(ring_square_1x1)
 
 
 def test_is_simple_ring_self_intersecting() -> None:
@@ -51,58 +46,39 @@ def test_is_simple_ring_self_intersecting() -> None:
     assert result
 
 
-def test_is_simple_polygon() -> None:
+def test_is_simple_polygon(polygon_1x1: Polygon) -> None:
     """Test is_simple for Polygon."""
     # Simple polygon
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    polygon = Polygon(Ring(lon, lat))
-    assert is_simple(polygon)
+    assert is_simple(polygon_1x1)
 
 
-def test_is_simple_linestring() -> None:
+def test_is_simple_linestring(linestring_simple: LineString) -> None:
     """Test is_simple for LineString."""
     # Simple linestring
-    lon = np.array([0.0, 1.0, 2.0])
-    lat = np.array([0.0, 1.0, 0.0])
-    linestring = LineString(lon, lat)
-    assert is_simple(linestring)
+    assert is_simple(linestring_simple)
 
 
-def test_is_simple_segment() -> None:
+def test_is_simple_segment(segment_simple: Segment) -> None:
     """Test is_simple for Segment."""
     # Simple segment
-    segment = Segment((0.0, 0.0), (1.0, 1.0))
-    assert is_simple(segment)
+    assert is_simple(segment_simple)
 
 
-def test_is_simple_multipoint() -> None:
+def test_is_simple_multipoint(multipoint_simple: MultiPoint) -> None:
     """Test is_simple for MultiPoint."""
     # Simple multipoint
-    points = [Point(0.0, 0.0), Point(1.0, 1.0), Point(2.0, 2.0)]
-    multipoint = MultiPoint(points)
-    assert is_simple(multipoint)
+    assert is_simple(multipoint_simple)
 
 
-def test_is_simple_multilinestring() -> None:
+def test_is_simple_multilinestring(
+    multilinestring_simple: MultiLineString,
+) -> None:
     """Test is_simple for MultiLineString."""
     # Simple multilinestring
-    lines1 = LineString(np.array([0.0, 1.0]), np.array([0.0, 1.0]))
-    lines2 = LineString(np.array([1.0, 2.0]), np.array([1.0, 0.0]))
-    multilinestring = MultiLineString([lines1, lines2])
-    assert is_simple(multilinestring)
+    assert is_simple(multilinestring_simple)
 
 
-def test_is_simple_multipolygon() -> None:
+def test_is_simple_multipolygon(multipolygon_complex: MultiPolygon) -> None:
     """Test is_simple for MultiPolygon."""
     # Simple multipolygon
-    lon1 = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat1 = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    polygon1 = Polygon(Ring(lon1, lat1))
-
-    lon2 = np.array([2.0, 2.0, 3.0, 3.0, 2.0])
-    lat2 = np.array([2.0, 3.0, 3.0, 2.0, 2.0])
-    polygon2 = Polygon(Ring(lon2, lat2))
-
-    multipolygon = MultiPolygon([polygon1, polygon2])
-    assert is_simple(multipolygon)
+    assert is_simple(multipolygon_complex)

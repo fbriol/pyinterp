@@ -1,7 +1,5 @@
 """Unit tests for the is_empty algorithm in geodetic geometries."""
 
-import numpy as np
-
 from pyinterp.core.geodetic import (
     Point,
     Box,
@@ -16,117 +14,94 @@ from pyinterp.core.geodetic import (
 from pyinterp.core.geodetic.algorithms import is_empty
 
 
-def test_is_empty_point() -> None:
+def test_is_empty_point(point_basic: Point, point_origin: Point) -> None:
     """Test is_empty for Point."""
     # Points are never empty
-    point = Point(1.0, 2.0)
-    assert not is_empty(point)
+    assert not is_empty(point_basic)
 
     # Even zero coordinates are not empty
-    zero_point = Point(0.0, 0.0)
-    assert not is_empty(zero_point)
+    assert not is_empty(point_origin)
 
 
-def test_is_empty_box() -> None:
+def test_is_empty_box(box_1x1: Box) -> None:
     """Test is_empty for Box."""
     # Normal box is not empty
-    box = Box((0.0, 0.0), (1.0, 1.0))
-    assert not is_empty(box)
+    assert not is_empty(box_1x1)
 
     # Default constructed box
     empty_box = Box()
     assert is_empty(empty_box)
 
 
-def test_is_empty_ring() -> None:
+def test_is_empty_ring(ring_empty: Ring, ring_square_1x1: Ring) -> None:
     """Test is_empty for Ring."""
     # Empty ring
-    empty_ring = Ring(np.array([]), np.array([]))
-    assert is_empty(empty_ring)
+    assert is_empty(ring_empty)
 
     # Non-empty ring
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    ring = Ring(lon, lat)
-    assert not is_empty(ring)
+    assert not is_empty(ring_square_1x1)
 
 
-def test_is_empty_polygon() -> None:
+def test_is_empty_polygon(polygon_empty: Polygon, polygon_1x1: Polygon) -> None:
     """Test is_empty for Polygon."""
     # Empty polygon
-    empty_polygon = Polygon(Ring(np.array([]), np.array([])))
-    assert is_empty(empty_polygon)
+    assert is_empty(polygon_empty)
 
     # Non-empty polygon
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    polygon = Polygon(Ring(lon, lat))
-    assert not is_empty(polygon)
+    assert not is_empty(polygon_1x1)
 
 
-def test_is_empty_linestring() -> None:
+def test_is_empty_linestring(
+    linestring_empty: LineString, linestring_simple: LineString
+) -> None:
     """Test is_empty for LineString."""
     # Empty linestring
-    empty_linestring = LineString()
-    assert is_empty(empty_linestring)
+    assert is_empty(linestring_empty)
 
     # Non-empty linestring
-    lon = np.array([0.0, 1.0, 2.0])
-    lat = np.array([0.0, 1.0, 0.0])
-    linestring = LineString(lon, lat)
-    assert not is_empty(linestring)
+    assert not is_empty(linestring_simple)
 
 
-def test_is_empty_segment() -> None:
+def test_is_empty_segment(
+    segment_empty: Segment, segment_simple: Segment
+) -> None:
     """Test is_empty for Segment."""
     # Empty segment
-    empty_segment = Segment()
-    assert is_empty(empty_segment)
+    assert is_empty(segment_empty)
 
     # Non-empty segment
-    segment = Segment((0.0, 0.0), (1.0, 1.0))
-    assert not is_empty(segment)
+    assert not is_empty(segment_simple)
 
 
-def test_is_empty_multipoint() -> None:
+def test_is_empty_multipoint(
+    multipoint_empty: MultiPoint, multipoint_simple: MultiPoint
+) -> None:
     """Test is_empty for MultiPoint."""
     # Empty multipoint
-    empty_multipoint = MultiPoint()
-    assert is_empty(empty_multipoint)
+    assert is_empty(multipoint_empty)
 
     # Non-empty multipoint
-    points = [Point(0.0, 0.0), Point(1.0, 1.0)]
-    multipoint = MultiPoint(points)
-    assert not is_empty(multipoint)
+    assert not is_empty(multipoint_simple)
 
 
-def test_is_empty_multilinestring() -> None:
+def test_is_empty_multilinestring(
+    multilinestring_empty: MultiLineString,
+    multilinestring_simple: MultiLineString,
+) -> None:
     """Test is_empty for MultiLineString."""
     # Empty multilinestring
-    empty_multilinestring = MultiLineString()
-    assert is_empty(empty_multilinestring)
+    assert is_empty(multilinestring_empty)
 
     # Non-empty multilinestring
-    lines1 = LineString(np.array([0.0, 1.0]), np.array([0.0, 1.0]))
-    lines2 = LineString(np.array([1.0, 2.0]), np.array([1.0, 0.0]))
-    multilinestring = MultiLineString([lines1, lines2])
-    assert not is_empty(multilinestring)
+    assert not is_empty(multilinestring_simple)
 
 
-def test_is_empty_multipolygon() -> None:
+def test_is_empty_multipolygon(
+    multipolygon_empty: MultiPolygon, multipolygon_complex: MultiPolygon
+) -> None:
     """Test is_empty for MultiPolygon."""
     # Empty multipolygon
-    empty_multipolygon = MultiPolygon()
-    assert is_empty(empty_multipolygon)
+    assert is_empty(multipolygon_empty)
 
     # Non-empty multipolygon
-    lon1 = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat1 = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    polygon1 = Polygon(Ring(lon1, lat1))
-
-    lon2 = np.array([2.0, 2.0, 3.0, 3.0, 2.0])
-    lat2 = np.array([2.0, 3.0, 3.0, 2.0, 2.0])
-    polygon2 = Polygon(Ring(lon2, lat2))
-
-    multipolygon = MultiPolygon([polygon1, polygon2])
-    assert not is_empty(multipolygon)
+    assert not is_empty(multipolygon_complex)

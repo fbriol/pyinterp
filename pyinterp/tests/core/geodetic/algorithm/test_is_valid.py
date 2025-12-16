@@ -16,33 +16,27 @@ from pyinterp.core.geodetic import (
 from pyinterp.core.geodetic.algorithms import is_valid
 
 
-def test_is_valid_point() -> None:
+def test_is_valid_point(point_basic: Point) -> None:
     """Test is_valid for Point."""
     # Valid point
-    point = Point(1.0, 2.0)
-    assert is_valid(point)
+    assert is_valid(point_basic)
 
     # Test with return_reason
-    valid, reason = is_valid(point, return_reason=True)
+    valid, reason = is_valid(point_basic, return_reason=True)
     assert valid
     assert isinstance(reason, str)
 
 
-def test_is_valid_box() -> None:
+def test_is_valid_box(box_1x1: Box) -> None:
     """Test is_valid for Box."""
     # Valid box
-    box = Box((0.0, 0.0), (1.0, 1.0))
-    assert is_valid(box)
+    assert is_valid(box_1x1)
 
 
-def test_is_valid_ring_valid() -> None:
+def test_is_valid_ring_valid(ring_square_1x1: Ring) -> None:
     """Test is_valid for a valid ring."""
     # Valid closed ring (counter-clockwise)
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    ring = Ring(lon, lat)
-
-    valid, reason = is_valid(ring, return_reason=True)
+    valid, reason = is_valid(ring_square_1x1, return_reason=True)
     # The ring should be valid
     assert valid or "Geometry is valid" in reason or len(reason) == 0
 
@@ -60,84 +54,51 @@ def test_is_valid_ring_not_closed() -> None:
     assert isinstance(reason, str)
 
 
-def test_is_valid_polygon_valid() -> None:
+def test_is_valid_polygon_valid(polygon_1x1: Polygon) -> None:
     """Test is_valid for a valid polygon."""
     # Valid polygon with counter-clockwise winding
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    polygon = Polygon(Ring(lon, lat))
+    assert is_valid(polygon_1x1)
 
-    assert is_valid(polygon)
-
-    valid, reason = is_valid(polygon, return_reason=True)
+    valid, reason = is_valid(polygon_1x1, return_reason=True)
     assert valid
     assert isinstance(reason, str)
 
 
-def test_is_valid_polygon_with_hole() -> None:
+def test_is_valid_polygon_with_hole(polygon_with_hole: Polygon) -> None:
     """Test is_valid for polygon with hole."""
-    # Outer ring
-    outer_lon = np.array([0.0, 0.0, 10.0, 10.0, 0.0])
-    outer_lat = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
-    outer = Ring(outer_lon, outer_lat)
-
-    # Inner ring (hole) - should be clockwise for validity
-    inner_lon = np.array([2.0, 8.0, 8.0, 2.0, 2.0])
-    inner_lat = np.array([2.0, 2.0, 8.0, 8.0, 2.0])
-    inner = Ring(inner_lon, inner_lat)
-
-    polygon = Polygon(outer, [inner])
-
     # Check validity (winding order matters)
-    valid, reason = is_valid(polygon, return_reason=True)
+    valid, reason = is_valid(polygon_with_hole, return_reason=True)
     # May or may not be valid depending on winding order
     assert isinstance(valid, bool)
     assert isinstance(reason, str)
 
 
-def test_is_valid_multipolygon() -> None:
+def test_is_valid_multipolygon(multipolygon_complex: MultiPolygon) -> None:
     """Test is_valid for MultiPolygon."""
-    # Create two valid polygons
-    lon1 = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat1 = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    poly1 = Polygon(Ring(lon1, lat1))
-
-    lon2 = np.array([5.0, 5.0, 6.0, 6.0, 5.0])
-    lat2 = np.array([5.0, 6.0, 6.0, 5.0, 5.0])
-    poly2 = Polygon(Ring(lon2, lat2))
-
-    multipolygon = MultiPolygon([poly1, poly2])
-    assert is_valid(multipolygon)
+    assert is_valid(multipolygon_complex)
 
 
-def test_is_valid_linestring() -> None:
+def test_is_valid_linestring(linestring_simple: LineString) -> None:
     """Test is_valid for LineString."""
     # Valid linestring
-    lon = np.array([0.0, 1.0, 2.0])
-    lat = np.array([0.0, 1.0, 0.0])
-    linestring = LineString(lon, lat)
-    assert is_valid(linestring)
+    assert is_valid(linestring_simple)
 
 
-def test_is_valid_segment() -> None:
+def test_is_valid_segment(segment_simple: Segment) -> None:
     """Test is_valid for Segment."""
     # Valid segment
-    segment = Segment((0.0, 0.0), (1.0, 1.0))
-    assert is_valid(segment)
+    assert is_valid(segment_simple)
 
 
-def test_is_valid_multipoint() -> None:
+def test_is_valid_multipoint(multipoint_simple: MultiPoint) -> None:
     """Test is_valid for MultiPoint."""
     # Valid multipoint
-    points = [Point(0.0, 0.0), Point(1.0, 1.0), Point(2.0, 2.0)]
-    multipoint = MultiPoint(points)
-    assert is_valid(multipoint)
+    assert is_valid(multipoint_simple)
 
 
-def test_is_valid_multilinestring() -> None:
+def test_is_valid_multilinestring(
+    multilinestring_simple: MultiLineString,
+) -> None:
     """Test is_valid for MultiLineString."""
     # Valid multilinestring
-    lines1 = LineString(np.array([0.0, 1.0]), np.array([0.0, 1.0]))
-    lines2 = LineString(np.array([1.0, 2.0]), np.array([1.0, 0.0]))
-    multilinestring = MultiLineString([lines1, lines2])
-    assert is_valid(multilinestring)
+    assert is_valid(multilinestring_simple)

@@ -1,7 +1,5 @@
 """Tests for geodetic algorithm functions."""
 
-import numpy as np
-
 from pyinterp.core.geodetic import (
     Box,
     MultiPolygon,
@@ -50,11 +48,9 @@ def test_area_point() -> None:
     assert area(point, strategy=Strategy.VINCENTY) == 0.0
 
 
-def test_area_box() -> None:
+def test_area_box(box_1x1: Box, box_10x10: Box) -> None:
     """Test area calculation for a box."""
-    # Create a 1x1 degree box at equator
-    box = Box((0.0, 0.0), (1.0, 1.0))
-    result = area(box)
+    result = area(box_1x1)
 
     # Area should be positive
     assert result > 0
@@ -64,21 +60,18 @@ def test_area_box() -> None:
     assert 12.3e9 < result < 12.4e9
 
     # Larger box should have larger area
-    large_box = Box((0.0, 0.0), (10.0, 10.0))
-    large_area = area(large_box)
+    large_area = area(box_10x10)
     assert (
         large_area > result * 90
     )  # Should be ~100x but accounting for curvature
 
 
-def test_area_box_different_strategies() -> None:
+def test_area_box_different_strategies(box_1x1: Box) -> None:
     """Test that different strategies give similar but not identical results."""
-    box = Box((0.0, 0.0), (1.0, 1.0))
-
-    area_andoyer = area(box, strategy=Strategy.ANDOYER)
-    area_karney = area(box, strategy=Strategy.KARNEY)
-    area_thomas = area(box, strategy=Strategy.THOMAS)
-    area_vincenty = area(box, strategy=Strategy.VINCENTY)
+    area_andoyer = area(box_1x1, strategy=Strategy.ANDOYER)
+    area_karney = area(box_1x1, strategy=Strategy.KARNEY)
+    area_thomas = area(box_1x1, strategy=Strategy.THOMAS)
+    area_vincenty = area(box_1x1, strategy=Strategy.VINCENTY)
 
     # All should be positive
     assert area_andoyer > 0
@@ -94,89 +87,54 @@ def test_area_box_different_strategies() -> None:
     assert abs(area_vincenty - mean_area) / mean_area < 0.01
 
 
-def test_area_ring() -> None:
+def test_area_ring(ring_square_1x1: Ring, box_1x1: Box) -> None:
     """Test area calculation for a ring."""
-    # Create a square ring (5 points to close the ring)
-    # Using counter-clockwise winding order (positive area)
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    ring = Ring(lon, lat)
-
-    result = area(ring)
+    result = area(ring_square_1x1)
 
     # Area should be positive (counter-clockwise winding)
     assert result > 0
 
     # Should be similar to the box area (same bounds)
-    box = Box((0.0, 0.0), (1.0, 1.0))
-    box_area = area(box)
+    box_area = area(box_1x1)
     # Ring and box should have very similar areas
     assert abs(result - box_area) / box_area < 0.01
 
 
-def test_area_polygon_simple() -> None:
+def test_area_polygon_simple(polygon_1x1: Polygon, box_1x1: Box) -> None:
     """Test area calculation for a simple polygon."""
-    # Create a square polygon with counter-clockwise winding
-    lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    outer = Ring(lon, lat)
-    polygon = Polygon(outer)
-
-    result = area(polygon)
+    result = area(polygon_1x1)
 
     # Area should be positive (counter-clockwise winding)
     assert result > 0
 
     # Should be similar to the box/ring area
-    box_area = area(Box((0.0, 0.0), (1.0, 1.0)))
+    box_area = area(box_1x1)
     assert abs(result - box_area) / box_area < 0.01
 
 
-def test_area_polygon_with_hole() -> None:
+def test_area_polygon_with_hole(
+    polygon_10x10: Polygon, polygon_with_hole: Polygon, ring_square_inner: Ring
+) -> None:
     """Test area calculation for a polygon with a hole."""
-    # Create outer ring (0-10 degrees square)
-    outer_lon = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
-    outer_lat = np.array([0.0, 0.0, 10.0, 10.0, 0.0])
-    outer = Ring(outer_lon, outer_lat)
-
-    # Create inner ring (hole, 2-8 degrees square)
-    inner_lon = np.array([2.0, 8.0, 8.0, 2.0, 2.0])
-    inner_lat = np.array([2.0, 2.0, 8.0, 8.0, 2.0])
-    inner = Ring(inner_lon, inner_lat)
-
-    # Polygon without hole
-    polygon_no_hole = Polygon(outer)
-    area_no_hole = area(polygon_no_hole)
-
-    # Polygon with hole
-    polygon_with_hole = Polygon(outer, [inner])
+    area_no_hole = area(polygon_10x10)
     area_with_hole = area(polygon_with_hole)
 
     # Area with hole should be smaller
     assert area_with_hole < area_no_hole
 
     # The difference should be approximately the area of the hole
-    hole_area = area(Polygon(inner))
+    hole_area = area(Polygon(ring_square_inner))
     assert abs((area_no_hole - area_with_hole) - hole_area) / hole_area < 0.01
 
 
-def test_area_multipolygon() -> None:
+def test_area_multipolygon(
+    multipolygon_simple: MultiPolygon, polygon_pair: tuple[Polygon, Polygon]
+) -> None:
     """Test area calculation for a multipolygon."""
-    # Create first polygon (0-1 degrees square)
-    lon1 = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    lat1 = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    poly1 = Polygon(Ring(lon1, lat1))
-
-    # Create second polygon (5-6 degrees square)
-    lon2 = np.array([5.0, 6.0, 6.0, 5.0, 5.0])
-    lat2 = np.array([5.0, 5.0, 6.0, 6.0, 5.0])
-    poly2 = Polygon(Ring(lon2, lat2))
-
-    # Create multipolygon
-    multipolygon = MultiPolygon([poly1, poly2])
-    multi_area = area(multipolygon)
+    multi_area = area(multipolygon_simple)
 
     # Area should be sum of individual polygons
+    poly1, poly2 = polygon_pair
     area1 = area(poly1)
     area2 = area(poly2)
 
@@ -187,139 +145,105 @@ def test_area_multipolygon() -> None:
     assert abs(multi_area - (area1 + area2)) / multi_area < 0.01
 
 
-def test_area_with_custom_spheroid() -> None:
+def test_area_with_custom_spheroid(box_1x1: Box) -> None:
     """Test area calculation with custom spheroid."""
-    box = Box((0.0, 0.0), (1.0, 1.0))
-
     # Default (WGS84)
-    area_wgs84 = area(box)
+    area_wgs84 = area(box_1x1)
 
     # Custom spheroid with WGS84 parameters (semi-major axis and flattening)
     # WGS84: a=6378137.0, 1/f=298.257223563, so f≈0.0033528
     custom_spheroid = Spheroid(6378137.0, 1.0 / 298.257223563)
-    area_custom = area(box, wgs=custom_spheroid)
+    area_custom = area(box_1x1, wgs=custom_spheroid)
 
     # Areas should be identical (using exact WGS84 parameters)
     assert abs(area_wgs84 - area_custom) / area_wgs84 < 1e-10
 
 
-def test_area_at_poles() -> None:
+def test_area_at_poles(box_polar: Box, box_equator: Box) -> None:
     """Test area calculation near poles."""
-    # Box near north pole
-    north_box = Box((0.0, 85.0), (10.0, 89.0))
-    north_area = area(north_box)
-
-    # Box at equator with same degree size
-    equator_box = Box((0.0, 0.0), (10.0, 4.0))
-    equator_area = area(equator_box)
+    north_area = area(box_polar)
+    equator_area = area(box_equator)
 
     # Polar box should have smaller area due to convergence of meridians
     assert north_area < equator_area
 
 
-def test_area_across_antimeridian() -> None:
+def test_area_across_antimeridian(
+    box_antimeridian: Box, box_10x10: Box
+) -> None:
     """Test area calculation for geometry crossing anti-meridian."""
-    # Box crossing anti-meridian (175°E to -175°E = 175°E to 185°E)
-    box = Box((175.0, 0.0), (185.0, 10.0))
-    result = area(box)
+    result = area(box_antimeridian)
 
     # Should have positive area (10 degrees lon x 10 degrees lat)
     assert result > 0
 
     # Should be similar to a 10x10 box at equator
-    reference_box = Box((0.0, 0.0), (10.0, 10.0))
-    reference_area = area(reference_box)
+    reference_area = area(box_10x10)
 
     # Areas should be similar (within 5% due to slight latitude difference)
     assert abs(result - reference_area) / reference_area < 0.05
 
 
-def test_area_zero_size_geometries() -> None:
+def test_area_zero_size_geometries(
+    box_zero: Box, ring_empty: Ring, polygon_empty: Polygon
+) -> None:
     """Test area of zero-size geometries."""
-    # Zero-size box (same min and max corners)
-    zero_box = Box((0.0, 0.0), (0.0, 0.0))
-    assert area(zero_box) == 0.0
-
-    # Empty ring
-    empty_ring = Ring(np.array([]), np.array([]))
-    assert area(empty_ring) == 0.0
-
-    # Empty polygon
-    empty_polygon = Polygon(Ring(np.array([]), np.array([])))
-    assert area(empty_polygon) == 0.0
+    assert area(box_zero) == 0.0
+    assert area(ring_empty) == 0.0
+    assert area(polygon_empty) == 0.0
 
 
-def test_area_segment() -> None:
+def test_area_segment(segment_basic: Segment) -> None:
     """Test area calculation for a segment."""
-    # Create a segment between two points
-    segment = Segment((0.0, 0.0), (10.0, 10.0))
-    result = area(segment)
+    result = area(segment_basic)
 
     # Area of a segment should be zero
     assert result == 0.0
 
     # Test with different strategies
-    assert area(segment, strategy=Strategy.ANDOYER) == 0.0
-    assert area(segment, strategy=Strategy.KARNEY) == 0.0
-    assert area(segment, strategy=Strategy.THOMAS) == 0.0
-    assert area(segment, strategy=Strategy.VINCENTY) == 0.0
+    assert area(segment_basic, strategy=Strategy.ANDOYER) == 0.0
+    assert area(segment_basic, strategy=Strategy.KARNEY) == 0.0
+    assert area(segment_basic, strategy=Strategy.THOMAS) == 0.0
+    assert area(segment_basic, strategy=Strategy.VINCENTY) == 0.0
 
 
-def test_area_linestring() -> None:
+def test_area_linestring(linestring_basic: LineString) -> None:
     """Test area calculation for a linestring."""
-    # Create a linestring with multiple points
-    lon = np.array([0.0, 5.0, 10.0])
-    lat = np.array([0.0, 5.0, 0.0])
-    linestring = LineString(lon, lat)
-    result = area(linestring)
+    result = area(linestring_basic)
 
     # Area of a linestring should be zero
     assert result == 0.0
 
     # Test with different strategies
-    assert area(linestring, strategy=Strategy.ANDOYER) == 0.0
-    assert area(linestring, strategy=Strategy.KARNEY) == 0.0
-    assert area(linestring, strategy=Strategy.THOMAS) == 0.0
-    assert area(linestring, strategy=Strategy.VINCENTY) == 0.0
+    assert area(linestring_basic, strategy=Strategy.ANDOYER) == 0.0
+    assert area(linestring_basic, strategy=Strategy.KARNEY) == 0.0
+    assert area(linestring_basic, strategy=Strategy.THOMAS) == 0.0
+    assert area(linestring_basic, strategy=Strategy.VINCENTY) == 0.0
 
 
-def test_area_multipoint() -> None:
+def test_area_multipoint(multipoint_basic: MultiPoint) -> None:
     """Test area calculation for a multipoint."""
-    # Create multiple points
-    point1 = Point(0.0, 0.0)
-    point2 = Point(10.0, 10.0)
-    multipoint = MultiPoint([point1, point2])
-    result = area(multipoint)
+    result = area(multipoint_basic)
 
     # Area of a multipoint should be zero
     assert result == 0.0
 
     # Test with different strategies
-    assert area(multipoint, strategy=Strategy.ANDOYER) == 0.0
-    assert area(multipoint, strategy=Strategy.KARNEY) == 0.0
-    assert area(multipoint, strategy=Strategy.THOMAS) == 0.0
-    assert area(multipoint, strategy=Strategy.VINCENTY) == 0.0
+    assert area(multipoint_basic, strategy=Strategy.ANDOYER) == 0.0
+    assert area(multipoint_basic, strategy=Strategy.KARNEY) == 0.0
+    assert area(multipoint_basic, strategy=Strategy.THOMAS) == 0.0
+    assert area(multipoint_basic, strategy=Strategy.VINCENTY) == 0.0
 
 
-def test_area_multilinestring() -> None:
+def test_area_multilinestring(multilinestring_basic: MultiLineString) -> None:
     """Test area calculation for a multilinestring."""
-    # Create multiple linestrings
-    lon1 = np.array([0.0, 5.0])
-    lat1 = np.array([0.0, 5.0])
-    linestring1 = LineString(lon1, lat1)
-
-    lon2 = np.array([5.0, 10.0])
-    lat2 = np.array([5.0, 0.0])
-    linestring2 = LineString(lon2, lat2)
-
-    multilinestring = MultiLineString([linestring1, linestring2])
-    result = area(multilinestring)
+    result = area(multilinestring_basic)
 
     # Area of a multilinestring should be zero
     assert result == 0.0
 
     # Test with different strategies
-    assert area(multilinestring, strategy=Strategy.ANDOYER) == 0.0
-    assert area(multilinestring, strategy=Strategy.KARNEY) == 0.0
-    assert area(multilinestring, strategy=Strategy.THOMAS) == 0.0
-    assert area(multilinestring, strategy=Strategy.VINCENTY) == 0.0
+    assert area(multilinestring_basic, strategy=Strategy.ANDOYER) == 0.0
+    assert area(multilinestring_basic, strategy=Strategy.KARNEY) == 0.0
+    assert area(multilinestring_basic, strategy=Strategy.THOMAS) == 0.0
+    assert area(multilinestring_basic, strategy=Strategy.VINCENTY) == 0.0
