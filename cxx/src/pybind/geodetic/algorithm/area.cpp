@@ -39,13 +39,15 @@ Returns:
     Area in square meters.
 
 Examples:
-    >>> from pyinterp.geodetic import Box, area
+    >>> from pyinterp.geodetic import Box
+    >>> from pyinterp.geodetic.algorithms import area
     >>> box = Box((0.0, 0.0), (1.0, 1.0))
     >>> area(box)  # Area in square meters
     12364036464.29887
 
 Note:
-    Point and LineString geometries have zero area.
+    For Point, Segment, LineString, MultiPoint, and MultiLineString,
+    the area is always 0.0.
 )doc";
 
 constexpr auto kStrategyDoc = R"doc(
@@ -58,7 +60,33 @@ Available strategies:
     - VINCENTY: Vincenty method - good balance (default)
 )doc";
 
-auto init_algorithms(nb::module_& m) -> void {
+// Area function definition helper
+template <typename Geometry>
+auto define_area_method(nb::module_& m) -> void {
+  if constexpr (std::is_same_v<Geometry, Point> ||
+                std::is_same_v<Geometry, Segment> ||
+                std::is_same_v<Geometry, LineString> ||
+                std::is_same_v<Geometry, MultiPoint> ||
+                std::is_same_v<Geometry, MultiLineString>) {
+    m.def(
+        "area",
+        [](const Geometry&, const std::optional<Spheroid>&,
+           const StrategyMethod) -> double { return 0.0; },
+        "geometry"_a, "wgs"_a = nb::none(),
+        "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
+  } else {
+    m.def(
+        "area",
+        [](const Geometry& geometry, const std::optional<Spheroid>& wgs,
+           const StrategyMethod strategy) -> double {
+          return area(geometry, wgs, strategy);
+        },
+        "geometry"_a, "wgs"_a = nb::none(),
+        "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
+  }
+}
+
+auto init_area(nb::module_& m) -> void {
   // Strategy enum
   nb::enum_<StrategyMethod>(m, "Strategy", kStrategyDoc)
       .value("ANDOYER", StrategyMethod::kAndoyer, "Andoyer method")
@@ -67,87 +95,15 @@ auto init_algorithms(nb::module_& m) -> void {
       .value("VINCENTY", StrategyMethod::kVincenty, "Vincenty method (default)")
       .export_values();
 
-  // Area function - Point (always returns 0)
-  m.def(
-      "area",
-      [](const Point&, const std::optional<Spheroid>&,
-         const StrategyMethod) -> double { return 0.0; },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - Box
-  m.def(
-      "area",
-      [](const Box& geometry, const std::optional<Spheroid>& wgs,
-         const StrategyMethod strategy) -> double {
-        return area(geometry, wgs, strategy);
-      },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - Ring
-  m.def(
-      "area",
-      [](const Ring& geometry, const std::optional<Spheroid>& wgs,
-         const StrategyMethod strategy) -> double {
-        return area(geometry, wgs, strategy);
-      },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - Segment (always returns 0)
-  m.def(
-      "area",
-      [](const Segment&, const std::optional<Spheroid>&,
-         const StrategyMethod) -> double { return 0.0; },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - LineString
-  m.def(
-      "area",
-      [](const LineString& self, const std::optional<Spheroid>& wgs,
-         const StrategyMethod strategy) -> double {
-        return area(self, wgs, strategy);
-      },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - Polygon
-  m.def(
-      "area",
-      [](const Polygon& geometry, const std::optional<Spheroid>& wgs,
-         const StrategyMethod strategy) -> double {
-        return area(geometry, wgs, strategy);
-      },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - MultiLineString (always returns 0)
-  m.def(
-      "area",
-      [](const MultiLineString&, const std::optional<Spheroid>&,
-         const StrategyMethod) -> double { return 0.0; },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - MultiPoint (always returns 0)
-  m.def(
-      "area",
-      [](const MultiPoint&, const std::optional<Spheroid>&,
-         const StrategyMethod) -> double { return 0.0; },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-
-  // Area function - MultiPolygon
-  m.def(
-      "area",
-      [](const MultiPolygon& geometry, const std::optional<Spheroid>& wgs,
-         const StrategyMethod strategy) -> double {
-        return area(geometry, wgs, strategy);
-      },
-      "geometry"_a, "wgs"_a = nb::none(),
-      "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
+  define_area_method<Box>(m);
+  define_area_method<LineString>(m);
+  define_area_method<MultiLineString>(m);
+  define_area_method<MultiPoint>(m);
+  define_area_method<MultiPolygon>(m);
+  define_area_method<Point>(m);
+  define_area_method<Polygon>(m);
+  define_area_method<Ring>(m);
+  define_area_method<Segment>(m);
 }
 
 }  // namespace pyinterp::geodetic::pybind

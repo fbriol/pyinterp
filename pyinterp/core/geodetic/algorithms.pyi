@@ -1,3 +1,4 @@
+from typing import overload
 import enum
 
 from . import Spheroid, _Concept
@@ -8,6 +9,19 @@ THOMAS: Strategy
 VINCENTY: Strategy
 
 def area(geometry: _Concept, wgs: Spheroid | None = None, strategy: Strategy = VINCENTY) -> float:
+    ...
+
+def is_empty(geometry: _Concept) -> bool:
+    ...
+
+def is_simple(geometry: _Concept) -> bool:
+    ...
+
+@overload
+def is_valid(geometry: _Concept, return_reason: bool) -> tuple[bool, str]:
+    ...
+@overload
+def is_valid(geometry: _Concept) -> bool:
     ...
 
 class Strategy(enum.Enum):

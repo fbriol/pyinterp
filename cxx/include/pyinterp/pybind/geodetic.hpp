@@ -48,9 +48,30 @@ auto init_spheroid(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_coordinates(nanobind::module_& m) -> void;
 
-/// @brief Initialize algorithm bindings (area, etc.)
+/// @brief Initialize area algorithm bindings
 /// @param[in,out] m Python module
-auto init_algorithms(nanobind::module_& m) -> void;
+auto init_area(nanobind::module_& m) -> void;
+
+/// @brief Initialize is_empty algorithm binding
+/// @param[in,out] m Python module
+auto init_is_empty(nanobind::module_& m) -> void;
+
+/// @brief Initialize is_simple algorithm binding
+/// @param[in,out] m Python module
+auto init_is_simple(nanobind::module_& m) -> void;
+
+/// @brief Initialize is_valid algorithm binding
+/// @param[in,out] m Python module
+auto init_is_valid(nanobind::module_& m) -> void;
+
+/// @brief Initialize all algorithm bindings
+/// @param[in,out] m Python module
+inline void init_algorithms(nanobind::module_& m) {
+  init_area(m);
+  init_is_empty(m);
+  init_is_simple(m);
+  init_is_valid(m);
+}
 
 }  // namespace geodetic::pybind
 
