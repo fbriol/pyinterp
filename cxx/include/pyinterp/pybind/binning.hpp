@@ -18,7 +18,7 @@
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/eigen.hpp"
-#include "pyinterp/geodetic/spheroid.hpp"
+#include "pyinterp/geometry/geographic/spheroid.hpp"
 #include "pyinterp/geometry/point.hpp"
 #include "pyinterp/math.hpp"
 #include "pyinterp/math/axis.hpp"
@@ -56,8 +56,9 @@ class Binning2D {
   /// @param[in] x Definition of the bin centers for the X axis of the grid.
   /// @param[in] y Definition of the bin centers for the Y axis of the grid.
   /// @param[in] wgs Optional WGS system for geographic coordinates
-  Binning2D(Axis<double> x, Axis<double> y,
-            std::optional<geodetic::Spheroid> spheroid = std::nullopt)
+  Binning2D(
+      Axis<double> x, Axis<double> y,
+      std::optional<geometry::geographic::Spheroid> spheroid = std::nullopt)
       : x_(std::move(x)),
         y_(std::move(y)),
         acc_(x_.size(), y_.size()),
@@ -174,7 +175,7 @@ class Binning2D {
   /// @brief Get the WGS spheroid
   /// @return Optional WGS spheroid
   [[nodiscard]] constexpr auto spheroid() const noexcept
-      -> const std::optional<geodetic::Spheroid>& {
+      -> const std::optional<geometry::geographic::Spheroid>& {
     return spheroid_;
   }
 
@@ -210,7 +211,7 @@ class Binning2D {
   /// @return Tuple representing the state
   [[nodiscard]] auto getstate() const
       -> std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
-                    std::optional<geodetic::Spheroid>> {
+                    std::optional<geometry::geographic::Spheroid>> {
     Vector<int8_t> acc_view(x_.size() * y_.size() *
                             sizeof(DescriptiveStatistics));
     std::memcpy(acc_view.data(), acc_.data(),
@@ -224,7 +225,8 @@ class Binning2D {
   /// @throw std::invalid_argument If the state is invalid
   static auto setstate(
       const std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
-                       std::optional<geodetic::Spheroid>>& state) -> Binning2D {
+                       std::optional<geometry::geographic::Spheroid>>& state)
+      -> Binning2D {
     auto x_axis = std::get<0>(state);
     auto y_axis = std::get<1>(state);
     auto acc_view = std::get<2>(state);
@@ -245,7 +247,7 @@ class Binning2D {
   Axis<double> x_;
   Axis<double> y_;
   Matrix<DescriptiveStatistics> acc_;
-  std::optional<geodetic::Spheroid> spheroid_;
+  std::optional<geometry::geographic::Spheroid> spheroid_;
 
  private:
   /// @brief Insert values using nearest binning strategy
@@ -528,7 +530,8 @@ class Binning1D : public Binning2D<T> {
   /// @return Tuple representing the state
   [[nodiscard]] auto getstate() const
       -> std::tuple<Axis<double>, Vector<int8_t>,
-                    std::optional<geodetic::Spheroid>, double, double> {
+                    std::optional<geometry::geographic::Spheroid>, double,
+                    double> {
     Vector<int8_t> acc_view(this->x_.size() * sizeof(DescriptiveStatistics));
     std::memcpy(acc_view.data(), this->acc_.data(),
                 this->x_.size() * sizeof(DescriptiveStatistics));
@@ -537,9 +540,10 @@ class Binning1D : public Binning2D<T> {
 
   /// @brief Create an instance from a serialized state.
   /// @param[in] state Tuple representing the state
-  static auto setstate(const std::tuple<Axis<double>, Vector<int8_t>,
-                                        std::optional<geodetic::Spheroid>,
-                                        double, double>& state) -> Binning1D {
+  static auto setstate(
+      const std::tuple<Axis<double>, Vector<int8_t>,
+                       std::optional<geometry::geographic::Spheroid>, double,
+                       double>& state) -> Binning1D {
     auto x_axis = std::get<0>(state);
     auto acc_view = std::get<1>(state);
     auto expected_size = x_axis.size() * sizeof(DescriptiveStatistics);

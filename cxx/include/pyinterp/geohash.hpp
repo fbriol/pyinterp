@@ -10,9 +10,9 @@
 #include <tuple>
 #include <vector>
 
-#include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/spheroid.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/geographic/spheroid.hpp"
 
 namespace pyinterp {
 
@@ -57,11 +57,11 @@ class GeoHash {
 
   /// @brief Returns the bounding box of the geohash
   /// @return Geodetic box representing the geohash bounds
-  [[nodiscard]] auto bounding_box() const -> geodetic::Box;
+  [[nodiscard]] auto bounding_box() const -> geometry::geographic::Box;
 
   /// @brief Returns the center point of this geohash
   /// @return Geodetic point at the center of the geohash
-  [[nodiscard]] auto center() const -> geodetic::Point;
+  [[nodiscard]] auto center() const -> geometry::geographic::Point;
 
   /// @brief Returns the geohash code as a string
   /// @return String representation of the geohash
@@ -91,16 +91,16 @@ class GeoHash {
   /// @brief Returns the area covered by this geohash
   /// @param[in] wgs Optional spheroid for area calculation
   /// @return The area of the geohash in square meters
-  [[nodiscard]] auto area(const std::optional<geodetic::Spheroid>& wgs) const
-      -> double;
+  [[nodiscard]] auto area(
+      const std::optional<geometry::geographic::Spheroid>& wgs) const -> double;
 
   /// @brief Gets the property of the grid covering the given box
   /// @param[in] box Geodetic box to cover
   /// @param[in] precision Number of characters in the geohash
   /// @return Tuple containing: The GeoHash of the minimum corner point, the
   /// number of cells in longitudes and latitudes
-  [[nodiscard]] static auto grid_properties(const geodetic::Box& box,
-                                            uint32_t precision)
+  [[nodiscard]] static auto grid_properties(
+      const geometry::geographic::Box& box, uint32_t precision)
       -> std::tuple<GeoHash, size_t, size_t>;
 
   /// @brief Returns the precision in longitude/latitude degrees for the given
@@ -132,7 +132,7 @@ class GeoHash {
   /// @brief GeoHash from point and precision
   /// @param[in] point Geodetic point
   /// @param[in] precision Number of characters
-  GeoHash(const geodetic::Point& point, uint32_t precision);
+  GeoHash(const geometry::geographic::Point& point, uint32_t precision);
 };
 
 }  // namespace pyinterp

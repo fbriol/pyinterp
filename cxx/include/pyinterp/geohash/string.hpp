@@ -12,12 +12,12 @@
 #include <vector>
 
 #include "Eigen/Core"
-#include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/multi_polygon.hpp"
-#include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geohash/base32.hpp"
 #include "pyinterp/geohash/int64.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/multi_polygon.hpp"
+#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/geographic/polygon.hpp"
 
 namespace pyinterp::geohash {
 
@@ -309,8 +309,8 @@ struct EncodedHashesView {
 /// @param point Geodetic point (longitude, latitude, altitude).
 /// @param buffer Character buffer that will receive the encoded geohash
 ///               (length equals the desired precision).
-inline auto encode(const geodetic::Point& point, std::span<char> buffer)
-    -> void {
+inline auto encode(const geometry::geographic::Point& point,
+                   std::span<char> buffer) -> void {
   const auto precision = static_cast<uint32_t>(5 * buffer.size());
   Base32::encode(int64::encode(point, precision), buffer);
 }
@@ -331,7 +331,8 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// characters) of the geohash.
 /// @returns Bounding box corresponding to the geohash.
 [[nodiscard]] auto bounding_box(std::span<const char> geohash,
-                                uint32_t* precision = nullptr) -> geodetic::Box;
+                                uint32_t* precision = nullptr)
+    -> geometry::geographic::Box;
 
 /// @brief Decode a geohash string into a geographic point.
 /// @param[in] hash Geohash string as a span of characters.
@@ -339,7 +340,7 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// of the bounding box represented by the geohash.
 /// @returns Decoded geographic point (longitude, latitude).
 [[nodiscard]] inline auto decode(std::span<const char> hash, bool round)
-    -> geodetic::Point {
+    -> geometry::geographic::Point {
   auto bbox = bounding_box(hash);
   return round ? bbox.round() : bbox.centroid();
 }
@@ -403,9 +404,11 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// @returns Area covered by the geohash in square meters.
 [[nodiscard]] inline auto area(
     std::span<const char> hash,
-    const std::optional<geodetic::Spheroid>& spheroid) -> double {
-  return geodetic::area<geodetic::Box, geodetic::StrategyMethod::kVincenty>(
-      bounding_box(hash), spheroid);
+    const std::optional<geometry::geographic::Spheroid>& spheroid) -> double {
+  return geometry::geographic::area<
+      geometry::geographic::Box,
+      geometry::geographic::StrategyMethod::kVincenty>(bounding_box(hash),
+                                                       spheroid);
 }
 
 /// @brief Compute area covered by each geohash in `hash`.
@@ -417,7 +420,8 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// @returns Areas in square meters for each geohash in `hash`.
 [[nodiscard]] inline auto area(
     const EncodedHashes& hash,
-    const std::optional<geodetic::Spheroid>& spheroid) -> Eigen::VectorXd {
+    const std::optional<geometry::geographic::Spheroid>& spheroid)
+    -> Eigen::VectorXd {
   Eigen::VectorXd areas(hash.count);
   for (auto [area_item, hash_span] : std::views::zip(areas, hash)) {
     area_item = area(hash_span, spheroid);
@@ -434,7 +438,8 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// @returns Areas in square meters for each geohash in `hash`.
 [[nodiscard]] inline auto area(
     const EncodedHashesView& hash,
-    const std::optional<geodetic::Spheroid>& spheroid) -> Eigen::VectorXd {
+    const std::optional<geometry::geographic::Spheroid>& spheroid)
+    -> Eigen::VectorXd {
   Eigen::VectorXd areas(hash.count);
   for (auto [area_item, hash_span] : std::views::zip(areas, hash)) {
     area_item = area(hash_span, spheroid);
@@ -452,8 +457,9 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// @return EncodedHashes containing the geohashes of bounding boxes at the
 /// specified precision
 /// @note The return value should be used, as indicated by [[nodiscard]]
-[[nodiscard]] auto bounding_boxes(const std::optional<geodetic::Box>& box,
-                                  const uint32_t precision) -> EncodedHashes;
+[[nodiscard]] auto bounding_boxes(
+    const std::optional<geometry::geographic::Box>& box,
+    const uint32_t precision) -> EncodedHashes;
 
 /// @brief Generate geohashes for bounding boxes that intersect with a polygon
 /// @param polygon Geodetic polygon defining the region of interest
@@ -463,7 +469,7 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// hardware concurrency)
 /// @return EncodedHashes containing the geohashes that intersect with the
 /// polygon
-[[nodiscard]] auto bounding_boxes(const geodetic::Polygon& polygon,
+[[nodiscard]] auto bounding_boxes(const geometry::geographic::Polygon& polygon,
                                   uint32_t precision, size_t num_threads = 0)
     -> EncodedHashes;
 
@@ -476,9 +482,9 @@ inline auto encode(const geodetic::Point& point, std::span<char> buffer)
 /// hardware concurrency)
 /// @return EncodedHashes containing the geohashes that intersect with the
 /// multipolygon
-[[nodiscard]] auto bounding_boxes(const geodetic::MultiPolygon& multipolygon,
-                                  uint32_t precision, size_t num_threads = 0)
-    -> EncodedHashes;
+[[nodiscard]] auto bounding_boxes(
+    const geometry::geographic::MultiPolygon& multipolygon, uint32_t precision,
+    size_t num_threads = 0) -> EncodedHashes;
 
 /// @brief Type alias for bounding region of geohash areas
 using HashRegionBounds =

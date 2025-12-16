@@ -4,9 +4,9 @@
 #include "pyinterp/pybind/binning.hpp"
 #include "pyinterp/pybind/config.hpp"
 #include "pyinterp/pybind/descriptive_statistics.hpp"
-#include "pyinterp/pybind/geodetic.hpp"
 #include "pyinterp/pybind/geohash.hpp"
 #include "pyinterp/pybind/geometric.hpp"
+#include "pyinterp/pybind/geometry.hpp"
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/rtree.hpp"
 #include "pyinterp/pybind/tdigest.hpp"
@@ -22,7 +22,7 @@ NB_MODULE(core, m) {
   pyinterp::pybind::windowed::init_bivariate(m);
   pyinterp::pybind::windowed::init_trivariate(m);
   pyinterp::pybind::windowed::init_quadrivariate(m);
-  pyinterp::pybind::init_geodetic(m);
+  pyinterp::pybind::init_geometry(m);
   pyinterp::pybind::init_geohash(m);
   pyinterp::pybind::init_rtree_3d(m);
   pyinterp::pybind::init_binning(m);

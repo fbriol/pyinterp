@@ -14,13 +14,13 @@
 #include <Eigen/Core>
 #include <utility>
 
-#include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/multi_polygon.hpp"
-#include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/multi_polygon.hpp"
+#include "pyinterp/geometry/geographic/polygon.hpp"
 
 namespace nb = nanobind;
 namespace geohash = pyinterp::geohash;
-namespace geodetic = pyinterp::geodetic;
+namespace geodetic = pyinterp::geometry::geographic;
 
 namespace pyinterp::geohash::pybind {
 
@@ -294,7 +294,8 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "area",
-      [](const nb::object& hash, const std::optional<geodetic::Spheroid>& wgs) {
+      [](const nb::object& hash,
+         const std::optional<geometry::geographic::Spheroid>& wgs) {
         auto hashes = from_numpy<1>(hash);
         {
           nb::gil_scoped_release release;
@@ -305,7 +306,8 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "bounding_boxes",
-      [](const std::optional<geodetic::Box>& box, uint32_t precision) {
+      [](const std::optional<geometry::geographic::Box>& box,
+         uint32_t precision) {
         check_range(precision);
         EncodedHashes result;
         {
@@ -319,7 +321,7 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "bounding_boxes",
-      [](const geodetic::Polygon& polygon, uint32_t precision,
+      [](const geometry::geographic::Polygon& polygon, uint32_t precision,
          size_t num_threads) {
         check_range(precision);
         EncodedHashes result;
@@ -334,7 +336,7 @@ auto init_geohash_string(nb::module_& m) -> void {
 
   m.def(
       "bounding_boxes",
-      [](const geodetic::MultiPolygon& polygons, uint32_t precision,
+      [](const geometry::geographic::MultiPolygon& polygons, uint32_t precision,
          size_t num_threads) {
         check_range(precision);
         EncodedHashes result;

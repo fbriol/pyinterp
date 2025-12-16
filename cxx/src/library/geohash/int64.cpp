@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "pyinterp/geodetic/box.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
 #if defined(__x86_64__) || defined(_M_X64)
 #include <immintrin.h>
 #ifdef _WIN32
@@ -186,7 +186,7 @@ static auto allocate_array(const size_t size) -> Vector<uint64_t> {
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto encode(const geodetic::Point &point, const uint32_t precision)
+auto encode(const geometry::geographic::Point &point, const uint32_t precision)
     -> uint64_t {
   auto lon = point.lon();
   if (lon < -180.0 || lon > 180.0) {
@@ -203,7 +203,7 @@ auto encode(const geodetic::Point &point, const uint32_t precision)
 // /////////////////////////////////////////////////////////////////////////////
 
 auto bounding_box(const uint64_t hash, const uint32_t precision) noexcept
-    -> geodetic::Box {
+    -> geometry::geographic::Box {
   auto full_hash = hash << (64U - precision);
   auto [x_err, y_err] = error_with_precision(precision);
   auto [y, x] = deinterleaver(full_hash);
@@ -251,7 +251,8 @@ auto neighbors(const uint64_t hash, const uint32_t precision)
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto grid_properties(const geodetic::Box &box, const uint32_t precision)
+auto grid_properties(const geometry::geographic::Box &box,
+                     const uint32_t precision)
     -> std::tuple<uint64_t, size_t, size_t> {
   auto hash_sw = encode(box.min_corner(), precision);
   auto box_sw = bounding_box(hash_sw, precision);
@@ -280,10 +281,11 @@ auto grid_properties(const geodetic::Box &box, const uint32_t precision)
 
 // Calculate the intersection mask between the geometry and the GeoHash grid.
 template <typename Geometry>
-auto mask_cell(const geodetic::Box &envelope, const Geometry &geometry,
-               double lng_err, double lat_err, const geodetic::Point &point_sw,
-               size_t lon_step, size_t lat_step, uint32_t bits,
-               size_t num_threads) -> Matrix<bool> {
+auto mask_cell(const geometry::geographic::Box &envelope,
+               const Geometry &geometry, double lng_err, double lat_err,
+               const geometry::geographic::Point &point_sw, size_t lon_step,
+               size_t lat_step, uint32_t bits, size_t num_threads)
+    -> Matrix<bool> {
   // Allocate the grid result
   auto result = Matrix<bool>(lon_step, lat_step);
 
@@ -291,7 +293,7 @@ auto mask_cell(const geodetic::Box &envelope, const Geometry &geometry,
       static_cast<int64_t>(lat_step),
       [&](int64_t start, int64_t end) {
         for (auto lat = start; lat < end; ++lat) {
-          auto point = geodetic::Point(
+          auto point = geometry::geographic::Point(
               0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
           for (size_t lon = 0; lon < lon_step; ++lon) {
@@ -310,9 +312,10 @@ auto mask_cell(const geodetic::Box &envelope, const Geometry &geometry,
 
 // Return all GeoHash codes selected by the mask.
 static auto select_cell(double lng_err, double lat_err,
-                        const geodetic::Point &point_sw, size_t lon_step,
-                        size_t lat_step, uint32_t bits, uint32_t precision,
-                        const Matrix<bool> &mask) -> Vector<uint64_t> {
+                        const geometry::geographic::Point &point_sw,
+                        size_t lon_step, size_t lat_step, uint32_t bits,
+                        uint32_t precision, const Matrix<bool> &mask)
+    -> Vector<uint64_t> {
   // Count the number of cells that are enclosed by the polygon
   auto size = mask.cast<uint64_t>().sum();
 
@@ -323,8 +326,8 @@ static auto select_cell(double lng_err, double lat_err,
   // result
   size_t result_ix = 0;
   for (size_t lat = 0; lat < lat_step; ++lat) {
-    auto point =
-        geodetic::Point(0, point_sw.lat() + static_cast<double>(lat) * lat_err);
+    auto point = geometry::geographic::Point(
+        0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
     for (size_t lon = 0; lon < lon_step; ++lon) {
       if (mask(lon, lat)) {
@@ -339,11 +342,11 @@ static auto select_cell(double lng_err, double lat_err,
 // Helper to safely compute envelope, correcting boost's anti-meridian
 // normalization
 template <typename Geometry>
-auto safe_envelope(const Geometry &geometry) -> geodetic::Box {
-  if constexpr (std::is_same_v<Geometry, geodetic::Box>) {
+auto safe_envelope(const Geometry &geometry) -> geometry::geographic::Box {
+  if constexpr (std::is_same_v<Geometry, geometry::geographic::Box>) {
     return geometry;  // Use box directly
   } else {
-    geodetic::Box envelope;
+    geometry::geographic::Box envelope;
     boost::geometry::envelope(geometry, envelope);
 
     // Check if boost incorrectly normalized the envelope
@@ -380,7 +383,7 @@ auto bounding_boxes_impl(const Geometry &geometry, uint32_t precision,
   const auto point_sw = decode(hash_sw, precision, false);
 
   Matrix<bool> mask;
-  if constexpr (std::is_same_v<Geometry, geodetic::Box>) {
+  if constexpr (std::is_same_v<Geometry, geometry::geographic::Box>) {
     // If the geometry is a box, all cells are selected
     mask = Matrix<bool>(lon_step, lat_step);
     mask.setConstant(true);
@@ -398,21 +401,23 @@ auto bounding_boxes_impl(const Geometry &geometry, uint32_t precision,
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto bounding_boxes(const geodetic::Box &box, const uint32_t precision,
-                    const size_t num_threads) -> Vector<uint64_t> {
+auto bounding_boxes(const geometry::geographic::Box &box,
+                    const uint32_t precision, const size_t num_threads)
+    -> Vector<uint64_t> {
   return bounding_boxes_impl(box, precision, num_threads);
 }
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto bounding_boxes(const geodetic::Polygon &polygon, const uint32_t precision,
-                    const size_t num_threads) -> Vector<uint64_t> {
+auto bounding_boxes(const geometry::geographic::Polygon &polygon,
+                    const uint32_t precision, const size_t num_threads)
+    -> Vector<uint64_t> {
   return bounding_boxes_impl(polygon, precision, num_threads);
 }
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto bounding_boxes(const geodetic::MultiPolygon &polygons,
+auto bounding_boxes(const geometry::geographic::MultiPolygon &polygons,
                     const uint32_t precision, const size_t num_threads)
     -> Vector<uint64_t> {
   return bounding_boxes_impl(polygons, precision, num_threads);

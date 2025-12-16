@@ -1,6 +1,6 @@
-#include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/geometry/geographic/polygon.hpp"
 
-namespace pyinterp::geodetic {
+namespace pyinterp::geometry::geographic {
 
 auto Polygon::unpack(serialization::Reader& state) -> Polygon {
   if (state.size() == 0) {
@@ -24,4 +24,4 @@ auto Polygon::unpack(serialization::Reader& state) -> Polygon {
   return {std::move(exterior), std::move(interiors)};
 }
 
-}  // namespace pyinterp::geodetic
+}  // namespace pyinterp::geometry::geographic

@@ -1,14 +1,14 @@
-#include "pyinterp/geodetic/coordinates.hpp"
+#include "pyinterp/geometry/geographic/coordinates.hpp"
 
 #include <gtest/gtest.h>
 
 #include <random>
 
 #include "boost/geometry/core/access.hpp"
-#include "pyinterp/geodetic/spheroid.hpp"
+#include "pyinterp/geometry/geographic/spheroid.hpp"
 #include "pyinterp/geometry/point.hpp"
 
-namespace geodetic = pyinterp::geodetic;
+namespace geodetic = pyinterp::geometry::geographic;
 namespace geometry = pyinterp::geometry;
 
 TEST(Coordinates, LLAtoECEF) {
@@ -17,7 +17,9 @@ TEST(Coordinates, LLAtoECEF) {
   // Computed by pyproj
   auto tls_ecef = geometry::ECEF<double>(4622395.2942195125, 110331.83487903349,
                                          4378876.426388506);
-  auto ecef = geodetic::Coordinates(geodetic::Spheroid()).lla_to_ecef(tls_lla);
+  auto ecef =
+      geometry::geographic::Coordinates(geometry::geographic::Spheroid())
+          .lla_to_ecef(tls_lla);
   EXPECT_NEAR(boost::geometry::get<0>(tls_ecef), boost::geometry::get<0>(ecef),
               1e-12);
   EXPECT_NEAR(boost::geometry::get<1>(tls_ecef), boost::geometry::get<1>(ecef),
@@ -33,7 +35,8 @@ TEST(Coordinates, ECEFtoLLA) {
   // Computed by pyproj
   auto tls_lla = geometry::LLA<double>(1.3673318639999998, 43.63433079599999,
                                        146.00000000093132);
-  auto lla = geodetic::Coordinates(geodetic::Spheroid()).ecef_to_lla(tls_ecef);
+  auto lla = geometry::geographic::Coordinates(geometry::geographic::Spheroid())
+                 .ecef_to_lla(tls_ecef);
   EXPECT_NEAR(boost::geometry::get<0>(tls_lla), boost::geometry::get<0>(lla),
               1e-12);
   EXPECT_NEAR(boost::geometry::get<1>(tls_lla), boost::geometry::get<1>(lla),
@@ -51,7 +54,8 @@ TEST(Coordinates, LLAtoECEFtoLLA) {
   std::uniform_real_distribution<double> alt(-10'000, 100'000);
   std::default_random_engine re;
 
-  auto coordinates = geodetic::Coordinates(geodetic::Spheroid());
+  auto coordinates =
+      geometry::geographic::Coordinates(geometry::geographic::Spheroid());
 
   for (int ix = 0; ix < 1'000'000; ix++) {
     auto ref = geometry::LLA<double>(lon(re), lat(re), alt(re));

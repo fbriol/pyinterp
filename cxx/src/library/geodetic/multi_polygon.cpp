@@ -1,6 +1,6 @@
-#include "pyinterp/geodetic/multi_polygon.hpp"
+#include "pyinterp/geometry/geographic/multi_polygon.hpp"
 
-namespace pyinterp::geodetic {
+namespace pyinterp::geometry::geographic {
 
 auto MultiPolygon::unpack(serialization::Reader& state) -> MultiPolygon {
   if (state.size() == 0) {
@@ -23,4 +23,4 @@ auto MultiPolygon::unpack(serialization::Reader& state) -> MultiPolygon {
   return MultiPolygon(std::move(polygons));
 }
 
-}  // namespace pyinterp::geodetic
+}  // namespace pyinterp::geometry::geographic

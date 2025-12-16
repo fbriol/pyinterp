@@ -12,8 +12,8 @@
 #include <ranges>
 #include <tuple>
 
-#include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/spheroid.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/spheroid.hpp"
 
 namespace pyinterp::geohash::int64 {
 
@@ -25,12 +25,14 @@ class GeoHashInt64Test : public ::testing::Test {
   static constexpr uint32_t kMaxPrecision = 64;
 
   // Helper: Create a point
-  static auto make_point(double lon, double lat) -> geodetic::Point {
+  static auto make_point(double lon, double lat)
+      -> geometry::geographic::Point {
     return {lon, lat};
   }
 
   // Helper: Check if two points are approximately equal
-  static auto points_equal(const geodetic::Point& p1, const geodetic::Point& p2,
+  static auto points_equal(const geometry::geographic::Point& p1,
+                           const geometry::geographic::Point& p2,
                            double eps = kEpsilon) -> bool {
     return std::abs(p1.lon() - p2.lon()) < eps &&
            std::abs(p1.lat() - p2.lat()) < eps;
@@ -464,7 +466,8 @@ TEST_F(GeoHashInt64Test, NeighborsNearPole) {
 // ============================================================================
 
 TEST_F(GeoHashInt64Test, GridPropertiesBasic) {
-  auto box = geodetic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
+  auto box =
+      geometry::geographic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
   auto [hash_sw, lon_step, lat_step] = grid_properties(box, kDefaultPrecision);
 
   // Should have valid hash and positive steps
@@ -475,7 +478,8 @@ TEST_F(GeoHashInt64Test, GridPropertiesBasic) {
 
 TEST_F(GeoHashInt64Test, GridPropertiesSinglePoint) {
   // Box that is a single point
-  auto box = geodetic::Box(make_point(10.0, 20.0), make_point(10.0, 20.0));
+  auto box =
+      geometry::geographic::Box(make_point(10.0, 20.0), make_point(10.0, 20.0));
   auto [hash_sw, lon_step, lat_step] = grid_properties(box, kDefaultPrecision);
 
   // Should return 1x1 grid
@@ -484,7 +488,8 @@ TEST_F(GeoHashInt64Test, GridPropertiesSinglePoint) {
 }
 
 TEST_F(GeoHashInt64Test, GridPropertiesIncreasesPrecision) {
-  auto box = geodetic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
+  auto box =
+      geometry::geographic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
 
   // Higher precision should give more grid cells
   for (uint32_t p1 = 16; p1 < 32; p1 += 4) {
@@ -502,7 +507,8 @@ TEST_F(GeoHashInt64Test, GridPropertiesIncreasesPrecision) {
 
 TEST_F(GeoHashInt64Test, GridPropertiesLargeBox) {
   // Test with a large box
-  auto box = geodetic::Box(make_point(-100.0, -50.0), make_point(100.0, 50.0));
+  auto box = geometry::geographic::Box(make_point(-100.0, -50.0),
+                                       make_point(100.0, 50.0));
   auto [hash_sw, lon_step, lat_step] = grid_properties(box, 24);
 
   // Large box should have many cells
@@ -512,14 +518,16 @@ TEST_F(GeoHashInt64Test, GridPropertiesLargeBox) {
 
 TEST_F(GeoHashInt64Test, GridPropertiesEdgeCases) {
   // Test box at 180 degree boundary
-  auto box1 = geodetic::Box(make_point(170.0, 0.0), make_point(180.0, 10.0));
+  auto box1 = geometry::geographic::Box(make_point(170.0, 0.0),
+                                        make_point(180.0, 10.0));
   auto [hash1, lon_step1, lat_step1] = grid_properties(box1, kDefaultPrecision);
 
   EXPECT_GT(lon_step1, 0u);
   EXPECT_GT(lat_step1, 0u);
 
   // Test box at 90 degree boundary
-  auto box2 = geodetic::Box(make_point(0.0, 80.0), make_point(10.0, 90.0));
+  auto box2 =
+      geometry::geographic::Box(make_point(0.0, 80.0), make_point(10.0, 90.0));
   auto [hash2, lon_step2, lat_step2] = grid_properties(box2, kDefaultPrecision);
 
   EXPECT_GT(lon_step2, 0u);
@@ -541,7 +549,7 @@ TEST_F(GeoHashInt64Test, AreaBasic) {
 TEST_F(GeoHashInt64Test, AreaWithSpheroid) {
   auto hash = encode(make_point(0.0, 0.0), kDefaultPrecision);
 
-  auto wgs84 = geodetic::Spheroid();  // Default WGS84
+  auto wgs84 = geometry::geographic::Spheroid();  // Default WGS84
 
   auto area_with_wgs = area(hash, kDefaultPrecision, wgs84);
 
@@ -584,7 +592,8 @@ TEST_F(GeoHashInt64Test, AreaNearPole) {
 // ============================================================================
 
 TEST_F(GeoHashInt64Test, BoundingBoxesPointZero) {
-  auto box = geodetic::Box(make_point(-180, -90.0), make_point(-135.0, -45.0));
+  auto box = geometry::geographic::Box(make_point(-180, -90.0),
+                                       make_point(-135.0, -45.0));
   auto boxes = bounding_boxes(box, 10);
 
   EXPECT_EQ(boxes.size(), 32);
@@ -594,7 +603,7 @@ TEST_F(GeoHashInt64Test, BoundingBoxesPolygonAntiMeridian) {
   // Create a polygon covering the same region as BoundingBoxesPointZero
   // This tests that safe_envelope() properly handles polygons at the
   // anti-meridian
-  geodetic::Polygon polygon;
+  geometry::geographic::Polygon polygon;
 
   // Create outer ring for polygon from (-180, -90) to (-135, -45)
   polygon.outer().push_back(make_point(-180.0, -90.0));
@@ -610,7 +619,8 @@ TEST_F(GeoHashInt64Test, BoundingBoxesPolygonAntiMeridian) {
 }
 
 TEST_F(GeoHashInt64Test, BoundingBoxesBasic) {
-  auto box = geodetic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
+  auto box =
+      geometry::geographic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
   auto boxes = bounding_boxes(box, kDefaultPrecision);
 
   // Should return non-empty vector
@@ -618,7 +628,8 @@ TEST_F(GeoHashInt64Test, BoundingBoxesBasic) {
 }
 
 TEST_F(GeoHashInt64Test, BoundingBoxesCount) {
-  auto box = geodetic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
+  auto box =
+      geometry::geographic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
   auto boxes = bounding_boxes(box, kDefaultPrecision);
 
   auto [hash_sw, lon_step, lat_step] = grid_properties(box, kDefaultPrecision);
@@ -631,8 +642,8 @@ TEST_F(GeoHashInt64Test, BoundingBoxesCount) {
 TEST_F(GeoHashInt64Test, BoundingBoxesSingleCell) {
   // Small box that fits in one geohash cell
   auto [lon_err, lat_err] = error_with_precision(kDefaultPrecision);
-  auto box =
-      geodetic::Box(make_point(0.0, 0.0), make_point(lon_err / 2, lat_err / 2));
+  auto box = geometry::geographic::Box(make_point(0.0, 0.0),
+                                       make_point(lon_err / 2, lat_err / 2));
 
   auto boxes = bounding_boxes(box, kDefaultPrecision);
 
@@ -641,7 +652,8 @@ TEST_F(GeoHashInt64Test, BoundingBoxesSingleCell) {
 }
 
 TEST_F(GeoHashInt64Test, BoundingBoxesIncreasesPrecision) {
-  auto box = geodetic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
+  auto box =
+      geometry::geographic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
 
   // Higher precision should give more boxes
   for (uint32_t p1 = 16; p1 < 32; p1 += 4) {
@@ -656,7 +668,8 @@ TEST_F(GeoHashInt64Test, BoundingBoxesIncreasesPrecision) {
 }
 
 TEST_F(GeoHashInt64Test, BoundingBoxesUnique) {
-  auto box = geodetic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
+  auto box =
+      geometry::geographic::Box(make_point(0.0, 0.0), make_point(10.0, 10.0));
   auto boxes = bounding_boxes(box, kDefaultPrecision);
 
   // All hashes should be unique (convert to set and check size)
@@ -667,7 +680,8 @@ TEST_F(GeoHashInt64Test, BoundingBoxesUnique) {
 }
 
 TEST_F(GeoHashInt64Test, BoundingBoxesCoverage) {
-  auto box = geodetic::Box(make_point(0.0, 0.0), make_point(5.0, 5.0));
+  auto box =
+      geometry::geographic::Box(make_point(0.0, 0.0), make_point(5.0, 5.0));
   auto boxes = bounding_boxes(box, 24);
 
   // Verify that all boxes are within or adjacent to the original box
@@ -689,7 +703,8 @@ TEST_F(GeoHashInt64Test, BoundingBoxesCoverage) {
 
 TEST_F(GeoHashInt64Test, BoundingBoxesLargeArea) {
   // Test with a large area
-  auto box = geodetic::Box(make_point(-50.0, -30.0), make_point(50.0, 30.0));
+  auto box = geometry::geographic::Box(make_point(-50.0, -30.0),
+                                       make_point(50.0, 30.0));
   auto boxes = bounding_boxes(box, 20);
 
   // Should produce many boxes
@@ -838,7 +853,8 @@ TEST_F(GeoHashInt64Test, PerformanceVectorizedEncode) {
 
 TEST_F(GeoHashInt64Test, PerformanceBoundingBoxes) {
   // Test bounding boxes performance with large area
-  auto box = geodetic::Box(make_point(-100.0, -50.0), make_point(100.0, 50.0));
+  auto box = geometry::geographic::Box(make_point(-100.0, -50.0),
+                                       make_point(100.0, 50.0));
 
   auto boxes = bounding_boxes(box, 20);
 

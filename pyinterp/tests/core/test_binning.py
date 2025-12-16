@@ -224,7 +224,7 @@ class TestBinning2DFloat32:
     ) -> None:
         """Test with geographic coordinates."""
         x_axis, y_axis = binning2d_axes
-        spheroid = core.geodetic.Spheroid()
+        spheroid = core.geometry.geographic.Spheroid()
         binning = core.Binning2D(
             x_axis, y_axis, spheroid=spheroid, dtype="float32"
         )
@@ -623,7 +623,7 @@ class TestBinningFactoryFunctions:
         """Test Binning2D factory with spheroid."""
         x_axis = core.Axis(np.arange(0.0, 360.0, 30.0))
         y_axis = core.Axis(np.arange(-90.0, 90.0, 30.0))
-        spheroid = core.geodetic.Spheroid()
+        spheroid = core.geometry.geographic.Spheroid()
 
         binning = core.Binning2D(
             x_axis, y_axis, spheroid=spheroid, dtype="float32"

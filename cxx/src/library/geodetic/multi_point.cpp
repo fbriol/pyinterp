@@ -1,6 +1,6 @@
-#include "pyinterp/geodetic/multi_point.hpp"
+#include "pyinterp/geometry/geographic/multi_point.hpp"
 
-namespace pyinterp::geodetic {
+namespace pyinterp::geometry::geographic {
 
 auto MultiPoint::unpack(serialization::Reader& state) -> MultiPoint {
   if (state.size() == 0) {
@@ -14,4 +14,4 @@ auto MultiPoint::unpack(serialization::Reader& state) -> MultiPoint {
   return MultiPoint(std::move(points));
 }
 
-}  // namespace pyinterp::geodetic
+}  // namespace pyinterp::geometry::geographic

@@ -12,10 +12,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from pyinterp import core
+from pyinterp.core import RTree3D, RTree3DFloat64, RTree3DFloat32
+from pyinterp.core.geometry.geographic import Spheroid
+
 
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
+    from pyinterp.core import RTree3DHolder
 
 
 @pytest.fixture(params=["float64", "float32"])
@@ -25,15 +28,15 @@ def dtype_param(request: FixtureRequest) -> str:
 
 
 @pytest.fixture
-def rtree_float64() -> core.RTree3DHolder[np.float64]:
+def rtree_float64() -> RTree3DHolder[np.float64]:
     """Create an RTree3D with float64 dtype."""
-    return core.RTree3D(dtype="float64")
+    return RTree3D(dtype="float64")
 
 
 @pytest.fixture
-def rtree_float32() -> core.RTree3DHolder[np.float32]:
+def rtree_float32() -> RTree3DHolder[np.float32]:
     """Create an RTree3D with float32 dtype."""
-    return core.RTree3D(dtype="float32")
+    return RTree3D(dtype="float32")
 
 
 @pytest.fixture(params=[np.float64, np.float32])
@@ -46,7 +49,7 @@ class TestRTree3DInitialization:
     """Tests for RTree3D initialization."""
 
     def test_init_no_spheroid_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test RTree3D initialization without spheroid."""
         assert rtree_float64.spheroid is None
@@ -54,7 +57,7 @@ class TestRTree3DInitialization:
         assert rtree_float64.size() == 0
 
     def test_init_no_spheroid_float32(
-        self, rtree_float32: core.RTree3DFloat32
+        self, rtree_float32: RTree3DFloat32
     ) -> None:
         """Test RTree3D initialization without spheroid."""
         assert rtree_float32.spheroid is None
@@ -63,23 +66,23 @@ class TestRTree3DInitialization:
 
     def test_init_with_spheroid_float64(self) -> None:
         """Test RTree3D initialization with spheroid."""
-        spheroid = core.geodetic.Spheroid()
-        tree = core.RTree3D(spheroid=spheroid, dtype="float64")
+        spheroid = Spheroid()
+        tree = RTree3D(spheroid=spheroid, dtype="float64")
         assert tree.spheroid is not None
         assert tree.empty()
         assert tree.size() == 0
 
     def test_init_with_spheroid_float32(self) -> None:
         """Test RTree3D initialization with spheroid."""
-        spheroid = core.geodetic.Spheroid()
-        tree = core.RTree3D(spheroid=spheroid, dtype="float32")
+        spheroid = Spheroid()
+        tree = RTree3D(spheroid=spheroid, dtype="float32")
         assert tree.spheroid is not None
         assert tree.empty()
         assert tree.size() == 0
 
     def test_init_parametrized(self, dtype_param: str) -> None:
         """Test initialization for both Float64 and Float32."""
-        tree = core.RTree3D(dtype=dtype_param)
+        tree = RTree3D(dtype=dtype_param)
         assert tree.empty()
         assert tree.size() == 0
 
@@ -88,7 +91,7 @@ class TestRTree3DPacking:
     """Tests for RTree3D packing operations."""
 
     def test_packing_3d_cartesian_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test packing 3D Cartesian points with float64."""
         coordinates = np.array(
@@ -110,7 +113,7 @@ class TestRTree3DPacking:
         assert rtree_float64.size() == 5
 
     def test_packing_3d_cartesian_float32(
-        self, rtree_float32: core.RTree3DFloat32
+        self, rtree_float32: RTree3DFloat32
     ) -> None:
         """Test packing 3D Cartesian points with float32."""
         coordinates = np.array(
@@ -131,9 +134,7 @@ class TestRTree3DPacking:
         assert not rtree_float32.empty()
         assert rtree_float32.size() == 5
 
-    def test_packing_2d_float64(
-        self, rtree_float64: core.RTree3DFloat64
-    ) -> None:
+    def test_packing_2d_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test packing 2D points (Z=0) with float64."""
         coordinates = np.array(
             [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], dtype=np.float64
@@ -146,9 +147,7 @@ class TestRTree3DPacking:
         assert not rtree_float64.empty()
         assert rtree_float64.size() == 4
 
-    def test_packing_2d_float32(
-        self, rtree_float32: core.RTree3DFloat32
-    ) -> None:
+    def test_packing_2d_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test packing 2D points (Z=0) with float32."""
         coordinates = np.array(
             [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], dtype=np.float32
@@ -167,7 +166,7 @@ class TestRTree3DPacking:
         float_dtype: type[np.float64 | np.float32],
     ) -> None:
         """Test packing 3D points for both Float64 and Float32."""
-        tree = core.RTree3D(dtype=dtype_param)  # type: ignore[call-arg]
+        tree = RTree3D(dtype=dtype_param)  # type: ignore[call-arg]
 
         coordinates = np.array(
             [
@@ -186,12 +185,11 @@ class TestRTree3DPacking:
         assert not tree.empty()
 
     def test_packing_geodetic_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test packing geodetic (lon, lat, alt) coordinates with float64."""
-        spheroid = core.geodetic.Spheroid()
-        tree = core.RTree3D(spheroid=spheroid, dtype="float64")
-
+        spheroid = Spheroid()
+        tree = RTree3D(spheroid=spheroid, dtype="float64")
         # Sample points around Paris
         coordinates = np.array(
             [
@@ -210,11 +208,11 @@ class TestRTree3DPacking:
         assert tree.spheroid is not None
 
     def test_packing_geodetic_float32(
-        self, rtree_float32: core.RTree3DFloat32
+        self, rtree_float32: RTree3DFloat32
     ) -> None:
         """Test packing geodetic (lon, lat, alt) coordinates with float32."""
-        spheroid = core.geodetic.Spheroid()
-        tree = core.RTree3D(spheroid=spheroid, dtype="float32")
+        spheroid = Spheroid()
+        tree = RTree3D(spheroid=spheroid, dtype="float32")
 
         coordinates = np.array(
             [
@@ -238,8 +236,8 @@ class TestRTree3DPacking:
         float_dtype: type[np.float64 | np.float32],
     ) -> None:
         """Test packing geodetic coordinates for both Float64 and Float32."""
-        spheroid = core.geodetic.Spheroid()
-        tree = core.RTree3D(spheroid=spheroid, dtype=dtype_param)
+        spheroid = Spheroid()
+        tree = RTree3D(spheroid=spheroid, dtype=dtype_param)
 
         coordinates = np.array(
             [
@@ -261,7 +259,7 @@ class TestRTree3DPacking:
 class TestRTree3DInsertion:
     """Tests for RTree3D insertion operations."""
 
-    def test_insert_float64(self, rtree_float64: core.RTree3DFloat64) -> None:
+    def test_insert_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test incremental insertion with float64."""
         coords1 = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=np.float64)
         values1 = np.array([10.0, 20.0], dtype=np.float64)
@@ -275,7 +273,7 @@ class TestRTree3DInsertion:
 
         assert rtree_float64.size() == 3
 
-    def test_insert_float32(self, rtree_float32: core.RTree3DFloat32) -> None:
+    def test_insert_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test incremental insertion with float32."""
         coords1 = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=np.float32)
         values1 = np.array([10.0, 20.0], dtype=np.float32)
@@ -295,7 +293,7 @@ class TestRTree3DInsertion:
         float_dtype: type[np.float64 | np.float32],
     ) -> None:
         """Test insertion for both Float64 and Float32."""
-        tree = core.RTree3D(dtype=dtype_param)
+        tree = RTree3D(dtype=dtype_param)
 
         coordinates = np.array(
             [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
@@ -311,7 +309,7 @@ class TestRTree3DInsertion:
 class TestRTree3DMaintenanceOperations:
     """Tests for RTree3D maintenance operations."""
 
-    def test_clear_float64(self, rtree_float64: core.RTree3DFloat64) -> None:
+    def test_clear_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test clearing tree with float64."""
         coordinates = np.array(
             [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], dtype=np.float64
@@ -326,7 +324,7 @@ class TestRTree3DMaintenanceOperations:
         assert rtree_float64.empty()
         assert rtree_float64.size() == 0
 
-    def test_clear_float32(self, rtree_float32: core.RTree3DFloat32) -> None:
+    def test_clear_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test clearing tree with float32."""
         coordinates = np.array(
             [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], dtype=np.float32
@@ -347,7 +345,7 @@ class TestRTree3DMaintenanceOperations:
         float_dtype: type[np.float64 | np.float32],
     ) -> None:
         """Test clearing for both Float64 and Float32."""
-        tree = core.RTree3D(dtype=dtype_param)
+        tree = RTree3D(dtype=dtype_param)
 
         coordinates = np.array(
             [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], dtype=float_dtype
@@ -360,20 +358,16 @@ class TestRTree3DMaintenanceOperations:
         tree.clear()
         assert tree.empty()
 
-    def test_bounds_empty_float64(
-        self, rtree_float64: core.RTree3DFloat64
-    ) -> None:
+    def test_bounds_empty_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test bounds on empty tree with float64."""
         assert rtree_float64.bounds() is None
 
-    def test_bounds_empty_float32(
-        self, rtree_float32: core.RTree3DFloat32
-    ) -> None:
+    def test_bounds_empty_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test bounds on empty tree with float32."""
         assert rtree_float32.bounds() is None
 
     def test_bounds_with_points_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test bounds calculation with float64."""
         coordinates = np.array(
@@ -391,7 +385,7 @@ class TestRTree3DMaintenanceOperations:
         assert len(max_point) == 3
 
     def test_bounds_with_points_float32(
-        self, rtree_float32: core.RTree3DFloat32
+        self, rtree_float32: RTree3DFloat32
     ) -> None:
         """Test bounds calculation with float32."""
         coordinates = np.array(
@@ -414,7 +408,7 @@ class TestRTree3DMaintenanceOperations:
         float_dtype: type[np.float64 | np.float32],
     ) -> None:
         """Test bounds for both Float64 and Float32."""
-        tree = core.RTree3D(dtype=dtype_param)
+        tree = RTree3D(dtype=dtype_param)
 
         coordinates = np.array(
             [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=float_dtype
@@ -430,7 +424,7 @@ class TestRTree3DMaintenanceOperations:
 class TestRTree3DPickling:
     """Tests for RTree3D serialization."""
 
-    def test_pickle_float64(self, rtree_float64: core.RTree3DFloat64) -> None:
+    def test_pickle_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test pickling and unpickling with float64."""
         coordinates = np.array(
             [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
@@ -446,7 +440,7 @@ class TestRTree3DPickling:
         assert tree2.size() == 3
         assert not tree2.empty()
 
-    def test_pickle_float32(self, rtree_float32: core.RTree3DFloat32) -> None:
+    def test_pickle_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test pickling and unpickling with float32."""
         coordinates = np.array(
             [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
@@ -468,7 +462,7 @@ class TestRTree3DPickling:
         float_dtype: type[np.float64 | np.float32],
     ) -> None:
         """Test pickling for both Float64 and Float32."""
-        tree = core.RTree3D(dtype=dtype_param)
+        tree = RTree3D(dtype=dtype_param)
 
         coordinates = np.array(
             [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], dtype=float_dtype
@@ -482,11 +476,11 @@ class TestRTree3DPickling:
         assert tree_copy.size() == 2
 
     def test_pickle_geodetic_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test pickling with geodetic spheroid float64."""
-        spheroid = core.geodetic.Spheroid()
-        tree = core.RTree3D(spheroid=spheroid, dtype="float64")
+        spheroid = Spheroid()
+        tree = RTree3D(spheroid=spheroid, dtype="float64")
 
         coordinates = np.array(
             [[2.35, 48.85, 0.0], [2.45, 48.90, 100.0]], dtype=np.float64
@@ -504,9 +498,7 @@ class TestRTree3DPickling:
 class TestRTree3DEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_single_point_float64(
-        self, rtree_float64: core.RTree3DFloat64
-    ) -> None:
+    def test_single_point_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test tree with a single point with float64."""
         coordinates = np.array([[0.0, 0.0, 0.0]], dtype=np.float64)
         values = np.array([42.0], dtype=np.float64)
@@ -515,9 +507,7 @@ class TestRTree3DEdgeCases:
 
         assert rtree_float64.size() == 1
 
-    def test_single_point_float32(
-        self, rtree_float32: core.RTree3DFloat32
-    ) -> None:
+    def test_single_point_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test tree with a single point with float32."""
         coordinates = np.array([[0.0, 0.0, 0.0]], dtype=np.float32)
         values = np.array([42.0], dtype=np.float32)
@@ -527,7 +517,7 @@ class TestRTree3DEdgeCases:
         assert rtree_float32.size() == 1
 
     def test_duplicate_coordinates_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test inserting duplicate coordinates with float64."""
         coordinates = np.array(
@@ -541,7 +531,7 @@ class TestRTree3DEdgeCases:
         assert rtree_float64.size() == 3
 
     def test_duplicate_coordinates_float32(
-        self, rtree_float32: core.RTree3DFloat32
+        self, rtree_float32: RTree3DFloat32
     ) -> None:
         """Test inserting duplicate coordinates with float32."""
         coordinates = np.array(
@@ -554,9 +544,7 @@ class TestRTree3DEdgeCases:
 
         assert rtree_float32.size() == 3
 
-    def test_large_values_float64(
-        self, rtree_float64: core.RTree3DFloat64
-    ) -> None:
+    def test_large_values_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test with large coordinate values (ECEF) with float64."""
         coordinates = np.array(
             [
@@ -572,9 +560,7 @@ class TestRTree3DEdgeCases:
 
         assert rtree_float64.size() == 3
 
-    def test_large_values_float32(
-        self, rtree_float32: core.RTree3DFloat32
-    ) -> None:
+    def test_large_values_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test with large coordinate values (ECEF) with float32."""
         coordinates = np.array(
             [
@@ -590,9 +576,7 @@ class TestRTree3DEdgeCases:
 
         assert rtree_float32.size() == 3
 
-    def test_small_values_float64(
-        self, rtree_float64: core.RTree3DFloat64
-    ) -> None:
+    def test_small_values_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test with very small coordinate values with float64."""
         coordinates = np.array(
             [
@@ -608,9 +592,7 @@ class TestRTree3DEdgeCases:
 
         assert rtree_float64.size() == 3
 
-    def test_small_values_float32(
-        self, rtree_float32: core.RTree3DFloat32
-    ) -> None:
+    def test_small_values_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test with very small coordinate values with float32."""
         coordinates = np.array(
             [
@@ -627,7 +609,7 @@ class TestRTree3DEdgeCases:
         assert rtree_float32.size() == 3
 
     def test_negative_coordinates_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test with negative coordinates with float64."""
         coordinates = np.array(
@@ -641,7 +623,7 @@ class TestRTree3DEdgeCases:
         assert rtree_float64.size() == 3
 
     def test_negative_coordinates_float32(
-        self, rtree_float32: core.RTree3DFloat32
+        self, rtree_float32: RTree3DFloat32
     ) -> None:
         """Test with negative coordinates with float32."""
         coordinates = np.array(
@@ -655,7 +637,7 @@ class TestRTree3DEdgeCases:
         assert rtree_float32.size() == 3
 
     def test_mismatched_dimensions_float64(
-        self, rtree_float64: core.RTree3DFloat64
+        self, rtree_float64: RTree3DFloat64
     ) -> None:
         """Test error handling for mismatched dimensions with float64."""
         coordinates = np.array(
@@ -670,7 +652,7 @@ class TestRTree3DEdgeCases:
             rtree_float64.packing(coordinates, values)
 
     def test_mismatched_dimensions_float32(
-        self, rtree_float32: core.RTree3DFloat32
+        self, rtree_float32: RTree3DFloat32
     ) -> None:
         """Test error handling for mismatched dimensions with float32."""
         coordinates = np.array(

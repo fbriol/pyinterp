@@ -162,7 +162,7 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
 
   binning2d_cls
       .def(nanobind::init<Axis<double>, Axis<double>,
-                          std::optional<geodetic::Spheroid>>(),
+                          std::optional<geometry::geographic::Spheroid>>(),
            nanobind::arg("x"), nanobind::arg("y"),
            nanobind::arg("spheroid") = std::nullopt)
 
@@ -191,7 +191,7 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
   // Bind pickle support
   using Binning2DStateType =
       std::tuple<Axis<double>, Axis<double>, Vector<int8_t>,
-                 std::optional<geodetic::Spheroid>>;
+                 std::optional<geometry::geographic::Spheroid>>;
   detail::bind_pickle_support<Binning2D<T>, Binning2DStateType>(binning2d_cls);
 
   // Bind Binning1D
@@ -217,7 +217,7 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
   // Bind pickle support for Binning1D
   using Binning1DStateType =
       std::tuple<Axis<double>, Vector<int8_t>,
-                 std::optional<geodetic::Spheroid>, double, double>;
+                 std::optional<geometry::geographic::Spheroid>, double, double>;
   detail::bind_pickle_support<Binning1D<T>, Binning1DStateType>(binning1d_cls);
 }
 
@@ -231,9 +231,10 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
 /// @param[in] dtype Data type for internal storage, either 'float32' or
 /// 'float64'. Determines precision and memory usage. Defaults to 'float64'.
 /// @return nanobind::object containing the Binning2D instance.
-auto binning_2d_factory(const Axis<double> &x, const Axis<double> &y,
-                        const std::optional<geodetic::Spheroid> &spheroid,
-                        const nanobind::object &dtype) -> nanobind::object {
+auto binning_2d_factory(
+    const Axis<double> &x, const Axis<double> &y,
+    const std::optional<geometry::geographic::Spheroid> &spheroid,
+    const nanobind::object &dtype) -> nanobind::object {
   auto dtype_str = dtype_to_str(dtype).value_or("float64");
 
   // Create appropriate Binning2D based on dtype string

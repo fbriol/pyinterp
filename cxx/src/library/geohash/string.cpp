@@ -7,8 +7,8 @@
 #include <unordered_set>
 
 #include "pyinterp/broadcast.hpp"
-#include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geohash/base32.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
 #include "pyinterp/math.hpp"
 
 namespace pyinterp::geohash {
@@ -38,7 +38,7 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
 // /////////////////////////////////////////////////////////////////////////////
 
 auto bounding_box(std::span<const char> geohash, uint32_t* precision)
-    -> geodetic::Box {
+    -> geometry::geographic::Box {
   auto [integer_encoded, chars] = encoder.decode(geohash);
   if (precision != nullptr) {
     *precision = chars;
@@ -88,22 +88,23 @@ auto bounding_boxes_impl(const Geometry& geometry, uint32_t precision,
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto bounding_boxes(const std::optional<geodetic::Box>& box,
+auto bounding_boxes(const std::optional<geometry::geographic::Box>& box,
                     const uint32_t precision) -> EncodedHashes {
-  return bounding_boxes_impl(box.value_or(geodetic::Box::global_bounding_box()),
-                             precision, 1);
+  return bounding_boxes_impl(
+      box.value_or(geometry::geographic::Box::global_bounding_box()), precision,
+      1);
 }
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto bounding_boxes(const geodetic::Polygon& polygon, uint32_t precision,
-                    size_t num_threads) -> EncodedHashes {
+auto bounding_boxes(const geometry::geographic::Polygon& polygon,
+                    uint32_t precision, size_t num_threads) -> EncodedHashes {
   return bounding_boxes_impl(polygon, precision, num_threads);
 }
 
 // /////////////////////////////////////////////////////////////////////////////
 
-auto bounding_boxes(const geodetic::MultiPolygon& multipolygon,
+auto bounding_boxes(const geometry::geographic::MultiPolygon& multipolygon,
                     uint32_t precision, size_t num_threads) -> EncodedHashes {
   return bounding_boxes_impl(multipolygon, precision, num_threads);
 }

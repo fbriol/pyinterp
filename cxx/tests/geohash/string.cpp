@@ -17,11 +17,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/multi_polygon.hpp"
-#include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/polygon.hpp"
-#include "pyinterp/geodetic/ring.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/multi_polygon.hpp"
+#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/geographic/polygon.hpp"
+#include "pyinterp/geometry/geographic/ring.hpp"
 
 namespace pyinterp::geohash {
 
@@ -32,12 +32,14 @@ class GeoHashStringTest : public ::testing::Test {
   static constexpr double kEpsilonDecode = 1e-5;
 
   // Helper: Create a point
-  static auto make_point(double lon, double lat) -> geodetic::Point {
+  static auto make_point(double lon, double lat)
+      -> geometry::geographic::Point {
     return {lon, lat};
   }
 
   // Helper: Check if two points are approximately equal
-  static auto points_equal(const geodetic::Point& p1, const geodetic::Point& p2,
+  static auto points_equal(const geometry::geographic::Point& p1,
+                           const geometry::geographic::Point& p2,
                            double eps = kEpsilon) -> bool {
     return std::abs(p1.lon() - p2.lon()) < eps &&
            std::abs(p1.lat() - p2.lat()) < eps;
@@ -358,7 +360,7 @@ TEST_F(GeoHashStringTest, AreaEncodedHashesVector) {
 // ============================================================================
 
 TEST_F(GeoHashStringTest, BoundingBoxesSmallRegion) {
-  auto box = geodetic::Box({-1.0, -1.0}, {1.0, 1.0});
+  auto box = geometry::geographic::Box({-1.0, -1.0}, {1.0, 1.0});
   auto result = bounding_boxes(std::make_optional(box), 3);
 
   EXPECT_GT(result.count, 0);
@@ -393,7 +395,7 @@ TEST_F(GeoHashStringTest, BoundingBoxesNulloptGlobal) {
 }
 
 TEST_F(GeoHashStringTest, BoundingBoxesIncreasingPrecision) {
-  auto box = geodetic::Box({-10.0, -10.0}, {10.0, 10.0});
+  auto box = geometry::geographic::Box({-10.0, -10.0}, {10.0, 10.0});
 
   auto result2 = bounding_boxes(std::make_optional(box), 2);
   auto result3 = bounding_boxes(std::make_optional(box), 3);
@@ -408,14 +410,14 @@ TEST_F(GeoHashStringTest, BoundingBoxesIncreasingPrecision) {
 
 TEST_F(GeoHashStringTest, BoundingBoxesPolygonSimple) {
   // Create a simple square polygon (larger to ensure we get some geohashes)
-  geodetic::Ring ring;
+  geometry::geographic::Ring ring;
   ring.push_back({-5.0, -5.0});
   ring.push_back({5.0, -5.0});
   ring.push_back({5.0, 5.0});
   ring.push_back({-5.0, 5.0});
   ring.push_back({-5.0, -5.0});
 
-  geodetic::Polygon polygon(ring);
+  geometry::geographic::Polygon polygon(ring);
 
   // First at precision 1 - Should return one geohash 7
   auto result = bounding_boxes(polygon, 1, 1);
@@ -445,14 +447,14 @@ TEST_F(GeoHashStringTest, BoundingBoxesPolygonSimple) {
 }
 
 TEST_F(GeoHashStringTest, BoundingBoxesPolygonWithThreads) {
-  geodetic::Ring ring;
+  geometry::geographic::Ring ring;
   ring.push_back({-5.0, -5.0});
   ring.push_back({5.0, -5.0});
   ring.push_back({5.0, 5.0});
   ring.push_back({-5.0, 5.0});
   ring.push_back({-5.0, -5.0});
 
-  geodetic::Polygon polygon(ring);
+  geometry::geographic::Polygon polygon(ring);
 
   auto result_single = bounding_boxes(polygon, 4, 1);
   auto result_multi = bounding_boxes(polygon, 4, 2);
@@ -471,23 +473,23 @@ TEST_F(GeoHashStringTest, BoundingBoxesPolygonWithThreads) {
 
 TEST_F(GeoHashStringTest, BoundingBoxesMultiPolygon) {
   // Create two separate polygons (larger to ensure we get results)
-  geodetic::Ring ring1;
+  geometry::geographic::Ring ring1;
   ring1.push_back({-10.0, -10.0});
   ring1.push_back({-5.0, -10.0});
   ring1.push_back({-5.0, -5.0});
   ring1.push_back({-10.0, -5.0});
   ring1.push_back({-10.0, -10.0});
 
-  geodetic::Ring ring2;
+  geometry::geographic::Ring ring2;
   ring2.push_back({5.0, 5.0});
   ring2.push_back({10.0, 5.0});
   ring2.push_back({10.0, 10.0});
   ring2.push_back({5.0, 10.0});
   ring2.push_back({5.0, 5.0});
 
-  geodetic::MultiPolygon multipolygon;
-  multipolygon.push_back(geodetic::Polygon(ring1));
-  multipolygon.push_back(geodetic::Polygon(ring2));
+  geometry::geographic::MultiPolygon multipolygon;
+  multipolygon.push_back(geometry::geographic::Polygon(ring1));
+  multipolygon.push_back(geometry::geographic::Polygon(ring2));
 
   auto result = bounding_boxes(multipolygon, 2, 0);  // Lower precision
 

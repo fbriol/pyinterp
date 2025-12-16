@@ -16,7 +16,7 @@ from ..type_hints import (
     TwoDims,
     OneDim,
 )
-from . import geodetic
+from . import geometry
 from .config import geometric, rtree, windowed
 
 # Type alias for temporal coordinate arrays
@@ -82,7 +82,7 @@ _FloatDType = TypeVar("_FloatDType", np.float32, np.float64)
 
 class Binning2DHolder(Generic[_FloatDType]):
     def __init__(
-        self, x: Axis, y: Axis, spheroid: geodetic.Spheroid | None = ...
+        self, x: Axis, y: Axis, spheroid: geometry.geographic.Spheroid | None = ...
     ) -> None: ...
     def clear(self) -> None: ...
     def count(self) -> NDArray2DUInt64: ...
@@ -108,7 +108,7 @@ class Binning2DHolder(Generic[_FloatDType]):
         self, other: Binning2DHolder[Any]
     ) -> Binning2DHolder[_FloatDType]: ...
     @property
-    def spheroid(self) -> geodetic.Spheroid | None: ...
+    def spheroid(self) -> geometry.geographic.Spheroid | None: ...
     @property
     def x(self) -> Axis: ...
     @property
@@ -146,13 +146,13 @@ class Binning1DHolder(Generic[_FloatDType]):
     @property
     def y(self) -> Axis: ...
     @property
-    def spheroid(self) -> geodetic.Spheroid | None: ...
+    def spheroid(self) -> geometry.geographic.Spheroid | None: ...
 
 @overload
 def Binning2D(
     x: Axis,
     y: Axis,
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: None = None,
 ) -> Binning2DHolder[np.float64]: ...
@@ -160,7 +160,7 @@ def Binning2D(
 def Binning2D(
     x: Axis,
     y: Axis,
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: Literal["float32"],
 ) -> Binning2DHolder[np.float32]: ...
@@ -168,7 +168,7 @@ def Binning2D(
 def Binning2D(
     x: Axis,
     y: Axis,
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: Literal["float64"],
 ) -> Binning2DHolder[np.float64]: ...
@@ -176,7 +176,7 @@ def Binning2D(
 def Binning2D(
     x: Axis,
     y: Axis,
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: type[_FloatDType] | np.dtype[_FloatDType],
 ) -> Binning2DHolder[_FloatDType]: ...
@@ -184,7 +184,7 @@ def Binning2D(
 def Binning2D(
     x: Axis,
     y: Axis,
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: str,
 ) -> Binning2DHolder[np.float32] | Binning2DHolder[np.float64]: ...
@@ -454,7 +454,7 @@ class TemporalGrid4D(GridHolder):
     def u(self) -> Axis: ...
 
 class RTree3DHolder(Generic[_FloatDType]):
-    def __init__(self, spheroid: geodetic.Spheroid | None = ...) -> None: ...
+    def __init__(self, spheroid: geometry.geographic.Spheroid | None = ...) -> None: ...
     def bounds(
         self,
     ) -> (
@@ -506,35 +506,35 @@ class RTree3DHolder(Generic[_FloatDType]):
         config: rtree.InterpolationWindow | None = ...,
     ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
     @property
-    def spheroid(self) -> geodetic.Spheroid | None: ...
+    def spheroid(self) -> geometry.geographic.Spheroid | None: ...
 
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: None = None,
 ) -> RTree3DHolder[np.float64]: ...
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: Literal["float32"],
 ) -> RTree3DHolder[np.float32]: ...
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: Literal["float64"],
 ) -> RTree3DHolder[np.float64]: ...
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: type[_FloatDType] | np.dtype[_FloatDType],
 ) -> RTree3DHolder[_FloatDType]: ...
 @overload
 def RTree3D(
-    spheroid: geodetic.Spheroid | None = None,
+    spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: str,
 ) -> RTree3DHolder[np.float32] | RTree3DHolder[np.float64]: ...

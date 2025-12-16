@@ -39,12 +39,12 @@ auto GeoHash::from_string(const std::string& code, const bool round)
   return result;
 }
 
-auto GeoHash::bounding_box() const -> geodetic::Box {
+auto GeoHash::bounding_box() const -> geometry::geographic::Box {
   return geohash::bounding_box(
       std::span<const char>(code_.data(), precision()));
 }
 
-auto GeoHash::center() const -> geodetic::Point {
+auto GeoHash::center() const -> geometry::geographic::Point {
   return bounding_box().centroid();
 }
 
@@ -68,12 +68,12 @@ auto GeoHash::neighbors() const -> std::vector<GeoHash> {
   return result;
 }
 
-auto GeoHash::area(const std::optional<geodetic::Spheroid>& wgs) const
-    -> double {
+auto GeoHash::area(
+    const std::optional<geometry::geographic::Spheroid>& wgs) const -> double {
   return geohash::area(std::span<const char>(code_.data(), precision()), wgs);
 }
 
-auto GeoHash::grid_properties(const geodetic::Box& box,
+auto GeoHash::grid_properties(const geometry::geographic::Box& box,
                               const uint32_t precision)
     -> std::tuple<GeoHash, size_t, size_t> {
   auto [code, lng_boxes, lat_boxes] =
@@ -98,7 +98,8 @@ auto GeoHash::getstate() const -> std::tuple<double, double, uint32_t> {
 
 GeoHash::GeoHash(const size_t precision) : code_(precision, '\0') {}
 
-GeoHash::GeoHash(const geodetic::Point& point, const uint32_t precision)
+GeoHash::GeoHash(const geometry::geographic::Point& point,
+                 const uint32_t precision)
     : GeoHash(point.lon(), point.lat(), precision) {}
 
 }  // namespace pyinterp

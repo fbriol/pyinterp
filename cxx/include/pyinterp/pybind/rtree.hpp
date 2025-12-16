@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "pyinterp/eigen.hpp"
-#include "pyinterp/geodetic/coordinates.hpp"
-#include "pyinterp/geodetic/spheroid.hpp"
+#include "pyinterp/geometry/geographic/coordinates.hpp"
+#include "pyinterp/geometry/geographic/spheroid.hpp"
 #include "pyinterp/geometry/point.hpp"
 #include "pyinterp/geometry/rtree.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
@@ -70,17 +70,18 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   using ValueVector = Vector<T>;
 
   /// Default constructor (WGS84 spheroid)
-  RTree3D() : spheroid_(geodetic::Spheroid()) {}
+  RTree3D() : spheroid_(geometry::geographic::Spheroid()) {}
 
   /// Construct with specified coordinate system
   /// @param[in] spheroid Optional spheroid used to convert geodetic inputs to
   /// ECEF; if std::nullopt, inputs are assumed already ECEF.
-  explicit RTree3D(const std::optional<geodetic::Spheroid>& spheroid)
+  explicit RTree3D(
+      const std::optional<geometry::geographic::Spheroid>& spheroid)
       : spheroid_(spheroid) {}
 
   /// Get the spheroid
   [[nodiscard]] constexpr auto spheroid() const noexcept
-      -> const std::optional<geodetic::Spheroid>& {
+      -> const std::optional<geometry::geographic::Spheroid>& {
     return spheroid_;
   }
 
@@ -185,7 +186,7 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
 
  private:
   /// Spheroid for geodetic calculations
-  std::optional<geodetic::Spheroid> spheroid_;
+  std::optional<geometry::geographic::Spheroid> spheroid_;
 
   /// Convert input coordinates to internal ECEF representation
   /// @param coordinates Input matrix (n, 3) or (n, 2)
@@ -250,7 +251,7 @@ void RTree3D<T>::validate_coordinates(
 
 template <std::floating_point T>
 auto RTree3D<T>::geodetic_to_ecef(T lon, T lat, T alt) const -> point_t {
-  auto transformer = geodetic::Coordinates(*spheroid_);
+  auto transformer = geometry::geographic::Coordinates(*spheroid_);
   return transformer.lla_to_ecef<T>(geometry::LLA<T>{lon, lat, alt});
 }
 

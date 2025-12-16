@@ -329,7 +329,7 @@ void init_rtree_3d(nb::module_& m, std::string_view suffix) {
       m, std::format("RTree3D{}", suffix).c_str(), kRTree3DDoc);
 
   rtree3d.def(
-      nb::init<const std::optional<geodetic::Spheroid>&>(),
+      nb::init<const std::optional<geometry::geographic::Spheroid>&>(),
       nb::arg("spheroid") = std::nullopt,
       "Initialize the RTree3D with optional spheroid for geodetic conversions.",
       nb::call_guard<nb::gil_scoped_release>());
@@ -343,8 +343,9 @@ void init_rtree_3d(nb::module_& m, std::string_view suffix) {
 }
 
 /// @brief RTree3D factory function that accepts dtype parameter
-auto rtree_3d_factory(const std::optional<geodetic::Spheroid>& spheroid,
-                      const nb::object& dtype) -> nb::object {
+auto rtree_3d_factory(
+    const std::optional<geometry::geographic::Spheroid>& spheroid,
+    const nb::object& dtype) -> nb::object {
   auto dtype_str = dtype_to_str(dtype).value_or("float64");
 
   // Create appropriate RTree3D based on dtype string

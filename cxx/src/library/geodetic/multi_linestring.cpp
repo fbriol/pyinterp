@@ -1,6 +1,6 @@
-#include "pyinterp/geodetic/multi_linestring.hpp"
+#include "pyinterp/geometry/geographic/multi_linestring.hpp"
 
-namespace pyinterp::geodetic {
+namespace pyinterp::geometry::geographic {
 
 auto MultiLineString::unpack(serialization::Reader& state) -> MultiLineString {
   if (state.size() == 0) {
@@ -23,4 +23,4 @@ auto MultiLineString::unpack(serialization::Reader& state) -> MultiLineString {
   return MultiLineString(std::move(lines));
 }
 
-}  // namespace pyinterp::geodetic
+}  // namespace pyinterp::geometry::geographic
