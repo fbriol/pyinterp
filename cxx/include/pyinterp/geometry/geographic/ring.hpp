@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iterator>
 #include <vector>
 
 #include "pyinterp/geometry/geographic/point.hpp"
@@ -139,40 +140,41 @@ struct point_type<pyinterp::geometry::geographic::Ring> {
   using type = pyinterp::geometry::geographic::Point;
 };
 
-// // Make Ring compatible with boost::geometry range utilities
-// namespace std {
-// template <>
-// class back_insert_iterator<pyinterp::geometry::geographic::Ring> {
-//  public:
-//   using iterator_category = std::output_iterator_tag;
-//   using value_type = void;
-//   using difference_type = void;
-//   using pointer = void;
-//   using reference = void;
-//   using container_type = pyinterp::geometry::geographic::Ring;
-//   explicit back_insert_iterator(pyinterp::geometry::geographic::Ring& ring)
-//       : ring_(&ring) {}
-
-//   back_insert_iterator& operator=(
-//       const pyinterp::geometry::geographic::Point& point) {
-//     ring_->push_back(point);
-//     return *this;
-//   }
-
-//   back_insert_iterator& operator=(
-//       pyinterp::geometry::geographic::Point&& point) {
-//     ring_->push_back(std::move(point));
-//     return *this;
-//   }
-
-//   back_insert_iterator& operator*() { return *this; }
-//   back_insert_iterator& operator++() { return *this; }
-//   back_insert_iterator operator++(int) { return *this; }
-
-//  private:
-//   pyinterp::geometry::geographic::Ring* ring_;
-// };
-
-// }  // namespace std
-
 }  // namespace boost::geometry::traits
+
+// Make Ring compatible with boost::geometry range utilities
+namespace std {
+template <>
+class back_insert_iterator<pyinterp::geometry::geographic::Ring> {
+ public:
+  using iterator_category = std::output_iterator_tag;
+  using value_type = void;
+  using difference_type = void;
+  using pointer = void;
+  using reference = void;
+  using container_type = pyinterp::geometry::geographic::Ring;
+
+  explicit back_insert_iterator(pyinterp::geometry::geographic::Ring& ring)
+      : ring_(&ring) {}
+
+  constexpr auto operator=(const pyinterp::geometry::geographic::Point& point)
+      -> back_insert_iterator& {
+    ring_->push_back(point);
+    return *this;
+  }
+
+  constexpr auto operator=(pyinterp::geometry::geographic::Point&& point)
+      -> back_insert_iterator& {
+    ring_->push_back(point);
+    return *this;
+  }
+
+  constexpr auto operator*() -> back_insert_iterator& { return *this; }
+  constexpr auto operator++() -> back_insert_iterator& { return *this; }
+  constexpr auto operator++(int) -> back_insert_iterator { return *this; }
+
+ private:
+  pyinterp::geometry::geographic::Ring* ring_;
+};
+
+}  // namespace std
