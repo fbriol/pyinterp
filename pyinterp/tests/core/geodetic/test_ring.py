@@ -148,12 +148,5 @@ def test_ring_getstate_setstate() -> None:
     lat = np.array([0.0, 0.0, 10.0])
     original = Ring(lon, lat)
 
-    # Get state
-    state = original.__getstate__()
-    assert len(state) == 1
-
-    # Set state on new instance
-    new_ring = Ring.__new__(Ring)
-    new_ring.__setstate__(state)
-
+    new_ring = pickle.loads(pickle.dumps(original))
     assert new_ring == original

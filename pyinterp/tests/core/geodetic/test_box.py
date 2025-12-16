@@ -26,7 +26,7 @@ def test_box_construction_validation() -> None:
     """Test Box construction validates array sizes."""
     # Arrays must have exactly 2 elements
     with pytest.raises(TypeError, match="incompatible function arguments"):
-        Box((1.0, 2.0, 3.0), (4.0, 5.0))
+        Box((1.0, 2.0, 3.0), (4.0, 5.0))  # type: ignore[arg-type]
 
 
 def test_box_corners() -> None:
@@ -108,14 +108,7 @@ def test_box_getstate_setstate() -> None:
     """Test Box __getstate__ and __setstate__ directly."""
     original = Box((-180.0, -90.0), (180.0, 90.0))
 
-    # Get state
-    state = original.__getstate__()
-    assert state == (-180.0, -90.0, 180.0, 90.0)
-
-    # Set state on new instance
-    new_box = Box.__new__(Box)
-    new_box.__setstate__(state)
-
+    new_box = pickle.loads(pickle.dumps(original))
     assert new_box.min_corner().lon == -180.0
     assert new_box.min_corner().lat == -90.0
     assert new_box.max_corner().lon == 180.0

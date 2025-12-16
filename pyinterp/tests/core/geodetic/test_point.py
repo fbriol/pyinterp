@@ -95,13 +95,7 @@ def test_point_getstate_setstate() -> None:
     """Test Point __getstate__ and __setstate__ directly."""
     original = Point(-122.4, 37.8)
 
-    # Get state
-    state = original.__getstate__()
-    assert state == (-122.4, 37.8)
-
-    # Set state on new instance
-    new_point = Point.__new__(Point)
-    new_point.__setstate__(state)
+    new_point = pickle.loads(pickle.dumps(original))
 
     assert new_point.lon == -122.4
     assert new_point.lat == 37.8

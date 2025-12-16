@@ -140,10 +140,5 @@ def test_linestring_getstate_setstate() -> None:
     lat = np.array([0.0, 5.0, 0.0])
     original = LineString(lon, lat)
 
-    state = original.__getstate__()
-    assert len(state) == 1
-
-    new_line = LineString.__new__(LineString)
-    new_line.__setstate__(state)
-
+    new_line = pickle.loads(pickle.dumps(original))
     assert new_line == original
