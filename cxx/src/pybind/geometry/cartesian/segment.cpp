@@ -2,7 +2,7 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/geometry/geographic/segment.hpp"
+#include "pyinterp/geometry/cartesian/segment.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
@@ -13,7 +13,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 
 namespace nb = nanobind;
@@ -23,15 +23,15 @@ using pyinterp::pybind::NanobindArray1DUInt8;
 using pyinterp::pybind::reader_from_ndarray;
 using pyinterp::pybind::writer_to_ndarray;
 
-namespace pyinterp::geometry::geographic::pybind {
+namespace pyinterp::geometry::cartesian::pybind {
 
 constexpr auto kSegmentClassDoc = R"doc(
-A segment in geographic coordinates.
+A segment in Cartesian coordinates.
 
-A Segment is defined by two endpoints (points) on the ellipsoid surface.
+A Segment is defined by two endpoints (points) on a flat plane.
 
 Examples:
-    >>> from pyinterp.geodetic import Point, Segment
+    >>> from pyinterp.cartesian import Point, Segment
     >>> s = Segment((0.0, 0.0), (10.0, 5.0))
     >>> len(s)
     2
@@ -41,8 +41,8 @@ constexpr auto kSegmentInitDoc = R"doc(
 Construct a segment from two endpoints or four coordinates.
 
 Args:
-    a: a tuple of two floats representing the first endpoint as lon, lat.
-    b: a tuple of two floats representing the second endpoint as lon, lat.
+    a: a tuple of two floats representing the first endpoint as x, y.
+    b: a tuple of two floats representing the second endpoint as x, y.
 )doc";
 
 auto init_segment(nb::module_& m) -> void {
@@ -108,8 +108,8 @@ auto init_segment(nb::module_& m) -> void {
             // Consider default-constructed points as empty; otherwise true
             const auto a = self.a();
             const auto b = self.b();
-            return !(a.lon() == 0.0 && a.lat() == 0.0 && b.lon() == 0.0 &&
-                     b.lat() == 0.0);
+            return !(a.x() == 0.0 && a.y() == 0.0 && b.x() == 0.0 &&
+                     b.y() == 0.0);
           },
           "Return True if the segment has non-default endpoints.")
 
@@ -128,16 +128,16 @@ auto init_segment(nb::module_& m) -> void {
            [](const Segment& self) {
              const auto& a = self.a();
              const auto& b = self.b();
-             return std::format("Segment(a=({}, {}), b=({}, {}))", a.lon(),
-                                a.lat(), b.lon(), b.lat());
+             return std::format("Segment(a=({}, {}), b=({}, {}))", a.x(),
+                                a.y(), b.x(), b.y());
            })
       .def("__str__",
            [](const Segment& self) {
              std::ostringstream oss;
              const auto& a = self.a();
              const auto& b = self.b();
-             oss << "Segment[('" << a.lon() << ", " << a.lat() << "') -> ('"
-                 << b.lon() << ", " << b.lat() << "')]";
+             oss << "Segment[('" << a.x() << ", " << a.y() << "') -> ('"
+                 << b.x() << ", " << b.y() << "')]";
              return oss.str();
            })
 
@@ -165,4 +165,4 @@ auto init_segment(nb::module_& m) -> void {
       });
 }
 
-}  // namespace pyinterp::geometry::geographic::pybind
+}  // namespace pyinterp::geometry::cartesian::pybind
