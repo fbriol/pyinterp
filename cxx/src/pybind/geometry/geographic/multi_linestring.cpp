@@ -16,12 +16,14 @@
 #include <stdexcept>
 
 #include "pyinterp/geometry/geographic/linestring.hpp"
-#include "pyinterp/pybind/geometry/geographic/container_view.hpp"
+#include "pyinterp/pybind/geometry/container_view.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 
 namespace nb = nanobind;
 using nb::literals::operator""_a;
 
+using pyinterp::geometry::pybind::bind_container_view;
+using pyinterp::geometry::pybind::ContainerView;
 using pyinterp::pybind::NanobindArray1DUInt8;
 using pyinterp::pybind::reader_from_ndarray;
 using pyinterp::pybind::writer_to_ndarray;

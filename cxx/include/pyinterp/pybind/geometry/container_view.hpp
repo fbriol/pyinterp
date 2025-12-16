@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <string_view>
 
-namespace pyinterp::geometry::geographic::pybind {
+namespace pyinterp::geometry::pybind {
 
 /// @brief Template proxy view for container access with Python semantics.
 ///
@@ -134,4 +134,4 @@ void bind_container_view(nanobind::module_& m, std::string_view class_name,
       });
 }
 
-}  // namespace pyinterp::geometry::geographic::pybind
+}  // namespace pyinterp::geometry::pybind
