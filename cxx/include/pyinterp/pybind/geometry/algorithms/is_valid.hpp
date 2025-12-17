@@ -1,5 +1,6 @@
 #pragma once
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>
 
 #include <boost/geometry.hpp>
 #include <string>
@@ -67,25 +68,15 @@ inline auto init_is_valid(nanobind::module_& m) -> void {
   };
 
   if constexpr (NS == GeometryNamespace::kCartesian) {
-    ([&]<typename... Geometry>() {
-      (..., m.def(
-                "area",
-                [=](const Geometry& g, const bool return_reason) -> nb::object {
-                  return is_valid_impl(g, return_reason);
-                },
-                "geometry"_a, nb::kw_only(), "return_reason"_a = false,
-                kIsValidDoc));
-    }).template operator()<GEOMETRY_TYPES(cartesian)>();
+    define_with_optional_bool<decltype(is_valid_impl),
+                              GEOMETRY_TYPES(cartesian)>(
+        m, "is_valid", kIsValidDoc, "return_reason", false,
+        std::move(is_valid_impl));
   } else {
-    ([&]<typename... Geometry>() {
-      (..., m.def(
-                "area",
-                [=](const Geometry& g, const bool return_reason) -> nb::object {
-                  return is_valid_impl(g, return_reason);
-                },
-                "geometry"_a, nb::kw_only(), "return_reason"_a = false,
-                kIsValidDoc));
-    }).template operator()<GEOMETRY_TYPES(geographic)>();
+    define_with_optional_bool<decltype(is_valid_impl),
+                              GEOMETRY_TYPES(geographic)>(
+        m, "is_valid", kIsValidDoc, "return_reason", false,
+        std::move(is_valid_impl));
   }
 }
 

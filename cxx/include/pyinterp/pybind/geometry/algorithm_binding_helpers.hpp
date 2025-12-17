@@ -90,6 +90,30 @@ inline auto define_mutable_for_geometries(nb::module_& m, const char* name,
   (..., m.def(name, [alg](Geometries& g) { alg(g); }, "geometry"_a, doc));
 }
 
+/// @brief Helper to define algorithm with optional bool argument for multiple
+/// geometries
+/// @tparam Algorithm Algorithm functor that takes (geometry, bool) and returns
+/// nb::object
+/// @tparam Geometries Geometry types to bind
+/// @param[in] m Python module
+/// @param[in] name Function name
+/// @param[in] doc Documentation string
+/// @param[in] arg_name Name of the optional boolean argument
+/// @param[in] arg_default Default value for the optional boolean argument
+/// @param[in] alg Algorithm functor
+template <typename Algorithm, typename... Geometries>
+inline auto define_with_optional_bool(nb::module_& m, const char* name,
+                                      const char* doc, const char* arg_name,
+                                      bool arg_default, Algorithm&& alg)
+    -> void {
+  (..., m.def(
+            name,
+            [alg](const Geometries& g, bool opt) -> nb::object {
+              return alg(g, opt);
+            },
+            "geometry"_a, nb::kw_only(), nb::arg(arg_name) = arg_default, doc));
+}
+
 /// @brief Helper to define a binary predicate for geometry pairs
 /// @tparam Predicate Binary predicate functor
 /// @tparam GeometryPairs Tuple of std::pair<G1, G2> for each combination

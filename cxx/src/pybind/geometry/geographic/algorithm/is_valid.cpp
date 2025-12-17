@@ -5,13 +5,8 @@
 #include "pyinterp/pybind/geometry/algorithms/is_valid.hpp"
 
 #include <nanobind/nanobind.h>
-#include <nanobind/stl/optional.h>
-#include <nanobind/stl/string.h>
-
-#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
-using nb::literals::operator""_a;
 using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::geographic::pybind {
