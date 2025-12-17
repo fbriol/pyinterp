@@ -16,19 +16,8 @@ using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
-constexpr auto kIsEmptyDoc = R"doc(
-Check if a geometric object is empty.
-
-Args:
-    geometry: Geometric object to check.
-
-Returns:
-    True if the geometry is empty, False otherwise.
-)doc";
-
 auto init_is_empty(nb::module_& m) -> void {
-  geometry::pybind::init_is_empty<GeometryNamespace::kCartesian>(m,
-                                                                 kIsEmptyDoc);
+  geometry::pybind::init_is_empty<GeometryNamespace::kCartesian>(m);
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

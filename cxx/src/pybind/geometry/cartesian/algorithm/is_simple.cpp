@@ -16,19 +16,8 @@ using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
-constexpr auto kIsSimpleDoc = R"doc(
-Check if a geometric object is simple (no self-intersections).
-
-Args:
-    geometry: Geometric object to check.
-
-Returns:
-    True if the geometry is simple, False otherwise.
-)doc";
-
 auto init_is_simple(nb::module_& m) -> void {
-  geometry::pybind::init_is_simple<GeometryNamespace::kCartesian>(m,
-                                                                  kIsSimpleDoc);
+  geometry::pybind::init_is_simple<GeometryNamespace::kCartesian>(m);
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

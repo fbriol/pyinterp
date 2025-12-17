@@ -7,13 +7,31 @@
 
 namespace pyinterp::geometry::pybind {
 
+constexpr auto kIsEmptyDoc = R"doc(
+Check if a geometry is empty (contains no points).
+
+Args:
+    geometry: Geometric object to check.
+
+Returns:
+    True if the geometry is empty, false otherwise.
+
+Examples:
+    >>> # Empty ring
+    >>> empty_ring = Ring(np.array([]), np.array([]))
+    >>> is_empty(empty_ring)
+    True
+    >>> # Non-empty point
+    >>> point = Point(1.0, 2.0)
+    >>> is_empty(point)
+    False
+)doc";
+
 /// @brief Initialize the is_empty algorithm in the given module
 /// @tparam NS Namespace of the geometries (cartesian or geographic)
 /// @param[in,out] m Nanobind module
-/// @param[in] docstring Documentation string for the is_empty function
 template <GeometryNamespace NS>
-inline auto init_is_empty(nanobind::module_& m, const char* const docstring)
-    -> void {
+inline auto init_is_empty(nanobind::module_& m) -> void {
   auto is_empty_impl = [](const auto& g) -> bool {
     nanobind::gil_scoped_release release;
     return boost::geometry::is_empty(g);
@@ -21,11 +39,11 @@ inline auto init_is_empty(nanobind::module_& m, const char* const docstring)
   if constexpr (NS == GeometryNamespace::kCartesian) {
     geometry::pybind::define_for_geometries<decltype(is_empty_impl),
                                             GEOMETRY_TYPES(cartesian)>(
-        m, "is_empty", docstring, std::move(is_empty_impl));
+        m, "is_empty", kIsEmptyDoc, std::move(is_empty_impl));
   } else {
     geometry::pybind::define_for_geometries<decltype(is_empty_impl),
                                             GEOMETRY_TYPES(geographic)>(
-        m, "is_empty", docstring, std::move(is_empty_impl));
+        m, "is_empty", kIsEmptyDoc, std::move(is_empty_impl));
   }
 }
 

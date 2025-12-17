@@ -14,32 +14,8 @@ using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::geographic::pybind {
 
-constexpr auto kIsEmptyDoc = R"doc(
-Check if a geometry is empty (contains no points).
-
-Args:
-    geometry: Geometric object to check.
-
-Returns:
-    True if the geometry is empty, false otherwise.
-
-Examples:
-    >>> from pyinterp.geometry.geographic import Point, Ring
-    >>> from pyinterp.geometry.geographic.algorithms import is_empty
-    >>> import numpy as np
-    >>> # Empty ring
-    >>> empty_ring = Ring(np.array([]), np.array([]))
-    >>> is_empty(empty_ring)
-    True
-    >>> # Non-empty point
-    >>> point = Point(1.0, 2.0)
-    >>> is_empty(point)
-    False
-)doc";
-
 auto init_is_empty(nb::module_& m) -> void {
-  geometry::pybind::init_is_empty<GeometryNamespace::kGeographic>(m,
-                                                                  kIsEmptyDoc);
+  geometry::pybind::init_is_empty<GeometryNamespace::kGeographic>(m);
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

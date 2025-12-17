@@ -16,19 +16,8 @@ using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
-constexpr auto kIsValidDoc = R"doc(
-Check if a geometric object is valid according to OGC standards.
-
-Args:
-    geometry: Geometric object to check.
-
-Returns:
-    True if the geometry is valid, False otherwise.
-)doc";
-
 auto init_is_valid(nb::module_& m) -> void {
-  pyinterp::geometry::pybind::init_is_valid<GeometryNamespace::kCartesian>(
-      m, kIsValidDoc);
+  pyinterp::geometry::pybind::init_is_valid<GeometryNamespace::kCartesian>(m);
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind
