@@ -1,7 +1,7 @@
 #include "pyinterp/pybind/geometry.hpp"
 
-#include "pyinterp/pybind/geometry/geographic.hpp"
 #include "pyinterp/pybind/geometry/cartesian.hpp"
+#include "pyinterp/pybind/geometry/geographic.hpp"
 
 namespace pyinterp::pybind {
 

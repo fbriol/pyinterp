@@ -58,9 +58,7 @@ class Ring {
   }
 
   /// @brief Get reference to the last point.
-  [[nodiscard]] constexpr auto back() -> Point& {
-    return points_.back();
-  }
+  [[nodiscard]] constexpr auto back() -> Point& { return points_.back(); }
 
   /// @brief Get const reference to the last point.
   [[nodiscard]] constexpr auto back() const -> const Point& {
