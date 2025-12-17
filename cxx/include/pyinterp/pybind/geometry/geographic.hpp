@@ -4,6 +4,10 @@
 
 namespace pyinterp::geometry::geographic::pybind {
 
+/// @brief Initialize Strategy enum bindings
+/// @param[in,out] m Nanobind module
+auto init_strategy(nanobind::module_& m) -> void;
+
 /// @brief Initialize Point bindings
 /// @param[in,out] m Python module
 auto init_point(nanobind::module_& m) -> void;
@@ -51,6 +55,10 @@ auto init_coordinates(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_area(nanobind::module_& m) -> void;
 
+/// @brief Initialize azimuth algorithm bindings
+/// @param[in,out] m Python module
+auto init_azimuth(nanobind::module_& m) -> void;
+
 /// @brief Initialize is_empty algorithm binding
 /// @param[in,out] m Python module
 auto init_is_empty(nanobind::module_& m) -> void;
@@ -66,7 +74,9 @@ auto init_is_valid(nanobind::module_& m) -> void;
 /// @brief Initialize all algorithm bindings
 /// @param[in,out] m Python module
 inline void init_algorithms(nanobind::module_& m) {
+  init_strategy(m);
   init_area(m);
+  init_azimuth(m);
   init_is_empty(m);
   init_is_simple(m);
   init_is_valid(m);

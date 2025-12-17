@@ -23,7 +23,7 @@ trade-offs.
 
 Args:
     geometry: Geometric object (Box, Ring, Polygon, or MultiPolygon).
-    wgs: Optional spheroid for geodetic calculations. If not provided, uses
+    spheroid: Optional spheroid for geodetic calculations. If not provided, uses
         WGS84 ellipsoid.
     strategy: Calculation strategy.
 Returns:
@@ -41,25 +41,7 @@ Note:
     the area is always 0.0.
 )doc";
 
-constexpr auto kStrategyDoc = R"doc(
-Geodetic calculation strategy.
-
-Available strategies:
-    - ANDOYER: Andoyer method - fast but less accurate
-    - KARNEY: Karney method - most accurate but slower
-    - THOMAS: Thomas method - balanced accuracy and performance
-    - VINCENTY: Vincenty method - good balance (default)
-)doc";
-
 auto init_area(nb::module_& m) -> void {
-  // Strategy enum
-  nb::enum_<StrategyMethod>(m, "Strategy", kStrategyDoc)
-      .value("ANDOYER", StrategyMethod::kAndoyer, "Andoyer method")
-      .value("KARNEY", StrategyMethod::kKarney, "Karney method")
-      .value("THOMAS", StrategyMethod::kThomas, "Thomas method")
-      .value("VINCENTY", StrategyMethod::kVincenty, "Vincenty method (default)")
-      .export_values();
-
   auto area_impl = [](const auto& geometry, const std::optional<Spheroid>& wgs,
                       StrategyMethod strategy) -> double {
     using GeometryType = std::decay_t<decltype(geometry)>;
@@ -83,7 +65,7 @@ auto init_area(nb::module_& m) -> void {
                   StrategyMethod strategy) -> double {
                 return area_impl(g, wgs, strategy);
               },
-              "geometry"_a, nb::kw_only(), "wgs"_a = std::nullopt,
+              "geometry"_a, nb::kw_only(), "spheroid"_a = std::nullopt,
               "strategy"_a = StrategyMethod::kVincenty, kAreaDoc));
   }).template operator()<GEOMETRY_TYPES(geographic)>();
 }

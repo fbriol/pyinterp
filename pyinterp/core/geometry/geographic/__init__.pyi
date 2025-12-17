@@ -4,9 +4,20 @@ from ....type_hints import NDArray1DFloat64
 
 _ConceptElement = TypeVar("_ConceptElement", Point, LineString, Polygon)
 
-_Concept = TypeVar("_Concept", Point, LineString, Polygon, Segment, Ring,
-                    Box, Spheroid, Coordinates,
-                    MultiPoint, MultiLineString, MultiPolygon)
+_Concept = TypeVar(
+    "_Concept",
+    Point,
+    LineString,
+    Polygon,
+    Segment,
+    Ring,
+    Box,
+    Spheroid,
+    Coordinates,
+    MultiPoint,
+    MultiLineString,
+    MultiPolygon,
+)
 
 class Box:
     @overload
@@ -171,7 +182,9 @@ class Segment:
     @overload
     def __init__(self) -> None: ...
     @overload
-    def __init__(self, a: tuple[float, float], b: tuple[float, float]) -> None: ...
+    def __init__(
+        self, a: tuple[float, float], b: tuple[float, float]
+    ) -> None: ...
     def __bool__(self) -> bool: ...
     def __eq__(self, other: object) -> bool: ...
     def __getitem__(self, idx: int) -> Point: ...

@@ -153,7 +153,7 @@ def test_area_with_custom_spheroid(box_1x1: Box) -> None:
     # Custom spheroid with WGS84 parameters (semi-major axis and flattening)
     # WGS84: a=6378137.0, 1/f=298.257223563, so f≈0.0033528
     custom_spheroid = Spheroid(6378137.0, 1.0 / 298.257223563)
-    area_custom = area(box_1x1, wgs=custom_spheroid)
+    area_custom = area(box_1x1, spheroid=custom_spheroid)
 
     # Areas should be identical (using exact WGS84 parameters)
     assert abs(area_wgs84 - area_custom) / area_wgs84 < 1e-10
