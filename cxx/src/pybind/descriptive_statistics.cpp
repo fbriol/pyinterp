@@ -351,9 +351,9 @@ auto init_descriptive_statistics(nb::module_& m) -> void {
         nb::arg("dtype") = nb::none());
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 PyDescriptiveStatistics<T>::PyDescriptiveStatistics(
@@ -408,7 +408,7 @@ PyDescriptiveStatistics<T>::PyDescriptiveStatistics(
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 template <typename U>
@@ -434,7 +434,7 @@ auto PyDescriptiveStatistics<T>::to_numpy_array(const Vector<U>& vec) const
   return nb::ndarray<nb::numpy, U>(data, shape.size(), shape.data(), owner);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto PyDescriptiveStatistics<T>::getstate() const -> nanobind::tuple {
@@ -446,7 +446,7 @@ auto PyDescriptiveStatistics<T>::getstate() const -> nanobind::tuple {
   return nanobind::make_tuple(writer_to_ndarray(std::move(state)));
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto PyDescriptiveStatistics<T>::setstate(const nanobind::tuple& state)

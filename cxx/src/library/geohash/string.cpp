@@ -35,7 +35,7 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_box(std::span<const char> geohash, uint32_t* precision)
     -> geometry::geographic::Box {
@@ -46,7 +46,7 @@ auto bounding_box(std::span<const char> geohash, uint32_t* precision)
   return int64::bounding_box(integer_encoded, 5 * chars);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto neighbors(std::span<const char> hash) -> EncodedHashes {
   auto [integer_encoded, precision] = encoder.decode(hash);
@@ -64,7 +64,7 @@ auto neighbors(std::span<const char> hash) -> EncodedHashes {
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Geometry>
 auto bounding_boxes_impl(const Geometry& geometry, uint32_t precision,
@@ -86,7 +86,7 @@ auto bounding_boxes_impl(const Geometry& geometry, uint32_t precision,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_boxes(const std::optional<geometry::geographic::Box>& box,
                     const uint32_t precision) -> EncodedHashes {
@@ -95,21 +95,21 @@ auto bounding_boxes(const std::optional<geometry::geographic::Box>& box,
       1);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_boxes(const geometry::geographic::Polygon& polygon,
                     uint32_t precision, size_t num_threads) -> EncodedHashes {
   return bounding_boxes_impl(polygon, precision, num_threads);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_boxes(const geometry::geographic::MultiPolygon& multipolygon,
                     uint32_t precision, size_t num_threads) -> EncodedHashes {
   return bounding_boxes_impl(multipolygon, precision, num_threads);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename HashContainer>
 auto where_impl(const HashContainer& hash, size_t rows, size_t cols)
@@ -163,7 +163,7 @@ auto where_impl(const HashContainer& hash, size_t rows, size_t cols)
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 // Zoom in from lower to higher precision
 template <typename HashContainer>
@@ -195,7 +195,7 @@ auto zoom_in(const HashContainer& hash, uint32_t to_precision)
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 // Zoom out from higher to lower precision
 template <typename HashContainer>
@@ -231,7 +231,7 @@ auto zoom_out(const HashContainer& hash, uint32_t to_precision)
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename HashContainer>
 auto transform_impl(const HashContainer& hash, uint32_t precision)
@@ -242,7 +242,7 @@ auto transform_impl(const HashContainer& hash, uint32_t precision)
   return zoom_in(hash, precision);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto transform(const EncodedHashesView& hash, uint32_t precision)
     -> EncodedHashes {
@@ -258,7 +258,7 @@ auto transform(const EncodedHashesView& hash, uint32_t precision)
   return transform_impl(hash, precision);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto transform(const EncodedHashes& hash, uint32_t precision) -> EncodedHashes {
   if (hash.precision == precision) {
@@ -268,14 +268,14 @@ auto transform(const EncodedHashes& hash, uint32_t precision) -> EncodedHashes {
   return transform_impl(hash, precision);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto where(const EncodedHashes& hash, size_t rows, size_t cols)
     -> HashRegionBounds {
   return where_impl(hash, rows, cols);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto where(const EncodedHashesView& hash, size_t rows, size_t cols)
     -> HashRegionBounds {

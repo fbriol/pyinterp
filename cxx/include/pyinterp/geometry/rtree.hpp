@@ -268,9 +268,9 @@ class RTree {
       const BoundaryCheck check) const -> bool;
 };
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -304,7 +304,7 @@ auto RTree<Point, Type>::query(const Point& point, const uint32_t k,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -330,7 +330,7 @@ auto RTree<Point, Type>::query_ball(const Point& point,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -362,7 +362,7 @@ auto RTree<Point, Type>::value(const Point& point, const coordinate_t& radius,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -396,7 +396,7 @@ auto RTree<Point, Type>::inverse_distance_weighting(
                          uint32_t{0}};
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -430,7 +430,7 @@ auto RTree<Point, Type>::kriging(
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -453,7 +453,7 @@ auto RTree<Point, Type>::radial_basis_function(
   return {interpolated(0), static_cast<uint32_t>(values.size())};
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -491,7 +491,7 @@ auto RTree<Point, Type>::window_function(
                          uint32_t{0}};
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 template <typename Strategy>
@@ -532,7 +532,7 @@ auto RTree<Point, Type>::nearest(const Point& point, const coordinate_t& radius,
   return {coordinates, values};
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 auto RTree<Point, Type>::is_boundary_valid(
@@ -564,7 +564,7 @@ auto RTree<Point, Type>::is_boundary_valid(
   return true;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 auto RTree<Point, Type>::pack() const -> serialization::Writer {
@@ -587,7 +587,7 @@ auto RTree<Point, Type>::pack() const -> serialization::Writer {
   return buffer;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point, std::floating_point Type>
 auto RTree<Point, Type>::unpack(serialization::Reader& state)

@@ -56,6 +56,10 @@ auto init_is_simple(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_is_valid(nanobind::module_& m) -> void;
 
+/// @brief Initialize buffer algorithm bindings
+/// @param[in,out] m Python module
+auto init_buffer(nanobind::module_& m) -> void;
+
 /// @brief Initialize all algorithm bindings
 /// @param[in,out] m Python module
 inline void init_algorithms(nanobind::module_& m) {
@@ -63,6 +67,7 @@ inline void init_algorithms(nanobind::module_& m) {
   init_is_empty(m);
   init_is_simple(m);
   init_is_valid(m);
+  init_buffer(m);
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

@@ -171,7 +171,7 @@ static EncoderPtr const encoder =
 static DecoderPtr const deinterleaver =
     have_bmi2 ? codec::deinterleave_bmi2 : codec::deinterleave;
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 static auto allocate_array(const size_t size) -> Vector<uint64_t> {
   try {
@@ -184,7 +184,7 @@ static auto allocate_array(const size_t size) -> Vector<uint64_t> {
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto encode(const geometry::geographic::Point &point, const uint32_t precision)
     -> uint64_t {
@@ -200,7 +200,7 @@ auto encode(const geometry::geographic::Point &point, const uint32_t precision)
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_box(const uint64_t hash, const uint32_t precision) noexcept
     -> geometry::geographic::Box {
@@ -216,7 +216,7 @@ auto bounding_box(const uint64_t hash, const uint32_t precision) noexcept
   };
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto neighbors(const uint64_t hash, const uint32_t precision)
     -> NeighborHashes {
@@ -249,7 +249,7 @@ auto neighbors(const uint64_t hash, const uint32_t precision)
                          encode({lon_dec, lat_inc}, precision)});
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto grid_properties(const geometry::geographic::Box &box,
                      const uint32_t precision)
@@ -277,7 +277,7 @@ auto grid_properties(const geometry::geographic::Box &box,
   return {hash_sw, lon_step + lon_offset, lat_step + lat_offset};
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 // Calculate the intersection mask between the geometry and the GeoHash grid.
 template <typename Geometry>
@@ -308,7 +308,7 @@ auto mask_cell(const geometry::geographic::Box &envelope,
   return result;
 }
 
-// ///////////////////////////////////////////////////////////////////////////////
+// ============================================================================//
 
 // Return all GeoHash codes selected by the mask.
 static auto select_cell(double lng_err, double lat_err,
@@ -339,6 +339,8 @@ static auto select_cell(double lng_err, double lat_err,
   return result;
 }
 
+// ============================================================================//
+
 // Helper to safely compute envelope, correcting boost's anti-meridian
 // normalization
 template <typename Geometry>
@@ -367,6 +369,8 @@ auto safe_envelope(const Geometry &geometry) -> geometry::geographic::Box {
     return envelope;
   }
 }
+
+// ============================================================================//
 
 // Common implementation for bounding_boxes with geometry
 template <typename Geometry>
@@ -399,7 +403,7 @@ auto bounding_boxes_impl(const Geometry &geometry, uint32_t precision,
                      precision, mask);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_boxes(const geometry::geographic::Box &box,
                     const uint32_t precision, const size_t num_threads)
@@ -407,7 +411,7 @@ auto bounding_boxes(const geometry::geographic::Box &box,
   return bounding_boxes_impl(box, precision, num_threads);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_boxes(const geometry::geographic::Polygon &polygon,
                     const uint32_t precision, const size_t num_threads)
@@ -415,7 +419,7 @@ auto bounding_boxes(const geometry::geographic::Polygon &polygon,
   return bounding_boxes_impl(polygon, precision, num_threads);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 auto bounding_boxes(const geometry::geographic::MultiPolygon &polygons,
                     const uint32_t precision, const size_t num_threads)

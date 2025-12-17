@@ -90,4 +90,8 @@ namespace pyinterp::geometry::pybind {
 /// @param[in,out] m Python module
 void init_geographic(nanobind::module_& m);
 
+/// @brief Initialize cartesian coordinate bindings
+/// @param[in,out] m Python module
+void init_cartesian(nanobind::module_& m);
+
 }  // namespace pyinterp::geometry::pybind

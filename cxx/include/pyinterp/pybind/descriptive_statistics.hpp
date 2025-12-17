@@ -214,9 +214,9 @@ class DescriptiveStatistics {
 /// @param[in,out] m Nanobind module
 auto init_descriptive_statistics(nanobind::module_& m) -> void;
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto DescriptiveStatistics<T>::push_all_strided(const T* values,
@@ -243,7 +243,7 @@ auto DescriptiveStatistics<T>::push_all_strided(const T* values,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto DescriptiveStatistics<T>::push_all_strided(
@@ -272,7 +272,7 @@ auto DescriptiveStatistics<T>::push_all_strided(
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto DescriptiveStatistics<T>::push_reduced_strided(
@@ -314,7 +314,7 @@ auto DescriptiveStatistics<T>::push_reduced_strided(
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 DescriptiveStatistics<T>::DescriptiveStatistics(
@@ -341,7 +341,7 @@ DescriptiveStatistics<T>::DescriptiveStatistics(
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 template <auto MemberFunc, typename ResultType, typename... Args>
@@ -356,7 +356,7 @@ auto DescriptiveStatistics<T>::calculate_statistics(Args... args) const
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto DescriptiveStatistics<T>::operator+=(const DescriptiveStatistics<T>& other)
@@ -372,7 +372,7 @@ auto DescriptiveStatistics<T>::operator+=(const DescriptiveStatistics<T>& other)
   return *this;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto DescriptiveStatistics<T>::pack() const -> serialization::Writer {
@@ -383,7 +383,7 @@ auto DescriptiveStatistics<T>::pack() const -> serialization::Writer {
   return buffer;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto DescriptiveStatistics<T>::unpack(serialization::Reader& state)

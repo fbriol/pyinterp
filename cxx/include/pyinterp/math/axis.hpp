@@ -515,9 +515,9 @@ class Axis {
   [[nodiscard]] auto format_value_list() const -> std::string;
 };
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 template <typename T>
   requires std::is_arithmetic_v<T>
 auto Axis<T>::clone() const -> std::unique_ptr<axis::Abstract<T>> {
@@ -536,7 +536,7 @@ auto Axis<T>::clone() const -> std::unique_ptr<axis::Abstract<T>> {
   std::unreachable();
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 template <typename T>
   requires std::is_arithmetic_v<T>
 auto Axis<T>::is_evenly_spaced(const Eigen::Ref<const Vector<T>>& points,
@@ -556,7 +556,7 @@ auto Axis<T>::is_evenly_spaced(const Eigen::Ref<const Vector<T>>& points,
   return std::nullopt;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 template <typename T>
   requires std::is_arithmetic_v<T>
 void Axis<T>::compute_properties(const T epsilon) {
@@ -582,7 +582,7 @@ void Axis<T>::compute_properties(const T epsilon) {
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -622,7 +622,7 @@ auto Axis<T>::adjust_period(const Vector<T>& points)
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -636,7 +636,7 @@ void Axis<T>::create_container_impl(Vector<T>&& values, T epsilon) {
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -675,7 +675,7 @@ Axis<T>::Axis(const Eigen::Ref<const Vector<T>>& values, T epsilon,
   compute_properties(epsilon);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -737,7 +737,7 @@ auto Axis<T>::find_indexes(T coordinate) const
              : std::nullopt;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -769,7 +769,7 @@ constexpr auto Axis<T>::make_boundary_handler(axis::Boundary boundary,
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -827,7 +827,7 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -860,7 +860,7 @@ template <typename T>
   return result + std::format("]\n  size: {}", size);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -883,7 +883,7 @@ Axis<T>::operator std::string() const {
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>
@@ -918,7 +918,7 @@ auto Axis<T>::pack() const -> serialization::Writer {
   return buffer;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename T>
   requires std::is_arithmetic_v<T>

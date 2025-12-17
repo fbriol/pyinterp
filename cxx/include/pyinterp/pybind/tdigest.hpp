@@ -207,9 +207,9 @@ class TDigest {
 /// @param[in,out] m Nanobind module
 auto init_tdigest(nanobind::module_& m) -> void;
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto TDigest<T>::push_all_strided(const T* values, const Shape& shape,
@@ -235,7 +235,7 @@ auto TDigest<T>::push_all_strided(const T* values, const Shape& shape,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto TDigest<T>::push_all_strided(const T* values, const Shape& shape,
@@ -264,7 +264,7 @@ auto TDigest<T>::push_all_strided(const T* values, const Shape& shape,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto TDigest<T>::push_reduced_strided(const T* values, const Shape& shape,
@@ -308,7 +308,7 @@ auto TDigest<T>::push_reduced_strided(const T* values, const Shape& shape,
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 TDigest<T>::TDigest(const T* values, const Shape& shape,
@@ -336,7 +336,7 @@ TDigest<T>::TDigest(const T* values, const Shape& shape,
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 template <auto MemberFunc, typename ResultType, typename... Args>
@@ -351,7 +351,7 @@ auto TDigest<T>::calculate_statistics(Args... args) const
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto TDigest<T>::quantile(const Eigen::Ref<const Eigen::VectorX<T>>& quantiles)
@@ -368,7 +368,7 @@ auto TDigest<T>::quantile(const Eigen::Ref<const Eigen::VectorX<T>>& quantiles)
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto TDigest<T>::operator+=(const TDigest<T>& other) -> TDigest<T>& {
@@ -383,7 +383,7 @@ auto TDigest<T>::operator+=(const TDigest<T>& other) -> TDigest<T>& {
   return *this;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto TDigest<T>::pack() const -> serialization::Writer {
@@ -403,7 +403,7 @@ auto TDigest<T>::pack() const -> serialization::Writer {
   return buffer;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto TDigest<T>::unpack(serialization::Reader& state) -> TDigest<T> {
@@ -428,7 +428,7 @@ auto TDigest<T>::unpack(serialization::Reader& state) -> TDigest<T> {
   return result;
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 void TDigest<T>::validate_axis_bounds(const Shape& shape,

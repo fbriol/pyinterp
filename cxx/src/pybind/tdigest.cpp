@@ -347,9 +347,9 @@ auto init_tdigest(nb::module_& m) -> void {
         nb::arg("compression") = 100, nb::arg("dtype") = nb::none());
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 PyTDigest<T>::PyTDigest(
@@ -404,7 +404,7 @@ PyTDigest<T>::PyTDigest(
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 template <typename U>
@@ -430,7 +430,7 @@ auto PyTDigest<T>::to_numpy_array(const Vector<U>& vec) const
   return nb::ndarray<nb::numpy, U>(data, shape.size(), shape.data(), owner);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto PyTDigest<T>::to_numpy_matrix(const Eigen::MatrixX<T>& mat) const
@@ -460,7 +460,7 @@ auto PyTDigest<T>::to_numpy_matrix(const Eigen::MatrixX<T>& mat) const
   return nb::ndarray<nb::numpy, T>(data, 2, shape_2d, owner);
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto PyTDigest<T>::getstate() const -> nanobind::tuple {
@@ -472,7 +472,7 @@ auto PyTDigest<T>::getstate() const -> nanobind::tuple {
   return nanobind::make_tuple(writer_to_ndarray(std::move(state)));
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 auto PyTDigest<T>::setstate(const nanobind::tuple& state) -> PyTDigest<T> {

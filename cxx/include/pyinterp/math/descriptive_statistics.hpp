@@ -194,9 +194,9 @@ class DescriptiveStatistics {
   }
 };
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 constexpr auto DescriptiveStatistics<T>::operator()(const T value) noexcept
@@ -237,7 +237,7 @@ constexpr auto DescriptiveStatistics<T>::operator()(const T value) noexcept
   }
 }
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <std::floating_point T>
 constexpr auto DescriptiveStatistics<T>::operator+=(
