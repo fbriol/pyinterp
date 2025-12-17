@@ -128,8 +128,8 @@ auto init_segment(nb::module_& m) -> void {
            [](const Segment& self) {
              const auto& a = self.a();
              const auto& b = self.b();
-             return std::format("Segment(a=({}, {}), b=({}, {}))", a.x(),
-                                a.y(), b.x(), b.y());
+             return std::format("Segment(a=({}, {}), b=({}, {}))", a.x(), a.y(),
+                                b.x(), b.y());
            })
       .def("__str__",
            [](const Segment& self) {

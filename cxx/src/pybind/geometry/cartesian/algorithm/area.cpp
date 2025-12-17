@@ -54,10 +54,7 @@ auto init_area(nb::module_& m) -> void {
 
   ([&]<typename... Geometry>() {
     (..., m.def(
-              "area",
-              [=](const Geometry& g) -> double {
-                return area_impl(g);
-              },
+              "area", [=](const Geometry& g) -> double { return area_impl(g); },
               "geometry"_a, kAreaDoc));
   }).template operator()<GEOMETRY_TYPES(cartesian)>();
 }

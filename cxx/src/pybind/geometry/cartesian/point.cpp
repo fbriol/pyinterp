@@ -48,8 +48,7 @@ Y coordinate.
 auto init_point(nb::module_& m) -> void {
   nb::class_<Point>(m, "Point", kPointClassDoc)
       .def(nb::init<>(), "Construct a point at (0, 0).")
-      .def(nb::init<double, double>(), "x"_a = 0.0, "y"_a = 0.0,
-           kPointInitDoc)
+      .def(nb::init<double, double>(), "x"_a = 0.0, "y"_a = 0.0, kPointInitDoc)
 
       // Properties
       .def_prop_rw(
@@ -90,10 +89,9 @@ auto init_point(nb::module_& m) -> void {
            })
 
       // Pickle support
-      .def("__getstate__",
-           [](const Point& self) {
-             return std::make_tuple(self.x(), self.y());
-           })
+      .def(
+          "__getstate__",
+          [](const Point& self) { return std::make_tuple(self.x(), self.y()); })
 
       .def("__setstate__",
            [](Point* self, const std::tuple<double, double>& state) {
