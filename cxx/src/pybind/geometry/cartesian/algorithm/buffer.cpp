@@ -180,17 +180,16 @@ using PointStrategy = std::variant<PointCircle, PointSquare>;
 // Generic buffer implementation
 template <typename Geometry>
 auto buffer_impl(const Geometry& geometry, const DistanceStrategy& distance,
-                 const SideStraight& /*side*/, const JoinStrategy& join,
-                 const EndStrategy& end, const PointStrategy& point)
-    -> MultiPolygon {
+                 const JoinStrategy& join, const EndStrategy& end,
+                 const PointStrategy& point) -> MultiPolygon {
   MultiPolygon result;
   {
     nb::gil_scoped_release release;
 
     std::visit(
         [&](const auto& dist, const auto& j, const auto& e, const auto& p) {
-          bg::strategy::buffer::side_straight side_strategy;
-          bg::buffer(geometry, result, dist.get(), side_strategy, j.get(),
+          ;
+          bg::buffer(geometry, result, dist.get(), SideStraight::get(), j.get(),
                      e.get(), p.get());
         },
         distance, join, end, point);
@@ -204,12 +203,12 @@ void bind_buffer_for_geometry(nb::module_& m) {
   m.def(
       "buffer",
       [](const Geometry& geometry, const DistanceStrategy& distance,
-         const SideStraight& side, const JoinStrategy& join,
-         const EndStrategy& end, const PointStrategy& point) -> MultiPolygon {
-        return buffer_impl(geometry, distance, side, join, end, point);
+         const JoinStrategy& join, const EndStrategy& end,
+         const PointStrategy& point) -> MultiPolygon {
+        return buffer_impl(geometry, distance, join, end, point);
       },
-      "geometry"_a, "distance_strategy"_a, "side_strategy"_a, "join_strategy"_a,
-      "end_strategy"_a, "point_strategy"_a, kBufferDoc);
+      "geometry"_a, "distance_strategy"_a, "join_strategy"_a, "end_strategy"_a,
+      "point_strategy"_a, kBufferDoc);
 }
 
 auto init_buffer(nb::module_& m) -> void {
