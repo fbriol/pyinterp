@@ -106,8 +106,10 @@ auto init_multipolygon(nb::module_& m) -> void {
           },
           "idx"_a, "poly"_a, "Set polygon at index.")
 
-      .def("append", &MultiPolygon::push_back, "poly"_a,
-           "Append a polygon to the collection.")
+      .def(
+          "append",
+          [](MultiPolygon& self, const Polygon& poly) { self.push_back(poly); },
+          "poly"_a, "Append a polygon to the collection.")
 
       .def("clear", &MultiPolygon::clear,
            "Remove all polygons from the collection.")

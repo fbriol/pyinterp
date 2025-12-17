@@ -17,6 +17,10 @@ class MultiPolygon {
  public:
   /// @brief Underlying container type for polygons.
   using container_type = std::vector<Polygon<Point>>;
+
+  /// @brief Value type (polygon) for container operations.
+  using value_type = Polygon<Point>;
+
   /// @brief Iterator over polygons.
   using iterator = container_type::iterator;
 
@@ -35,6 +39,22 @@ class MultiPolygon {
   /// @param[in] pt Polygon to append.
   constexpr void push_back(const Polygon<Point>& pt) {
     polygons_.push_back(pt);
+  }
+
+  /// @brief Append a polygon to the collection (rvalue).
+  /// @param[in] pt Polygon to append.
+  constexpr void push_back(Polygon<Point>&& pt) {
+    polygons_.push_back(std::move(pt));
+  }
+
+  /// @brief Get reference to the last polygon.
+  [[nodiscard]] constexpr auto back() -> Polygon<Point>& {
+    return polygons_.back();
+  }
+
+  /// @brief Get const reference to the last polygon.
+  [[nodiscard]] constexpr auto back() const -> const Polygon<Point>& {
+    return polygons_.back();
   }
 
   /// @brief Remove all polygons from the collection.
@@ -111,9 +131,9 @@ class MultiPolygon {
   container_type polygons_;
 };
 
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 // Implementation of templated methods
-// /////////////////////////////////////////////////////////////////////////////
+// ============================================================================
 
 template <typename Point>
 auto MultiPolygon<Point>::unpack(serialization::Reader& state)
