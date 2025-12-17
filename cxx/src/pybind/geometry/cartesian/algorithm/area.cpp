@@ -6,15 +6,7 @@
 
 #include <boost/geometry.hpp>
 
-#include "pyinterp/geometry/cartesian/box.hpp"
-#include "pyinterp/geometry/cartesian/linestring.hpp"
-#include "pyinterp/geometry/cartesian/multi_linestring.hpp"
-#include "pyinterp/geometry/cartesian/multi_point.hpp"
-#include "pyinterp/geometry/cartesian/multi_polygon.hpp"
-#include "pyinterp/geometry/cartesian/point.hpp"
-#include "pyinterp/geometry/cartesian/polygon.hpp"
-#include "pyinterp/geometry/cartesian/ring.hpp"
-#include "pyinterp/geometry/cartesian/segment.hpp"
+#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
 using nb::literals::operator""_a;
@@ -33,8 +25,8 @@ Returns:
     Area in square units.
 
 Examples:
-    >>> from pyinterp.cartesian import Box
-    >>> from pyinterp.cartesian.algorithms import area
+    >>> from pyinterp.geometry.cartesian import Box
+    >>> from pyinterp.geometry.cartesian.algorithms import area
     >>> box = Box((0.0, 0.0), (10.0, 10.0))
     >>> area(box)  # Area is 100.0
     100.0
@@ -44,37 +36,30 @@ Note:
     the area is always 0.0.
 )doc";
 
-// Area function definition helper
-template <typename Geometry>
-auto define_area_method(nb::module_& m) -> void {
-  if constexpr (std::is_same_v<Geometry, Point> ||
-                std::is_same_v<Geometry, Segment> ||
-                std::is_same_v<Geometry, LineString> ||
-                std::is_same_v<Geometry, MultiPoint> ||
-                std::is_same_v<Geometry, MultiLineString>) {
-    m.def(
-        "area", [](const Geometry&) -> double { return 0.0; }, "geometry"_a,
-        kAreaDoc);
-  } else {
-    m.def(
-        "area",
-        [](const Geometry& geometry) -> double {
-          return boost::geometry::area(geometry);
-        },
-        "geometry"_a, kAreaDoc);
-  }
-}
-
 auto init_area(nb::module_& m) -> void {
-  define_area_method<Point>(m);
-  define_area_method<Box>(m);
-  define_area_method<Segment>(m);
-  define_area_method<Ring>(m);
-  define_area_method<LineString>(m);
-  define_area_method<Polygon>(m);
-  define_area_method<MultiPoint>(m);
-  define_area_method<MultiLineString>(m);
-  define_area_method<MultiPolygon>(m);
+  auto area_impl = [](const auto& geometry) -> double {
+    using GeometryType = std::decay_t<decltype(geometry)>;
+
+    if constexpr (std::is_same_v<GeometryType, Point> ||
+                  std::is_same_v<GeometryType, Segment> ||
+                  std::is_same_v<GeometryType, LineString> ||
+                  std::is_same_v<GeometryType, MultiPoint> ||
+                  std::is_same_v<GeometryType, MultiLineString>) {
+      return 0.0;  // 0D/1D geometries
+    } else {
+      nb::gil_scoped_release release;
+      return boost::geometry::area(geometry);
+    }
+  };
+
+  ([&]<typename... Geometry>() {
+    (..., m.def(
+              "area",
+              [=](const Geometry& g) -> double {
+                return area_impl(g);
+              },
+              "geometry"_a, kAreaDoc));
+  }).template operator()<GEOMETRY_TYPES(cartesian)>();
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

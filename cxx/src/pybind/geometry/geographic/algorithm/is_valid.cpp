@@ -2,26 +2,17 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/geometry/geographic/algorithms/is_valid.hpp"
+#include "pyinterp/pybind/geometry/algorithms/is_valid.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 
-#include <string>
-
-#include "pyinterp/geometry/geographic/box.hpp"
-#include "pyinterp/geometry/geographic/linestring.hpp"
-#include "pyinterp/geometry/geographic/multi_linestring.hpp"
-#include "pyinterp/geometry/geographic/multi_point.hpp"
-#include "pyinterp/geometry/geographic/multi_polygon.hpp"
-#include "pyinterp/geometry/geographic/point.hpp"
-#include "pyinterp/geometry/geographic/polygon.hpp"
-#include "pyinterp/geometry/geographic/ring.hpp"
-#include "pyinterp/geometry/geographic/segment.hpp"
+#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
 using nb::literals::operator""_a;
+using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::geographic::pybind {
 
@@ -47,8 +38,8 @@ Returns:
                the geometry is invalid (empty string if valid).
 
 Examples:
-    >>> from pyinterp.geodetic import Polygon, Ring
-    >>> from pyinterp.geodetic.algorithms import is_valid
+    >>> from pyinterp.geometry.geographic import Polygon, Ring
+    >>> from pyinterp.geometry.geographic.algorithms import is_valid
     >>> import numpy as np
     >>> # Valid polygon (counter-clockwise winding)
     >>> lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
@@ -61,33 +52,9 @@ Examples:
     (True, '')
 )doc";
 
-// is_valid function definition helper
-template <typename Geometry>
-auto define_is_valid_method(nb::module_& m) -> void {
-  m.def(
-      "is_valid",
-      [](const Geometry& geometry, bool return_reason) -> nb::object {
-        if (return_reason) {
-          std::string reason;
-          bool valid = is_valid(geometry, reason);
-          return nb::make_tuple(valid, reason);
-        } else {
-          return nb::cast(is_valid(geometry));
-        }
-      },
-      "geometry"_a, "return_reason"_a = false, kIsValidDoc);
-}
-
 auto init_is_valid(nb::module_& m) -> void {
-  define_is_valid_method<Box>(m);
-  define_is_valid_method<LineString>(m);
-  define_is_valid_method<MultiLineString>(m);
-  define_is_valid_method<MultiPoint>(m);
-  define_is_valid_method<MultiPolygon>(m);
-  define_is_valid_method<Point>(m);
-  define_is_valid_method<Polygon>(m);
-  define_is_valid_method<Ring>(m);
-  define_is_valid_method<Segment>(m);
+  pyinterp::geometry::pybind::init_is_valid<GeometryNamespace::kGeographic>(
+      m, kIsValidDoc);
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

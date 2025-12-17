@@ -7,16 +7,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 
-#include "pyinterp/geometry/geographic/box.hpp"
-#include "pyinterp/geometry/geographic/linestring.hpp"
-#include "pyinterp/geometry/geographic/multi_linestring.hpp"
-#include "pyinterp/geometry/geographic/multi_point.hpp"
-#include "pyinterp/geometry/geographic/multi_polygon.hpp"
-#include "pyinterp/geometry/geographic/point.hpp"
-#include "pyinterp/geometry/geographic/polygon.hpp"
-#include "pyinterp/geometry/geographic/ring.hpp"
-#include "pyinterp/geometry/geographic/segment.hpp"
-#include "pyinterp/geometry/geographic/spheroid.hpp"
+#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
 using nb::literals::operator""_a;
@@ -39,8 +30,8 @@ Returns:
     Area in square meters.
 
 Examples:
-    >>> from pyinterp.geodetic import Box
-    >>> from pyinterp.geodetic.algorithms import area
+    >>> from pyinterp.geometry.geographic import Box
+    >>> from pyinterp.geometry.geographic.algorithms import area
     >>> box = Box((0.0, 0.0), (1.0, 1.0))
     >>> area(box)  # Area in square meters
     12364036464.29887
@@ -60,32 +51,6 @@ Available strategies:
     - VINCENTY: Vincenty method - good balance (default)
 )doc";
 
-// Area function definition helper
-template <typename Geometry>
-auto define_area_method(nb::module_& m) -> void {
-  if constexpr (std::is_same_v<Geometry, Point> ||
-                std::is_same_v<Geometry, Segment> ||
-                std::is_same_v<Geometry, LineString> ||
-                std::is_same_v<Geometry, MultiPoint> ||
-                std::is_same_v<Geometry, MultiLineString>) {
-    m.def(
-        "area",
-        [](const Geometry&, const std::optional<Spheroid>&,
-           const StrategyMethod) -> double { return 0.0; },
-        "geometry"_a, "wgs"_a = nb::none(),
-        "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-  } else {
-    m.def(
-        "area",
-        [](const Geometry& geometry, const std::optional<Spheroid>& wgs,
-           const StrategyMethod strategy) -> double {
-          return area(geometry, wgs, strategy);
-        },
-        "geometry"_a, "wgs"_a = nb::none(),
-        "strategy"_a = StrategyMethod::kVincenty, kAreaDoc);
-  }
-}
-
 auto init_area(nb::module_& m) -> void {
   // Strategy enum
   nb::enum_<StrategyMethod>(m, "Strategy", kStrategyDoc)
@@ -95,15 +60,32 @@ auto init_area(nb::module_& m) -> void {
       .value("VINCENTY", StrategyMethod::kVincenty, "Vincenty method (default)")
       .export_values();
 
-  define_area_method<Box>(m);
-  define_area_method<LineString>(m);
-  define_area_method<MultiLineString>(m);
-  define_area_method<MultiPoint>(m);
-  define_area_method<MultiPolygon>(m);
-  define_area_method<Point>(m);
-  define_area_method<Polygon>(m);
-  define_area_method<Ring>(m);
-  define_area_method<Segment>(m);
+  auto area_impl = [](const auto& geometry, const std::optional<Spheroid>& wgs,
+                      StrategyMethod strategy) -> double {
+    using GeometryType = std::decay_t<decltype(geometry)>;
+
+    if constexpr (std::is_same_v<GeometryType, Point> ||
+                  std::is_same_v<GeometryType, Segment> ||
+                  std::is_same_v<GeometryType, LineString> ||
+                  std::is_same_v<GeometryType, MultiPoint> ||
+                  std::is_same_v<GeometryType, MultiLineString>) {
+      return 0.0;  // 0D/1D geometries
+    } else {
+      nb::gil_scoped_release release;
+      return area(geometry, wgs, strategy);
+    }
+  };
+
+  ([&]<typename... Geometry>() {
+    (..., m.def(
+              "area",
+              [=](const Geometry& g, const std::optional<Spheroid>& wgs,
+                  StrategyMethod strategy) -> double {
+                return area_impl(g, wgs, strategy);
+              },
+              "geometry"_a, nb::kw_only(), "wgs"_a = std::nullopt,
+              "strategy"_a = StrategyMethod::kVincenty, kAreaDoc));
+  }).template operator()<GEOMETRY_TYPES(geographic)>();
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind
