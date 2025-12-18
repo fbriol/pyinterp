@@ -66,7 +66,8 @@ auto init_covered_by(nb::module_& m) -> void {
       std::pair<NS::MultiPolygon, NS::Polygon>,                                \
       std::pair<NS::MultiPolygon, NS::MultiPolygon>
 
-  geometry::pybind::define_binary_predicate<decltype(covered_by_impl)>(
+  geometry::pybind::define_binary_predicate<decltype(covered_by_impl),
+                                            PAIRS(geographic)>(
       m, "covered_by", kCoveredByDoc, std::move(covered_by_impl));
 }
 
