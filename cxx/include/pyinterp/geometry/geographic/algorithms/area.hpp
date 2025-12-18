@@ -53,23 +53,23 @@ template <typename Geometry, StrategyMethod Method>
 /// @brief Calculate the area using a runtime strategy
 /// @tparam Geometry Geometry type
 /// @param[in] geometry Geometry object
-/// @param[in] wgs Optional Spheroid for geodetic calculations
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
 /// @param[in] strategy Strategy method to use
 /// @return Calculated area
 template <typename Geometry>
 [[nodiscard]] inline auto area(const Geometry &geometry,
-                               const std::optional<Spheroid> &wgs,
+                               const std::optional<Spheroid> &spheroid,
                                const StrategyMethod strategy) -> double {
   using enum StrategyMethod;
   switch (strategy) {
     case kAndoyer:
-      return area<Geometry, kAndoyer>(geometry, wgs);
+      return area<Geometry, kAndoyer>(geometry, spheroid);
     case kKarney:
-      return area<Geometry, kKarney>(geometry, wgs);
+      return area<Geometry, kKarney>(geometry, spheroid);
     case kThomas:
-      return area<Geometry, kThomas>(geometry, wgs);
+      return area<Geometry, kThomas>(geometry, spheroid);
     case kVincenty:
-      return area<Geometry, kVincenty>(geometry, wgs);
+      return area<Geometry, kVincenty>(geometry, spheroid);
   }
   std::unreachable();
 }

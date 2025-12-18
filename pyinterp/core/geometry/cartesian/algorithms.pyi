@@ -1,6 +1,6 @@
 from typing import overload
 
-from . import MultiPolygon, Point, _Concept
+from . import MultiPolygon, Point, Segment, _Concept
 
 def area(
     geometry: _Concept,
@@ -17,6 +17,10 @@ def buffer(
     point_strategy: PointCircle | PointSquare,
 ) -> MultiPolygon: ...
 def centroid(geometry: _Concept) -> Point: ...
+def closest_points(
+    geometry1: _Concept,
+    geometry2: _Concept,
+) -> Segment: ...
 def is_empty(geometry: _Concept) -> bool: ...
 def is_simple(geometry: _Concept) -> bool: ...
 @overload

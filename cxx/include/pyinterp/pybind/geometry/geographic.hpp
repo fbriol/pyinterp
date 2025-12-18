@@ -63,6 +63,10 @@ auto init_azimuth(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_centroid(nanobind::module_& m) -> void;
 
+/// @brief Initialize closest_points algorithm bindings
+/// @param[in,out] m Python module
+auto init_closest_points(nanobind::module_& m) -> void;
+
 /// @brief Initialize is_empty algorithm binding
 /// @param[in,out] m Python module
 auto init_is_empty(nanobind::module_& m) -> void;
@@ -82,6 +86,7 @@ inline void init_algorithms(nanobind::module_& m) {
   init_area(m);
   init_azimuth(m);
   init_centroid(m);
+  init_closest_points(m);
   init_is_empty(m);
   init_is_simple(m);
   init_is_valid(m);

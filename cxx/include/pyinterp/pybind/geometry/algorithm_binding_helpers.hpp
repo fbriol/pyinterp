@@ -52,30 +52,6 @@ inline auto define_for_geometries(nb::module_& m, const char* name,
        name, [alg](const Geometries& g) { return alg(g); }, "geometry"_a, doc));
 }
 
-/// @brief Helper to define algorithm with optional arguments for multiple
-/// geometries
-///
-/// Usage: Just pass the wrapper lambda directly in the fold expression
-///
-/// Example:
-///   auto area_impl = [](const auto& g, std::optional<Spheroid> wgs, Strategy
-///   s) {
-///     return compute(g, wgs, s);
-///   };
-///
-///   ([&]<typename... Gs>() {
-///     (..., m.def("area",
-///                 [=](const Gs& g, std::optional<Spheroid> w, Strategy s) {
-///                   return area_impl(g, w, s);
-///                 },
-///                 "geometry"_a, nb::kw_only(),
-///                 "wgs"_a = std::nullopt, "strategy"_a = Strategy::kDefault,
-///                 kDoc));
-///   }).template operator()<GEOMETRY_TYPES(cartesian)>();
-///
-/// Key: Lambda parameters must be EXPLICIT types (not auto), otherwise nanobind
-/// can't determine which overload to use.
-
 /// @brief Helper to define a mutable algorithm for multiple geometry types
 /// @tparam Algorithm Algorithm functor that modifies geometry in place
 /// @tparam Geometries Geometry types to bind
