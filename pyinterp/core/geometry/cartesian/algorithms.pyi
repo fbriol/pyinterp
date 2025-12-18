@@ -2,12 +2,14 @@ from typing import overload
 
 from . import (
     _Concept,
+    Box,
     LineString,
     MultiLineString,
     MultiPoint,
     MultiPolygon,
     Point,
     Polygon,
+    Ring,
     Segment,
 )
 
@@ -38,6 +40,25 @@ def closest_points(
     | MultiPolygon
     | Polygon,
 ) -> Segment: ...
+def covered_by(
+    geometry1: Point
+    | Box
+    | LineString
+    | Ring
+    | Polygon
+    | MultiPoint
+    | MultiLineString
+    | MultiPolygon,
+    geometry2: Point
+    | Segment
+    | Box
+    | LineString
+    | Ring
+    | Polygon
+    | MultiPoint
+    | MultiLineString
+    | MultiPolygon,
+) -> bool: ...
 def is_empty(geometry: _Concept) -> bool: ...
 def is_simple(geometry: _Concept) -> bool: ...
 @overload

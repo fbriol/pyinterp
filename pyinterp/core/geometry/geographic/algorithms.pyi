@@ -10,6 +10,7 @@ from . import (
     MultiPolygon,
     Point,
     Polygon,
+    Ring,
     Segment,
     Spheroid,
 )
@@ -45,6 +46,25 @@ def closest_points(
     spheroid: Spheroid | None = None,
     strategy: Strategy = VINCENTY,
 ) -> Segment: ...
+def covered_by(
+    geometry1: Point
+    | Box
+    | LineString
+    | Ring
+    | Polygon
+    | MultiPoint
+    | MultiLineString
+    | MultiPolygon,
+    geometry2: Point
+    | Segment
+    | Box
+    | LineString
+    | Ring
+    | Polygon
+    | MultiPoint
+    | MultiLineString
+    | MultiPolygon,
+) -> bool: ...
 def is_empty(geometry: _Concept) -> bool: ...
 def is_simple(geometry: _Concept) -> bool: ...
 @overload
