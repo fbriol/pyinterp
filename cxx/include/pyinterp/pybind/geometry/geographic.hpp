@@ -23,6 +23,7 @@ auto init_ring(nanobind::module_& m) -> void;
 /// @brief Initialize LineString bindings
 /// @param[in,out] m Python module
 auto init_linestring(nanobind::module_& m) -> void;
+
 /// @brief Initialize Segment bindings
 /// @param[in,out] m Python module
 auto init_segment(nanobind::module_& m) -> void;
@@ -67,6 +68,10 @@ auto init_centroid(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_closest_points(nanobind::module_& m) -> void;
 
+/// @brief Initialize covered_by algorithm binding
+/// @param[in,out] m Python module
+auto init_covered_by(nanobind::module_& m) -> void;
+
 /// @brief Initialize is_empty algorithm binding
 /// @param[in,out] m Python module
 auto init_is_empty(nanobind::module_& m) -> void;
@@ -87,6 +92,7 @@ inline void init_algorithms(nanobind::module_& m) {
   init_azimuth(m);
   init_centroid(m);
   init_closest_points(m);
+  init_covered_by(m);
   init_is_empty(m);
   init_is_simple(m);
   init_is_valid(m);
