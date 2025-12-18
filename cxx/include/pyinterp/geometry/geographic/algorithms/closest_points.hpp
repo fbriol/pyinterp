@@ -49,7 +49,8 @@ template <typename Geometry1, typename Geometry2, StrategyMethod Method>
   Segment segment;
   boost::geometry::closest_points(geometry1, geometry2, segment,
                                   detail::make_closest_points_strategy<Method>(
-                                      spheroid.value_or(Spheroid())));
+                                      boost::geometry::srs::spheroid<double>(
+                                          spheroid.value_or(Spheroid()))));
   return segment;
 }
 

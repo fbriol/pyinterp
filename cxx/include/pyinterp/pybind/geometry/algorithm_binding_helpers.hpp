@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 
 #include <cstdint>
 
@@ -107,6 +108,38 @@ inline auto define_binary_predicate(nb::module_& m, const char* name,
     m.def(
         name, [pred](const G1& g1, const G2& g2) { return pred(g1, g2); },
         "geometry1"_a, "geometry2"_a, doc);
+  };
+
+  // Fold expression to define binding for each pair
+  (..., define_pair(static_cast<GeometryPairs*>(nullptr)));
+}
+
+/// @brief Helper to define a binary predicate for geometry pairs
+/// @tparam Predicate Binary predicate functor
+/// @tparam GeometryPairs Tuple of std::pair<G1, G2> for each combination
+/// @param[in] m Python module
+/// @param[in] name Function name
+/// @param[in] doc Documentation string
+/// @param[in] pred Predicate functor that takes two geometries
+template <typename Predicate, typename Spheroid, typename Strategy,
+          typename... GeometryPairs>
+inline auto define_binary_predicate_with_strategy(nb::module_& m,
+                                                  const char* name,
+                                                  const char* doc,
+                                                  Predicate&& pred) -> void {
+  // Helper to unpack std::pair and define binding
+  auto define_pair = [&]<typename Pair>(Pair*) {
+    using G1 = typename Pair::first_type;
+    using G2 = typename Pair::second_type;
+    m.def(
+        name,
+        [pred](const G1& g1, const G2& g2,
+               const std::optional<Spheroid>& spheroid,
+               const Strategy& strategy) {
+          return pred(g1, g2, spheroid, strategy);
+        },
+        "geometry1"_a, "geometry2"_a, "spheroid"_a = std::nullopt,
+        "strategy"_a = Strategy{}, doc);
   };
 
   // Fold expression to define binding for each pair

@@ -1,7 +1,18 @@
 from typing import overload
 import enum
 
-from . import Box, Point, Segment, Spheroid, _Concept
+from . import (
+    _Concept,
+    Box,
+    LineString,
+    MultiLineString,
+    MultiPoint,
+    MultiPolygon,
+    Point,
+    Polygon,
+    Segment,
+    Spheroid,
+)
 
 ANDOYER: Strategy
 KARNEY: Strategy
@@ -21,8 +32,16 @@ def azimuth(
 ) -> float: ...
 def centroid(geometry: Box | Segment) -> Point: ...
 def closest_points(
-    geometry1: _Concept,
-    geometry2: _Concept,
+    geometry1: LineString
+    | MultiLineString
+    | MultiPoint
+    | MultiPolygon
+    | Polygon,
+    geometry2: LineString
+    | MultiLineString
+    | MultiPoint
+    | MultiPolygon
+    | Polygon,
     spheroid: Spheroid | None = None,
     strategy: Strategy = VINCENTY,
 ) -> Segment: ...

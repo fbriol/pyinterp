@@ -38,14 +38,44 @@ Examples:
 )doc";
 
 auto init_closest_points(nb::module_& m) -> void {
-  geometry::pybind::define_binary_predicate(
-      m, "closest_points", kClosestPointsDoc,
-      [](const auto& geometry1, const auto& geometry2,
-         const std::optional<Spheroid>& spheroid,
-         const StrategyMethod& strategy) -> Segment {
-        nb::gil_scoped_release release;
-        return closest_points(geometry1, geometry2, spheroid, strategy);
-      });
+#define PAIRS(NS)                                          \
+  std::pair<NS::LineString, NS::LineString>,               \
+      std::pair<NS::LineString, NS::MultiLineString>,      \
+      std::pair<NS::LineString, NS::MultiPoint>,           \
+      std::pair<NS::LineString, NS::MultiPolygon>,         \
+      std::pair<NS::LineString, NS::Polygon>,              \
+      std::pair<NS::MultiPoint, NS::LineString>,           \
+      std::pair<NS::MultiPoint, NS::MultiLineString>,      \
+      std::pair<NS::MultiPoint, NS::MultiPoint>,           \
+      std::pair<NS::MultiPoint, NS::MultiPolygon>,         \
+      std::pair<NS::MultiPoint, NS::Polygon>,              \
+      std::pair<NS::MultiLineString, NS::LineString>,      \
+      std::pair<NS::MultiLineString, NS::MultiLineString>, \
+      std::pair<NS::MultiLineString, NS::MultiPoint>,      \
+      std::pair<NS::MultiLineString, NS::MultiPolygon>,    \
+      std::pair<NS::MultiLineString, NS::Polygon>,         \
+      std::pair<NS::MultiPolygon, NS::LineString>,         \
+      std::pair<NS::MultiPolygon, NS::MultiLineString>,    \
+      std::pair<NS::MultiPolygon, NS::MultiPoint>,         \
+      std::pair<NS::MultiPolygon, NS::MultiPolygon>,       \
+      std::pair<NS::MultiPolygon, NS::Polygon>,            \
+      std::pair<NS::Polygon, NS::LineString>,              \
+      std::pair<NS::Polygon, NS::MultiLineString>,         \
+      std::pair<NS::Polygon, NS::MultiPoint>,              \
+      std::pair<NS::Polygon, NS::MultiPolygon>,            \
+      std::pair<NS::Polygon, NS::Polygon>
+
+  auto closest_points_impl = [](const auto& geometry1, const auto& geometry2,
+                                const std::optional<Spheroid>& spheroid,
+                                StrategyMethod strategy) -> Segment {
+    nb::gil_scoped_release release;
+    return closest_points(geometry1, geometry2, spheroid, strategy);
+  };
+
+  geometry::pybind::define_binary_predicate_with_strategy<
+      decltype(closest_points_impl), Spheroid, StrategyMethod,
+      PAIRS(geographic)>(m, "closest_points", kClosestPointsDoc,
+                         std::move(closest_points_impl));
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind
