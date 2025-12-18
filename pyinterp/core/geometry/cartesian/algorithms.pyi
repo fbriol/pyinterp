@@ -6,7 +6,8 @@ def area(
     geometry: _Concept,
 ) -> float: ...
 def azimuth(
-    geometry: _Concept,
+    point1: Point,
+    point2: Point,
 ) -> float: ...
 def buffer(
     geometry: _Concept,

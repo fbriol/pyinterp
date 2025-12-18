@@ -15,7 +15,8 @@ def area(
 ) -> float: ...
 def centroid(geometry: Box | Segment) -> Point: ...
 def azimuth(
-    geometry: _Concept,
+    point1: Point,
+    point2: Point,
     spheroid: Spheroid | None = None,
     strategy: Strategy = VINCENTY,
 ) -> float: ...
