@@ -65,6 +65,20 @@ def covered_by(
     | MultiLineString
     | MultiPolygon,
 ) -> bool: ...
+def crosses(
+    geometry1: Point
+    | LineString
+    | Ring
+    | Polygon
+    | MultiLineString
+    | MultiPolygon,
+    geometry2: Point
+    | LineString
+    | Ring
+    | Polygon
+    | MultiLineString
+    | MultiPolygon,
+) -> bool: ...
 def is_empty(geometry: _Concept) -> bool: ...
 def is_simple(geometry: _Concept) -> bool: ...
 @overload

@@ -72,6 +72,10 @@ auto init_closest_points(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_covered_by(nanobind::module_& m) -> void;
 
+/// @brief Initialize crosses algorithm binding
+/// @param[in,out] m Python module
+auto init_crosses(nanobind::module_& m) -> void;
+
 /// @brief Initialize is_empty algorithm binding
 /// @param[in,out] m Python module
 auto init_is_empty(nanobind::module_& m) -> void;
@@ -93,6 +97,7 @@ inline void init_algorithms(nanobind::module_& m) {
   init_centroid(m);
   init_closest_points(m);
   init_covered_by(m);
+  init_crosses(m);
   init_is_empty(m);
   init_is_simple(m);
   init_is_valid(m);

@@ -170,4 +170,26 @@ inline auto define_binary_predicate_with_strategy(nb::module_& m,
       std::pair<NS::MultiPolygon, NS::Polygon>,                              \
       std::pair<NS::MultiPolygon, NS::MultiPolygon>
 
+/// @brief Macro to create common binary geometry pairs for the "crosses"
+/// predicate
+#define CROSSES_PAIRS(NS)                                                \
+  std::pair<NS::Point, NS::LineString>, std::pair<NS::Point, NS::Ring>,  \
+      std::pair<NS::Point, NS::Polygon>,                                 \
+      std::pair<NS::Point, NS::MultiLineString>,                         \
+      std::pair<NS::Point, NS::MultiPolygon>,                            \
+      std::pair<NS::LineString, NS::Point>,                              \
+      std::pair<NS::LineString, NS::LineString>,                         \
+      std::pair<NS::LineString, NS::Ring>,                               \
+      std::pair<NS::LineString, NS::Polygon>,                            \
+      std::pair<NS::LineString, NS::MultiLineString>,                    \
+      std::pair<NS::LineString, NS::MultiPolygon>,                       \
+      std::pair<NS::Ring, NS::Point>, std::pair<NS::Polygon, NS::Point>, \
+      std::pair<NS::MultiLineString, NS::Point>,                         \
+      std::pair<NS::MultiLineString, NS::LineString>,                    \
+      std::pair<NS::MultiLineString, NS::Ring>,                          \
+      std::pair<NS::MultiLineString, NS::Polygon>,                       \
+      std::pair<NS::MultiLineString, NS::MultiLineString>,               \
+      std::pair<NS::MultiLineString, NS::MultiPolygon>,                  \
+      std::pair<NS::MultiPolygon, NS::MultiPolygon>
+
 }  // namespace pyinterp::geometry::pybind
