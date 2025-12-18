@@ -1,7 +1,7 @@
 from typing import overload
 import enum
 
-from . import Point, Spheroid, _Concept
+from . import Box, Point, Segment, Spheroid, _Concept
 
 ANDOYER: Strategy
 KARNEY: Strategy
@@ -13,7 +13,7 @@ def area(
     spheroid: Spheroid | None = None,
     strategy: Strategy = VINCENTY,
 ) -> float: ...
-def centroid(geometry: _Concept) -> Point: ...
+def centroid(geometry: Box | Segment) -> Point: ...
 def azimuth(
     geometry: _Concept,
     spheroid: Spheroid | None = None,

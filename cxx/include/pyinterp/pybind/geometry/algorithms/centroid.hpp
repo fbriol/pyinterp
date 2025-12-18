@@ -2,7 +2,12 @@
 #include <nanobind/nanobind.h>
 
 #include <boost/geometry.hpp>
+#include <boost/geometry/algorithms/centroid.hpp>
 
+#include "pyinterp/geometry/box.hpp"
+#include "pyinterp/geometry/cartesian/point.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/segment.hpp"
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace pyinterp::geometry::pybind {
@@ -24,23 +29,32 @@ Examples:
     >>> centroid(polygon)
 )doc";
 
+template <typename Geometry, typename Point>
+auto centroid(const Geometry& g) -> Point {
+  nanobind::gil_scoped_release release;
+  Point pt;
+  boost::geometry::centroid(g, pt);
+  return pt;
+};
+
 /// @brief Initialize the centroid algorithm in the given module
 /// @tparam NS Namespace of the geometries (cartesian or geographic)
 /// @param[in,out] m Nanobind module
 template <GeometryNamespace NS>
 inline auto init_centroid(nanobind::module_& m) -> void {
-  auto centroid_impl = [](const auto& g) -> bool {
-    nanobind::gil_scoped_release release;
-    return boost::geometry::is_empty(g);
-  };
   if constexpr (NS == GeometryNamespace::kCartesian) {
+    auto centroid_impl = [](auto&& geometry) {
+      using GeometryType = std::decay_t<decltype(geometry)>;
+      return centroid<GeometryType, cartesian::Point>(geometry);
+    };
     geometry::pybind::define_for_geometries<decltype(centroid_impl),
                                             GEOMETRY_TYPES(cartesian)>(
         m, "centroid", kCentroidDoc, std::move(centroid_impl));
   } else {
-    geometry::pybind::define_for_geometries<decltype(centroid_impl),
-                                            GEOMETRY_TYPES(geographic)>(
-        m, "centroid", kCentroidDoc, std::move(centroid_impl));
+    m.def("centroid", &centroid<geographic::Box, geographic::Point>,
+          kCentroidDoc);
+    m.def("centroid", &centroid<geographic::Segment, geographic::Point>,
+          kCentroidDoc);
   }
 }
 
