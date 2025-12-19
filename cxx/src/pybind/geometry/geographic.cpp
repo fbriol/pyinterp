@@ -18,6 +18,7 @@ void init_geographic(nanobind::module_& m) {
   geometry::geographic::pybind::init_multipolygon(geographic_module);
   geometry::geographic::pybind::init_spheroid(geographic_module);
   geometry::geographic::pybind::init_coordinates(geographic_module);
+  geometry::geographic::pybind::init_rtree(geographic_module);
   geometry::geographic::pybind::init_algorithms(algorithms_module);
 }
 

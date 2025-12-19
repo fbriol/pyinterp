@@ -1,6 +1,8 @@
 import collections.abc
-from typing import Generic, Iterator, TypeVar, overload
-from ....type_hints import NDArray1DFloat64
+from typing import Generic, Iterator, TypeVar, overload, Literal
+from ....type_hints import NDArray1DFloat64, NDArray1DUInt32, NDArray2DFloat64
+import numpy as np
+from ... import config
 
 _ConceptElement = TypeVar("_ConceptElement", Point, LineString, Polygon)
 
@@ -175,6 +177,52 @@ class Ring:
     def __len__(self) -> int: ...
     def __ne__(self, other: object) -> bool: ...
     def __setitem__(self, idx: int, point: Point) -> None: ...
+
+class RTree:
+    def __init__(self) -> None: ...
+    def bounds(
+        self,
+    ) -> (
+        tuple[
+            np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+            np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+        ]
+        | None
+    ): ...
+    def clear(self) -> None: ...
+    def empty(self) -> bool: ...
+    def insert(
+        self, coordinates: NDArray2DFloat64, values: NDArray1DFloat64
+    ) -> None: ...
+    def inverse_distance_weighting(
+        self,
+        coordinates: NDArray2DFloat64,
+        config: config.rtree.InverseDistanceWeighting | None = None,
+    ) -> tuple[NDArray1DFloat64, NDArray1DUInt32]: ...
+    def kriging(
+        self,
+        coordinates: NDArray2DFloat64,
+        config: config.rtree.Kriging | None = None,
+    ) -> tuple[NDArray1DFloat64, NDArray1DUInt32]: ...
+    def packing(
+        self, coordinates: NDArray2DFloat64, values: NDArray1DFloat64
+    ) -> None: ...
+    def query(
+        self,
+        coordinates: NDArray2DFloat64,
+        config: config.rtree.Query | None = None,
+    ) -> tuple[NDArray2DFloat64, NDArray2DFloat64]: ...
+    def radial_basis_function(
+        self,
+        coordinates: NDArray2DFloat64,
+        config: config.rtree.RadialBasisFunction | None = None,
+    ) -> tuple[NDArray1DFloat64, NDArray1DUInt32]: ...
+    def size(self) -> int: ...
+    def window_function(
+        self,
+        coordinates: NDArray2DFloat64,
+        config: config.rtree.InterpolationWindow | None = None,
+    ) -> tuple[NDArray1DFloat64, NDArray1DUInt32]: ...
 
 class Segment:
     a: Point

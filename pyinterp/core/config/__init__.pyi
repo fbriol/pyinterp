@@ -1,3 +1,3 @@
-from . import geometric, windowed
+from . import geometric, windowed, rtree
 
-__all__ = ["geometric", "windowed"]
+__all__ = ["geometric", "windowed", "rtree"]

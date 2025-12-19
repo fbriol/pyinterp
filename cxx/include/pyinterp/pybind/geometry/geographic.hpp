@@ -52,6 +52,10 @@ auto init_spheroid(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_coordinates(nanobind::module_& m) -> void;
 
+/// @brief Initialize geographic RTree bindings
+/// @param[in,out] m Python module
+auto init_rtree(nanobind::module_& m) -> void;
+
 /// @brief Initialize area algorithm bindings
 /// @param[in,out] m Python module
 auto init_area(nanobind::module_& m) -> void;
