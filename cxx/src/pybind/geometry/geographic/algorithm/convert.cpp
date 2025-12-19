@@ -8,10 +8,7 @@
 
 #include <boost/geometry.hpp>
 
-#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
-
 namespace nb = nanobind;
-using nb::literals::operator""_a;
 
 namespace pyinterp::geometry::geographic::pybind {
 

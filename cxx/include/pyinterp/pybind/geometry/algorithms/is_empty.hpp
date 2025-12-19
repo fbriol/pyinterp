@@ -37,12 +37,12 @@ inline auto init_is_empty(nanobind::module_& m) -> void {
     return boost::geometry::is_empty(g);
   };
   if constexpr (NS == GeometryNamespace::kCartesian) {
-    geometry::pybind::define_for_geometries<decltype(is_empty_impl),
-                                            GEOMETRY_TYPES(cartesian)>(
+    geometry::pybind::define_unary_predicate<decltype(is_empty_impl),
+                                             GEOMETRY_TYPES(cartesian)>(
         m, "is_empty", kIsEmptyDoc, std::move(is_empty_impl));
   } else {
-    geometry::pybind::define_for_geometries<decltype(is_empty_impl),
-                                            GEOMETRY_TYPES(geographic)>(
+    geometry::pybind::define_unary_predicate<decltype(is_empty_impl),
+                                             GEOMETRY_TYPES(geographic)>(
         m, "is_empty", kIsEmptyDoc, std::move(is_empty_impl));
   }
 }

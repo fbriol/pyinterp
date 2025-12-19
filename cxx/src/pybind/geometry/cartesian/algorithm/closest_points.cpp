@@ -23,21 +23,9 @@ Args:
 
 Returns:
     Closest points as a Segment.
-
-Examples:
-    >>> g1 = Polygon(...)  # Define first geometry
-    >>> g2 = LineString(...)  # Define second geometry
-    >>> closest_points(g1, g2)  # Closest points as a Segment
 )doc";
 
-auto init_closest_points(nb::module_& m) -> void {
-  auto closest_points_impl = [](const auto& geometry1,
-                                const auto& geometry2) -> Segment {
-    nb::gil_scoped_release release;
-    Segment segment;
-    boost::geometry::closest_points(geometry1, geometry2, segment);
-    return segment;
-  };
+// Define all valid pairs of geometry types for closest points calculation
 #define PAIRS(NS)                                          \
   std::pair<NS::LineString, NS::LineString>,               \
       std::pair<NS::LineString, NS::MultiLineString>,      \
@@ -64,6 +52,16 @@ auto init_closest_points(nb::module_& m) -> void {
       std::pair<NS::Polygon, NS::MultiPoint>,              \
       std::pair<NS::Polygon, NS::MultiPolygon>,            \
       std::pair<NS::Polygon, NS::Polygon>
+
+auto init_closest_points(nb::module_& m) -> void {
+  auto closest_points_impl = [](const auto& geometry1,
+                                const auto& geometry2) -> Segment {
+    nb::gil_scoped_release release;
+    Segment segment;
+    boost::geometry::closest_points(geometry1, geometry2, segment);
+    return segment;
+  };
+
   geometry::pybind::define_binary_predicate<decltype(closest_points_impl),
                                             PAIRS(cartesian)>(
       m, "closest_points", kClosestPointsDoc, std::move(closest_points_impl));

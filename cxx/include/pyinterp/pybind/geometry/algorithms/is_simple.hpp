@@ -47,12 +47,12 @@ inline auto init_is_simple(nanobind::module_& m) -> void {
     return boost::geometry::is_simple(g);
   };
   if constexpr (NS == GeometryNamespace::kCartesian) {
-    geometry::pybind::define_for_geometries<decltype(is_simple_impl),
-                                            GEOMETRY_TYPES(cartesian)>(
+    geometry::pybind::define_unary_predicate<decltype(is_simple_impl),
+                                             GEOMETRY_TYPES(cartesian)>(
         m, "is_simple", kIsSimpleDoc, std::move(is_simple_impl));
   } else {
-    geometry::pybind::define_for_geometries<decltype(is_simple_impl),
-                                            GEOMETRY_TYPES(geographic)>(
+    geometry::pybind::define_unary_predicate<decltype(is_simple_impl),
+                                             GEOMETRY_TYPES(geographic)>(
         m, "is_simple", kIsSimpleDoc, std::move(is_simple_impl));
   }
 }

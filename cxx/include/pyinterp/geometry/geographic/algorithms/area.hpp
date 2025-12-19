@@ -8,8 +8,6 @@
 
 namespace pyinterp::geometry::geographic {
 
-namespace detail {
-
 /// @brief Create area strategy based on the specified method
 /// and spheroid
 /// @tparam Method Strategy method to use
@@ -35,19 +33,18 @@ template <StrategyMethod Method>
   }
 }
 
-}  // namespace detail
-
 /// @brief Calculate the area using a compile-time strategy
 /// @tparam Geometry Geometry type
 /// @tparam Method Strategy method to use
 /// @param[in] geometry Geometry object
-/// @param[in] wgs Optional Spheroid for geodetic calculations
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
 /// @return Calculated area
 template <typename Geometry, StrategyMethod Method>
 [[nodiscard]] inline auto area(const Geometry &geometry,
-                               const std::optional<Spheroid> &wgs) -> double {
+                               const std::optional<Spheroid> &spheroid)
+    -> double {
   return boost::geometry::area(
-      geometry, detail::make_area_strategy<Method>(detail::make_spheroid(wgs)));
+      geometry, make_area_strategy<Method>(make_spheroid(spheroid)));
 }
 
 /// @brief Calculate the area using a runtime strategy

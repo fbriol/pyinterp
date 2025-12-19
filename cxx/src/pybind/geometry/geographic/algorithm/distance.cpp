@@ -39,16 +39,9 @@ auto init_distance(nb::module_& m) -> void {
     return distance(geometry1, geometry2, wgs, strategy);
   };
 
-  ([&]<typename... Geometry>() {
-    (..., m.def(
-              "distance",
-              [=](const Geometry& g1, const Geometry& g2,
-                  const std::optional<Spheroid>& wgs, StrategyMethod strategy)
-                  -> double { return distance_impl(g1, g2, wgs, strategy); },
-              "geometry1"_a, "geometry2"_a, nb::kw_only(),
-              "spheroid"_a = std::nullopt,
-              "strategy"_a = StrategyMethod::kVincenty, kDistanceDoc));
-  }).template operator()<GEOMETRY_TYPES(geographic)>();
+  geometry::pybind::define_binary_predicate_with_strategy<
+      decltype(distance_impl), Spheroid, StrategyMethod>(
+      m, "distance", kDistanceDoc, std::move(distance_impl));
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

@@ -31,8 +31,8 @@ inline auto init_envelope(nanobind::module_& m) -> void {
       boost::geometry::envelope(g, result);
       return result;
     };
-    geometry::pybind::define_for_geometries<decltype(envelope_impl),
-                                            GEOMETRY_TYPES(cartesian)>(
+    geometry::pybind::define_unary_predicate<decltype(envelope_impl),
+                                             GEOMETRY_TYPES(cartesian)>(
         m, "envelope", kEnvelopeDoc, std::move(envelope_impl));
   } else {
     auto envelope_impl = [](const auto& g) -> geographic::Box {
@@ -41,8 +41,8 @@ inline auto init_envelope(nanobind::module_& m) -> void {
       boost::geometry::envelope(g, result);
       return result;
     };
-    geometry::pybind::define_for_geometries<decltype(envelope_impl),
-                                            GEOMETRY_TYPES(geographic)>(
+    geometry::pybind::define_unary_predicate<decltype(envelope_impl),
+                                             GEOMETRY_TYPES(geographic)>(
         m, "envelope", kEnvelopeDoc, std::move(envelope_impl));
   }
 }

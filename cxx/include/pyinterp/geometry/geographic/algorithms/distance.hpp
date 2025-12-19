@@ -8,8 +8,6 @@
 
 namespace pyinterp::geometry::geographic {
 
-namespace detail {
-
 /// @brief Create distance strategy based on the specified method
 /// and spheroid
 /// @tparam Method Strategy method to use
@@ -35,23 +33,21 @@ template <StrategyMethod Method>
   }
 }
 
-}  // namespace detail
-
 /// @brief Calculate the distance using a compile-time strategy
 /// @tparam Geometry Geometry type
 /// @tparam Method Strategy method to use
 /// @param[in] geometry1 First geometric object
 /// @param[in] geometry2 Second geometric object
-/// @param[in] wgs Optional Spheroid for geodetic calculations
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
 /// @return Calculated distance
 template <typename Geometry, StrategyMethod Method>
 [[nodiscard]] inline auto distance(const Geometry &geometry1,
                                    const Geometry &geometry2,
-                                   const std::optional<Spheroid> &wgs)
+                                   const std::optional<Spheroid> &spheroid)
     -> double {
   return boost::geometry::distance(
       geometry1, geometry2,
-      detail::make_distance_strategy<Method>(detail::make_spheroid(wgs)));
+      make_distance_strategy<Method>(make_spheroid(spheroid)));
 }
 
 /// @brief Calculate the distance using a runtime strategy

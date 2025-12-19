@@ -56,6 +56,10 @@ auto init_buffer(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_centroid(nanobind::module_& m) -> void;
 
+/// @brief Initialize convert algorithm binding
+/// @param[in,out] m Python module
+auto init_convert(nanobind::module_& m) -> void;
+
 /// @brief Initialize closest_points algorithm bindings
 /// @param[in,out] m Python module
 auto init_closest_points(nanobind::module_& m) -> void;
@@ -84,19 +88,167 @@ auto init_is_valid(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_buffer(nanobind::module_& m) -> void;
 
+/// @brief Initialize clear algorithm binding
+/// @param[in,out] m Python module
+auto init_clear(nanobind::module_& m) -> void;
+
+/// @brief Initialize correct algorithm binding
+/// @param[in,out] m Python module
+auto init_correct(nanobind::module_& m) -> void;
+
+/// @brief Initialize convex_hull algorithm binding
+/// @param[in,out] m Python module
+auto init_convex_hull(nanobind::module_& m) -> void;
+
+/// @brief Initialize densify algorithm binding
+/// @param[in,out] m Python module
+auto init_densify(nanobind::module_& m) -> void;
+
+/// @brief Initialize difference algorithm binding
+/// @param[in,out] m Python module
+auto init_difference(nanobind::module_& m) -> void;
+
+/// @brief Initialize disjoint algorithm binding
+/// @param[in,out] m Python module
+auto init_disjoint(nanobind::module_& m) -> void;
+
+/// @brief Initialize distance algorithm binding
+/// @param[in,out] m Python module
+auto init_distance(nanobind::module_& m) -> void;
+
+/// @brief Initialize envelope algorithm binding
+/// @param[in,out] m Python module
+auto init_envelope(nanobind::module_& m) -> void;
+
+/// @brief Initialize equals algorithm binding
+/// @param[in,out] m Python module
+auto init_equals(nanobind::module_& m) -> void;
+
+/// @brief Initialize intersection algorithm binding
+/// @param[in,out] m Python module
+auto init_intersection(nanobind::module_& m) -> void;
+
+/// @brief Initialize intersects algorithm binding
+/// @param[in,out] m Python module
+auto init_intersects(nanobind::module_& m) -> void;
+
+/// @brief Initialize length algorithm binding
+/// @param[in,out] m Python module
+auto init_length(nanobind::module_& m) -> void;
+
+/// @brief Initialize line_interpolate algorithm binding
+/// @param[in,out] m Python module
+auto init_line_interpolate(nanobind::module_& m) -> void;
+
+/// @brief Initialize num_geometries algorithm binding
+/// @param[in,out] m Python module
+auto init_num_geometries(nanobind::module_& m) -> void;
+
+/// @brief Initialize num_interior_rings algorithm binding
+/// @param[in,out] m Python module
+auto init_num_interior_rings(nanobind::module_& m) -> void;
+
+/// @brief Initialize num_points algorithm binding
+/// @param[in,out] m Python module
+auto init_num_points(nanobind::module_& m) -> void;
+
+/// @brief Initialize num_segments algorithm binding
+/// @param[in,out] m Python module
+auto init_num_segments(nanobind::module_& m) -> void;
+
+/// @brief Initialize overlaps algorithm binding
+/// @param[in,out] m Python module
+auto init_overlaps(nanobind::module_& m) -> void;
+
+/// @brief Initialize perimeter algorithm binding
+/// @param[in,out] m Python module
+auto init_perimeter(nanobind::module_& m) -> void;
+
+/// @brief Initialize relate algorithm binding
+/// @param[in,out] m Python module
+auto init_relate(nanobind::module_& m) -> void;
+
+/// @brief Initialize relation algorithm binding
+/// @param[in,out] m Python module
+auto init_relation(nanobind::module_& m) -> void;
+
+/// @brief Initialize reverse algorithm binding
+/// @param[in,out] m Python module
+auto init_reverse(nanobind::module_& m) -> void;
+
+/// @brief Initialize simplify algorithm binding
+/// @param[in,out] m Python module
+auto init_simplify(nanobind::module_& m) -> void;
+
+/// @brief Initialize touches algorithm binding
+/// @param[in,out] m Python module
+auto init_touches(nanobind::module_& m) -> void;
+
+/// @brief Initialize union algorithm binding
+/// @param[in,out] m Python module
+auto init_union(nanobind::module_& m) -> void;
+
+/// @brief Initialize unique algorithm binding
+/// @param[in,out] m Python module
+auto init_unique(nanobind::module_& m) -> void;
+
+/// @brief Initialize WKT algorithm binding
+/// @param[in,out] m Python module
+auto init_wkt(nanobind::module_& m) -> void;
+
+/// @brief Initialize GeoJSON algorithm binding
+/// @param[in,out] m Python module
+auto init_geojson(nanobind::module_& m) -> void;
+
+/// @brief Initialize within algorithm binding
+/// @param[in,out] m Python module
+auto init_within(nanobind::module_& m) -> void;
+
 /// @brief Initialize all algorithm bindings
 /// @param[in,out] m Python module
 inline void init_algorithms(nanobind::module_& m) {
   init_area(m);
   init_azimuth(m);
+  init_buffer(m);
   init_centroid(m);
+  init_convert(m);
+
+  init_clear(m);
   init_closest_points(m);
+  init_convex_hull(m);
+  init_correct(m);
   init_covered_by(m);
   init_crosses(m);
+  init_densify(m);
+  init_difference(m);
+  init_disjoint(m);
+  init_distance(m);
+  init_envelope(m);
+  init_equals(m);
+  init_intersection(m);
+  init_intersects(m);
   init_is_empty(m);
   init_is_simple(m);
   init_is_valid(m);
-  init_buffer(m);
+  init_length(m);
+  init_line_interpolate(m);
+
+  init_num_geometries(m);
+  init_num_interior_rings(m);
+  init_num_points(m);
+  init_num_segments(m);
+  init_overlaps(m);
+  init_perimeter(m);
+  init_relate(m);
+  init_relation(m);
+  init_reverse(m);
+  init_simplify(m);
+  init_touches(m);
+  init_union(m);
+  init_unique(m);
+  init_wkt(m);
+  init_geojson(m);
+  init_within(m);
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

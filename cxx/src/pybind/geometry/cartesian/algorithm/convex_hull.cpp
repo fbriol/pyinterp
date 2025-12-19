@@ -34,8 +34,8 @@ auto init_convex_hull(nb::module_& m) -> void {
     boost::geometry::convex_hull(g, result);
     return result;
   };
-  geometry::pybind::define_for_geometries<decltype(convex_hull_impl),
-                                          GEOMETRY_TYPES(cartesian)>(
+  geometry::pybind::define_unary_predicate<decltype(convex_hull_impl),
+                                           GEOMETRY_TYPES(cartesian)>(
       m, "convex_hull", kConvexHullDoc, std::move(convex_hull_impl));
   ;
 }

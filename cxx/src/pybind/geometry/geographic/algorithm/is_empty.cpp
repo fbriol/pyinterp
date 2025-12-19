@@ -8,13 +8,11 @@
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
-namespace nb = nanobind;
-using nb::literals::operator""_a;
 using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::geographic::pybind {
 
-auto init_is_empty(nb::module_& m) -> void {
+auto init_is_empty(nanobind::module_& m) -> void {
   geometry::pybind::init_is_empty<GeometryNamespace::kGeographic>(m);
 }
 

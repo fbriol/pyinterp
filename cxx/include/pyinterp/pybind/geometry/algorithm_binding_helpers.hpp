@@ -45,12 +45,35 @@ using nb::literals::operator""_a;
 /// @param[in] doc Documentation string
 /// @param[in] alg Algorithm functor that takes a geometry
 template <typename Algorithm, typename... Geometries>
-inline auto define_for_geometries(nb::module_& m, const char* name,
-                                  const char* doc, Algorithm&& alg) -> void {
+inline auto define_unary_predicate(nb::module_& m, const char* name,
+                                   const char* doc, Algorithm&& alg) -> void {
   // Fold expression to define binding for each geometry type
   (...,
    m.def(
        name, [alg](const Geometries& g) { return alg(g); }, "geometry"_a, doc));
+}
+
+/// @brief Helper to define a unary algorithm for multiple geometry types
+/// using a strategy
+/// @tparam Algorithm Algorithm functor
+/// @tparam Geometries Geometry types to bind
+/// @param[in] m Python module
+/// @param[in] name Function name
+/// @param[in] doc Documentation string
+/// @param[in] alg Algorithm functor that takes a geometry
+template <typename Algorithm, typename Spheroid, typename Strategy,
+          typename... Geometries>
+inline auto define_unary_predicate_with_strategy(nb::module_& m,
+                                                 const char* name,
+                                                 const char* doc,
+                                                 Algorithm&& alg) -> void {
+  (...,
+   m.def(
+       name,
+       [alg](const Geometries& g, const std::optional<Spheroid>& spheroid,
+             const Strategy& strategy) { return alg(g, spheroid, strategy); },
+       "geometry"_a, "spheroid"_a = std::nullopt, "strategy"_a = Strategy{},
+       doc));
 }
 
 /// @brief Helper to define a mutable algorithm for multiple geometry types
@@ -61,34 +84,10 @@ inline auto define_for_geometries(nb::module_& m, const char* name,
 /// @param[in] doc Documentation string
 /// @param[in] alg Algorithm functor that takes a mutable geometry reference
 template <typename Algorithm, typename... Geometries>
-inline auto define_mutable_for_geometries(nb::module_& m, const char* name,
-                                          const char* doc, Algorithm&& alg)
+inline auto define_mutable_unary_predicate(nb::module_& m, const char* name,
+                                           const char* doc, Algorithm&& alg)
     -> void {
   (..., m.def(name, [alg](Geometries& g) { alg(g); }, "geometry"_a, doc));
-}
-
-/// @brief Helper to define algorithm with optional bool argument for multiple
-/// geometries
-/// @tparam Algorithm Algorithm functor that takes (geometry, bool) and returns
-/// nb::object
-/// @tparam Geometries Geometry types to bind
-/// @param[in] m Python module
-/// @param[in] name Function name
-/// @param[in] doc Documentation string
-/// @param[in] arg_name Name of the optional boolean argument
-/// @param[in] arg_default Default value for the optional boolean argument
-/// @param[in] alg Algorithm functor
-template <typename Algorithm, typename... Geometries>
-inline auto define_with_optional_bool(nb::module_& m, const char* name,
-                                      const char* doc, const char* arg_name,
-                                      bool arg_default, Algorithm&& alg)
-    -> void {
-  (..., m.def(
-            name,
-            [alg](const Geometries& g, bool opt) -> nb::object {
-              return alg(g, opt);
-            },
-            "geometry"_a, nb::kw_only(), nb::arg(arg_name) = arg_default, doc));
 }
 
 /// @brief Helper to define a binary predicate for geometry pairs

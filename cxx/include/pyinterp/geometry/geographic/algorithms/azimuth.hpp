@@ -9,8 +9,6 @@
 
 namespace pyinterp::geometry::geographic {
 
-namespace detail {
-
 /// @brief Create azimuth strategy based on the specified method
 /// and spheroid
 /// @tparam Method Strategy method to use
@@ -36,8 +34,6 @@ template <StrategyMethod Method>
   }
 }
 
-}  // namespace detail
-
 /// @brief Calculate the azimuth using a compile-time strategy
 /// @tparam Geometry Geometry type
 /// @tparam Method Strategy method to use
@@ -50,8 +46,7 @@ template <StrategyMethod Method>
                                   const std::optional<Spheroid> &wgs)
     -> double {
   return boost::geometry::azimuth(
-      point1, point2,
-      detail::make_azimuth_strategy<Method>(detail::make_spheroid(wgs)));
+      point1, point2, make_azimuth_strategy<Method>(make_spheroid(wgs)));
 }
 
 /// @brief Calculate the azimuth using a runtime strategy

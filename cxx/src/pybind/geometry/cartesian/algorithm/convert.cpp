@@ -10,12 +10,9 @@
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
-namespace nb = nanobind;
-using nb::literals::operator""_a;
-
 namespace pyinterp::geometry::cartesian::pybind {
 
-auto init_convert(nb::module_& m) -> void {
+auto init_convert(nanobind::module_& m) -> void {
   geometry::pybind::init_convert_cartesian(m);
 }
 

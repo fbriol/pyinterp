@@ -38,16 +38,9 @@ auto init_length(nb::module_& m) -> void {
     return length(geometry, wgs, strategy);
   };
 
-  ([&]<typename... Geometry>() {
-    (..., m.def(
-              "length",
-              [=](const Geometry& g, const std::optional<Spheroid>& wgs,
-                  StrategyMethod strategy) -> double {
-                return length_impl(g, wgs, strategy);
-              },
-              "geometry"_a, nb::kw_only(), "spheroid"_a = std::nullopt,
-              "strategy"_a = StrategyMethod::kVincenty, kLengthDoc));
-  }).template operator()<GEOMETRY_TYPES(geographic)>();
+  geometry::pybind::define_unary_predicate_with_strategy<
+      decltype(length_impl), Spheroid, StrategyMethod>(m, "length", kLengthDoc,
+                                                       std::move(length_impl));
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

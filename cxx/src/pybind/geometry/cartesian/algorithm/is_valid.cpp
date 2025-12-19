@@ -6,12 +6,11 @@
 
 #include <nanobind/nanobind.h>
 
-namespace nb = nanobind;
 using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
-auto init_is_valid(nb::module_& m) -> void {
+auto init_is_valid(nanobind::module_& m) -> void {
   pyinterp::geometry::pybind::init_is_valid<GeometryNamespace::kCartesian>(m);
 }
 

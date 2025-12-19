@@ -1,0 +1,49 @@
+#pragma once
+#include <nanobind/nanobind.h>
+
+#include <boost/geometry.hpp>
+
+#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
+
+namespace pyinterp::geometry::pybind {
+
+constexpr auto kUniqueDoc = R"doc(
+Removes consecutive duplicate points from a geometry.
+
+This function removes points that are equal to their immediate predecessor.
+For closed geometries like rings, the closing point is preserved.
+
+This operation modifies the geometry in-place.
+
+Args:
+    geometry: Geometric object to process.
+
+Examples:
+    >>> # LineString with duplicate consecutive points
+    >>> ls = LineString(np.array([0.0, 0.0, 1.0, 1.0, 2.0]),
+    ...                 np.array([0.0, 0.0, 1.0, 1.0, 0.0]))
+    >>> unique(ls)
+    >>> # Duplicates removed: (0.0, 0.0), (1.0, 1.0), (2.0, 0.0)
+)doc";
+
+/// @brief Initialize the unique algorithm in the given module
+/// @tparam NS Namespace of the geometries (cartesian or geographic)
+/// @param[in,out] m Nanobind module
+template <GeometryNamespace NS>
+inline auto init_unique(nanobind::module_& m) -> void {
+  auto unique_impl = [](auto& g) -> void {
+    nanobind::gil_scoped_release release;
+    boost::geometry::unique(g);
+  };
+  if constexpr (NS == GeometryNamespace::kCartesian) {
+    geometry::pybind::define_mutable_unary_predicate<decltype(unique_impl),
+                                                     GEOMETRY_TYPES(cartesian)>(
+        m, "unique", kUniqueDoc, std::move(unique_impl));
+  } else {
+    geometry::pybind::define_mutable_unary_predicate<
+        decltype(unique_impl), GEOMETRY_TYPES(geographic)>(
+        m, "unique", kUniqueDoc, std::move(unique_impl));
+  }
+}
+
+}  // namespace pyinterp::geometry::pybind

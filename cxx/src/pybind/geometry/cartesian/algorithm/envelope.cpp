@@ -10,12 +10,11 @@
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
-namespace nb = nanobind;
 using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
-auto init_envelope(nb::module_& m) -> void {
+auto init_envelope(nanobind::module_& m) -> void {
   geometry::pybind::init_envelope<GeometryNamespace::kCartesian>(m);
 }
 

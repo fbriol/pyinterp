@@ -9,7 +9,6 @@
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
-using nb::literals::operator""_a;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
@@ -31,6 +30,7 @@ auto init_covered_by(nb::module_& m) -> void {
     return boost::geometry::covered_by(geometry1, geometry2);
   };
 
+// Define all valid pairs of geometry types for covered_by calculation
 #define PAIRS(NS)                                                              \
   std::pair<NS::Point, NS::Point>, std::pair<NS::Point, NS::Segment>,          \
       std::pair<NS::Point, NS::Box>, std::pair<NS::Point, NS::LineString>,     \

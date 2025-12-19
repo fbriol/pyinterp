@@ -9,7 +9,6 @@
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
-using nb::literals::operator""_a;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
@@ -23,13 +22,6 @@ Args:
 
 Returns:
     Area in square units.
-
-Examples:
-    >>> from pyinterp.geometry.cartesian import Box
-    >>> from pyinterp.geometry.cartesian.algorithms import area
-    >>> box = Box((0.0, 0.0), (10.0, 10.0))
-    >>> area(box)  # Area is 100.0
-    100.0
 
 Note:
     For Point, Segment, LineString, MultiPoint, and MultiLineString,
@@ -52,11 +44,9 @@ auto init_area(nb::module_& m) -> void {
     }
   };
 
-  ([&]<typename... Geometry>() {
-    (..., m.def(
-              "area", [=](const Geometry& g) -> double { return area_impl(g); },
-              "geometry"_a, kAreaDoc));
-  }).template operator()<GEOMETRY_TYPES(cartesian)>();
+  geometry::pybind::define_unary_predicate<decltype(area_impl),
+                                           GEOMETRY_TYPES(cartesian)>(
+      m, "area", kAreaDoc, std::move(area_impl));
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

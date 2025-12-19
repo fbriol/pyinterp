@@ -47,8 +47,8 @@ inline auto init_centroid(nanobind::module_& m) -> void {
       using GeometryType = std::decay_t<decltype(geometry)>;
       return centroid<GeometryType, cartesian::Point>(geometry);
     };
-    geometry::pybind::define_for_geometries<decltype(centroid_impl),
-                                            GEOMETRY_TYPES(cartesian)>(
+    geometry::pybind::define_unary_predicate<decltype(centroid_impl),
+                                             GEOMETRY_TYPES(cartesian)>(
         m, "centroid", kCentroidDoc, std::move(centroid_impl));
   } else {
     m.def("centroid", &centroid<geographic::Box, geographic::Point>,

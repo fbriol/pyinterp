@@ -15,8 +15,6 @@ enum class StrategyMethod : std::int8_t {
   kVincenty  ///< Vincenty
 };
 
-namespace detail {
-
 /// @brief Create spheroid from optional Spheroid
 /// @param[in] wgs Optional Spheroid
 /// @return Boost geometry spheroid
@@ -26,5 +24,4 @@ namespace detail {
                          : boost::geometry::srs::spheroid<double>{};
 }
 
-}  // namespace detail
 }  // namespace pyinterp::geometry::geographic

@@ -30,11 +30,6 @@ Args:
 
 Returns:
     Azimuth in radians (0 to 2π).
-
-Examples:
-    >>> p1 = Point(0.0, 0.0)
-    >>> p2 = Point(1.0, 0.0)
-    >>> azimuth(p1, p2)  # Azimuth in radians
 )doc";
 
 auto init_azimuth(nb::module_& m) -> void {

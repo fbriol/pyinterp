@@ -13,14 +13,14 @@ namespace pyinterp::geometry::geographic {
 /// @tparam Geometry Geometry type
 /// @tparam Method Strategy method to use
 /// @param[in] geometry Geometry object
-/// @param[in] wgs Optional Spheroid for geodetic calculations
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
 /// @return Calculated length
 template <typename Geometry, StrategyMethod Method>
 [[nodiscard]] inline auto length(const Geometry &geometry,
-                                 const std::optional<Spheroid> &wgs) -> double {
+                                 const std::optional<Spheroid> &spheroid)
+    -> double {
   return boost::geometry::length(
-      geometry,
-      detail::make_distance_strategy<Method>(detail::make_spheroid(wgs)));
+      geometry, make_distance_strategy<Method>(make_spheroid(spheroid)));
 }
 
 /// @brief Calculate the length using a runtime strategy

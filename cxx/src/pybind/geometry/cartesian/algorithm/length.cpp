@@ -4,6 +4,8 @@
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
+namespace nb = nanobind;
+
 namespace pyinterp::geometry::cartesian::pybind {
 
 constexpr auto kLengthDoc = R"doc(
@@ -19,13 +21,13 @@ Returns:
 /// @brief Initialize the length algorithm in the given module
 /// @tparam NS Namespace of the geometries (cartesian or geographic)
 /// @param[in,out] m Nanobind module
-auto init_length(nanobind::module_& m) -> void {
+auto init_length(nb::module_& m) -> void {
   auto length_impl = [](const auto& g) -> double {
-    nanobind::gil_scoped_release release;
+    nb::gil_scoped_release release;
     return boost::geometry::length(g);
   };
-  geometry::pybind::define_for_geometries<decltype(length_impl),
-                                          GEOMETRY_TYPES(cartesian)>(
+  geometry::pybind::define_unary_predicate<decltype(length_impl),
+                                           GEOMETRY_TYPES(cartesian)>(
       m, "length", kLengthDoc, std::move(length_impl));
 }
 

@@ -9,7 +9,6 @@
 #include "pyinterp/geometry/geographic/spheroid.hpp"
 
 namespace pyinterp::geometry::geographic {
-namespace detail {
 
 /// @brief Create convex hull strategy based on the specified method
 /// and spheroid
@@ -36,22 +35,20 @@ template <StrategyMethod Method>
   }
 }
 
-}  // namespace detail
-
 /// @brief Calculate the convex hull using a compile-time strategy
 /// @tparam Geometry Geometry type
 /// @tparam Method Strategy method to use
 /// @param[in] geometry Geometry object
-/// @param[in] wgs Optional Spheroid for geodetic calculations
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
 /// @return Calculated convex hull
 template <typename Geometry, StrategyMethod Method>
 [[nodiscard]] inline auto convex_hull(const Geometry &geometry,
-                                      const std::optional<Spheroid> &wgs)
+                                      const std::optional<Spheroid> &spheroid)
     -> Polygon {
   Polygon result;
   boost::geometry::convex_hull(
       geometry, result,
-      detail::make_convex_hull_strategy<Method>(detail::make_spheroid(wgs)));
+      make_convex_hull_strategy<Method>(make_spheroid(spheroid)));
   return result;
 }
 

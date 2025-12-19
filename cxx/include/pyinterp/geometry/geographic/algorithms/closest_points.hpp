@@ -10,8 +10,6 @@
 
 namespace pyinterp::geometry::geographic {
 
-namespace detail {
-
 /// @brief Create closest points strategy based on the specified method
 /// and spheroid
 /// @tparam Method Strategy method to use
@@ -33,8 +31,6 @@ template <StrategyMethod Method>
   }
 }
 
-}  // namespace detail
-
 /// @brief Calculate the closest points using a compile-time strategy
 /// @tparam Geometry Geometry type
 /// @tparam Method Strategy method to use
@@ -47,10 +43,9 @@ template <typename Geometry1, typename Geometry2, StrategyMethod Method>
     const Geometry1 &geometry1, const Geometry2 &geometry2,
     const std::optional<Spheroid> &spheroid) -> Segment {
   Segment segment;
-  boost::geometry::closest_points(geometry1, geometry2, segment,
-                                  detail::make_closest_points_strategy<Method>(
-                                      boost::geometry::srs::spheroid<double>(
-                                          spheroid.value_or(Spheroid()))));
+  boost::geometry::closest_points(
+      geometry1, geometry2, segment,
+      make_closest_points_strategy<Method>(make_spheroid(spheroid)));
   return segment;
 }
 

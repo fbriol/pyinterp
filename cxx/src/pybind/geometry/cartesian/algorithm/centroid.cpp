@@ -8,13 +8,11 @@
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
-namespace nb = nanobind;
-using nb::literals::operator""_a;
 using pyinterp::geometry::pybind::GeometryNamespace;
 
 namespace pyinterp::geometry::cartesian::pybind {
 
-auto init_centroid(nb::module_& m) -> void {
+auto init_centroid(nanobind::module_& m) -> void {
   geometry::pybind::init_centroid<GeometryNamespace::kCartesian>(m);
 }
 

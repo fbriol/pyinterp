@@ -32,12 +32,12 @@ inline auto init_correct(nanobind::module_& m) -> void {
     boost::geometry::correct(g);
   };
   if constexpr (NS == GeometryNamespace::kCartesian) {
-    geometry::pybind::define_mutable_for_geometries<decltype(correct_impl),
-                                                    GEOMETRY_TYPES(cartesian)>(
+    geometry::pybind::define_mutable_unary_predicate<decltype(correct_impl),
+                                                     GEOMETRY_TYPES(cartesian)>(
         m, "correct", kCorrectDoc, std::move(correct_impl));
   } else {
-    geometry::pybind::define_mutable_for_geometries<decltype(correct_impl),
-                                                    GEOMETRY_TYPES(geographic)>(
+    geometry::pybind::define_mutable_unary_predicate<
+        decltype(correct_impl), GEOMETRY_TYPES(geographic)>(
         m, "correct", kCorrectDoc, std::move(correct_impl));
   }
 }

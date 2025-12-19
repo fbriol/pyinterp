@@ -11,7 +11,6 @@
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
-using nb::literals::operator""_a;
 
 namespace pyinterp::geometry::geographic::pybind {
 
@@ -30,14 +29,9 @@ Args:
 
 Returns:
     Closest points as a Segment.
-
-Examples:
-    >>> g1 = Polygon(...)  # Define first geometry
-    >>> g2 = LineString(...)  # Define second geometry
-    >>> closest_points(g1, g2)  # Closest points as a Segment
 )doc";
 
-auto init_closest_points(nb::module_& m) -> void {
+// Macro to create geometry pairs for the closest_points algorithm
 #define PAIRS(NS)                                          \
   std::pair<NS::LineString, NS::LineString>,               \
       std::pair<NS::LineString, NS::MultiLineString>,      \
@@ -65,6 +59,7 @@ auto init_closest_points(nb::module_& m) -> void {
       std::pair<NS::Polygon, NS::MultiPolygon>,            \
       std::pair<NS::Polygon, NS::Polygon>
 
+auto init_closest_points(nb::module_& m) -> void {
   auto closest_points_impl = [](const auto& geometry1, const auto& geometry2,
                                 const std::optional<Spheroid>& spheroid,
                                 StrategyMethod strategy) -> Segment {

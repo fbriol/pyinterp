@@ -43,16 +43,10 @@ auto init_convex_hull(nb::module_& m) -> void {
     return convex_hull(geometry, spheroid, strategy);
   };
 
-  ([&]<typename... Geometry>() {
-    (..., m.def(
-              "area",
-              [=](const Geometry& g, const std::optional<Spheroid>& wgs,
-                  StrategyMethod strategy) -> Polygon {
-                return convex_hull_impl(g, wgs, strategy);
-              },
-              "geometry"_a, nb::kw_only(), "spheroid"_a = std::nullopt,
-              "strategy"_a = StrategyMethod::kVincenty, kConvexHullDoc));
-  }).template operator()<GEOMETRY_TYPES(geographic)>();
+  geometry::pybind::define_unary_predicate_with_strategy<
+      decltype(convex_hull_impl), Spheroid, StrategyMethod,
+      GEOMETRY_TYPES(geographic)>(m, "convex_hull", kConvexHullDoc,
+                                  std::move(convex_hull_impl));
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

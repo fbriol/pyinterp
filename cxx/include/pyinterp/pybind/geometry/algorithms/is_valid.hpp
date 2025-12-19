@@ -42,41 +42,45 @@ Examples:
     (True, '')
 )doc";
 
+/// @brief Define is_valid algorithm for the specified geometry types.
+/// @tparam NS Geometry namespace (cartesian or geographic).
+/// @tparam Geometries Geometry types to bind.
+/// @param[in,out] m Python module.
+template <GeometryNamespace NS, typename... Geometries>
+inline auto is_valid_impl(nanobind::module_& m) -> void {
+  (..., m.def(
+            "is_valid",
+            [](const Geometries& geometry,
+               const bool return_reason) -> nanobind::object {
+              bool valid;
+              if (return_reason) {
+                std::string reason;
+                {
+                  nanobind::gil_scoped_release release;
+                  valid = boost::geometry::is_valid(geometry, reason);
+                }
+                return nanobind::make_tuple(valid, reason);
+              } else {
+                {
+                  nanobind::gil_scoped_release release;
+                  valid = boost::geometry::is_valid(geometry);
+                }
+                return nanobind::cast(valid);
+              }
+            },
+            "geometry"_a, "return_reason"_a = false, kIsValidDoc));
+}
+
 /// @brief Initialize is_valid algorithm bindings for the specified geometry
 /// namespace.
 /// @tparam NS Geometry namespace (cartesian or geographic).
 /// @param[in,out] m Nanobind module.
 template <GeometryNamespace NS>
 inline auto init_is_valid(nanobind::module_& m) -> void {
-  auto is_valid_impl = [](const auto& geometry,
-                          const bool return_reason) -> nb::object {
-    bool valid;
-    if (return_reason) {
-      std::string reason;
-      {
-        nb::gil_scoped_release release;
-        valid = boost::geometry::is_valid(geometry, reason);
-      }
-      return nb::make_tuple(valid, reason);
-    } else {
-      {
-        nb::gil_scoped_release release;
-        valid = boost::geometry::is_valid(geometry);
-      }
-      return nb::cast(valid);
-    }
-  };
-
   if constexpr (NS == GeometryNamespace::kCartesian) {
-    define_with_optional_bool<decltype(is_valid_impl),
-                              GEOMETRY_TYPES(cartesian)>(
-        m, "is_valid", kIsValidDoc, "return_reason", false,
-        std::move(is_valid_impl));
+    is_valid_impl<NS, GEOMETRY_TYPES(cartesian)>(m);
   } else {
-    define_with_optional_bool<decltype(is_valid_impl),
-                              GEOMETRY_TYPES(geographic)>(
-        m, "is_valid", kIsValidDoc, "return_reason", false,
-        std::move(is_valid_impl));
+    is_valid_impl<NS, GEOMETRY_TYPES(geographic)>(m);
   }
 }
 

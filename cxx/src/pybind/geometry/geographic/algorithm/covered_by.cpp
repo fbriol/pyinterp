@@ -7,7 +7,6 @@
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
-using nb::literals::operator""_a;
 
 namespace pyinterp::geometry::geographic::pybind {
 
@@ -22,13 +21,7 @@ Returns:
     True if geometry1 is covered by geometry2, False otherwise.
 )doc";
 
-auto init_covered_by(nb::module_& m) -> void {
-  auto covered_by_impl = [](const auto& geometry1,
-                            const auto& geometry2) -> bool {
-    nb::gil_scoped_release release;
-    return boost::geometry::covered_by(geometry1, geometry2);
-  };
-
+// Macro to create geometry pairs for the covered_by algorithm
 #define PAIRS(NS)                                                              \
   std::pair<NS::Point, NS::Point>, std::pair<NS::Point, NS::Segment>,          \
       std::pair<NS::Point, NS::Box>, std::pair<NS::Point, NS::LineString>,     \
@@ -65,6 +58,13 @@ auto init_covered_by(nb::module_& m) -> void {
       std::pair<NS::MultiPolygon, NS::Ring>,                                   \
       std::pair<NS::MultiPolygon, NS::Polygon>,                                \
       std::pair<NS::MultiPolygon, NS::MultiPolygon>
+
+auto init_covered_by(nb::module_& m) -> void {
+  auto covered_by_impl = [](const auto& geometry1,
+                            const auto& geometry2) -> bool {
+    nb::gil_scoped_release release;
+    return boost::geometry::covered_by(geometry1, geometry2);
+  };
 
   geometry::pybind::define_binary_predicate<decltype(covered_by_impl),
                                             PAIRS(geographic)>(
