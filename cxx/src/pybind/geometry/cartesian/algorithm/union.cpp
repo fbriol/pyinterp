@@ -57,7 +57,7 @@ auto init_union(nb::module_& m) -> void {
   };
   geometry::pybind::define_binary_predicate<
       decltype(_union_for_polygon_pairs_impl), UNION_POLYGON_PAIRS(cartesian)>(
-      m, "union_", kUnionDoc, std::move(_union_for_polygon_pairs_impl));
+      m, "union", kUnionDoc, std::move(_union_for_polygon_pairs_impl));
 
   auto _union_for_linestring_pairs_impl = [](const auto& g1, const auto& g2) {
     nb::gil_scoped_release release;
@@ -68,7 +68,7 @@ auto init_union(nb::module_& m) -> void {
   geometry::pybind::define_binary_predicate<
       decltype(_union_for_linestring_pairs_impl),
       UNION_LINESTRING_PAIRS(cartesian)>(
-      m, "union_", kUnionDoc, std::move(_union_for_linestring_pairs_impl));
+      m, "union", kUnionDoc, std::move(_union_for_linestring_pairs_impl));
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind
