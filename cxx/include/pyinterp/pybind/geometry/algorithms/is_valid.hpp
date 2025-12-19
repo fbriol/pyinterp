@@ -29,17 +29,6 @@ Returns:
     If called with return_reason=True:
         tuple: (is_valid, reason) where reason is a string describing why
                the geometry is invalid (empty string if valid).
-
-Examples:
-    >>> # Valid polygon (counter-clockwise winding)
-    >>> lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    >>> lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    >>> polygon = Polygon(Ring(lon, lat))
-    >>> is_valid(polygon)
-    True
-    >>> # Check with reason
-    >>> is_valid(polygon, return_reason=True)
-    (True, '')
 )doc";
 
 /// @brief Define is_valid algorithm for the specified geometry types.

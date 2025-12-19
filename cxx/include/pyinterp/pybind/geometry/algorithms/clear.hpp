@@ -15,13 +15,6 @@ This operation modifies the geometry in-place.
 
 Args:
     geometry: Geometric object to clear.
-
-Examples:
-    >>> ring = Ring(np.array([0.0, 1.0, 1.0, 0.0, 0.0]),
-    ...             np.array([0.0, 0.0, 1.0, 1.0, 0.0]))
-    >>> clear(ring)
-    >>> is_empty(ring)
-    True
 )doc";
 
 /// @brief Initialize the clear algorithm in the given module

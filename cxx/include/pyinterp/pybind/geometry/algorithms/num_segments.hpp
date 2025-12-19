@@ -18,13 +18,6 @@ Args:
 
 Returns:
     The number of segments.
-
-Examples:
-    >>> # Triangle (closed ring with 3 segments)
-    >>> ring = Ring(np.array([0.0, 1.0, 0.5, 0.0]),
-    ...             np.array([0.0, 0.0, 1.0, 0.0]))
-    >>> num_segments(ring)
-    3
 )doc";
 
 /// @brief Initialize the num_segments algorithm in the given module

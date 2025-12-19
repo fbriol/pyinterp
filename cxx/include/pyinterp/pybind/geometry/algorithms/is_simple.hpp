@@ -21,20 +21,6 @@ Args:
 
 Returns:
     True if the geometry is simple, false otherwise.
-
-Examples:
-    >>> # Simple square ring
-    >>> lon = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
-    >>> lat = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    >>> ring = Ring(lon, lat)
-    >>> is_simple(ring)
-    True
-    >>> # Self-intersecting ring
-    >>> lon = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
-    >>> lat = np.array([0.0, 1.0, 0.0, 1.0, 0.0])
-    >>> ring = Ring(lon, lat)
-    >>> is_simple(ring)
-    False
 )doc";
 
 /// @brief Initialize the is_simple algorithm in the given module

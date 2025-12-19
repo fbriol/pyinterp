@@ -18,12 +18,6 @@ Args:
 
 Returns:
     The number of geometries.
-
-Examples:
-    >>> mp = MultiPoint(np.array([0.0, 1.0, 2.0]),
-    ...                 np.array([0.0, 1.0, 2.0]))
-    >>> num_geometries(mp)
-    3
 )doc";
 
 /// @brief Initialize the num_geometries algorithm in the given module

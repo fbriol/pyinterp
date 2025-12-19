@@ -18,12 +18,6 @@ This operation modifies the geometry in-place.
 
 Args:
     geometry: Geometric object to reverse.
-
-Examples:
-    >>> ls = LineString(np.array([0.0, 1.0, 2.0]),
-    ...                 np.array([0.0, 1.0, 0.0]))
-    >>> reverse(ls)
-    >>> # Points are now in order: (2.0, 0.0), (1.0, 1.0), (0.0, 0.0)
 )doc";
 
 /// @brief Initialize the reverse algorithm in the given module

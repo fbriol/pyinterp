@@ -19,12 +19,6 @@ Args:
 
 Returns:
     True if geometry1 is within geometry2, False otherwise.
-
-Examples:
-    >>> p = Point(0.5, 0.5)
-    >>> box = Box(Point(0.0, 0.0), Point(1.0, 1.0))
-    >>> within(p, box)
-    True
 )doc";
 
 /// @brief Macro to create geometry pairs for the within predicate

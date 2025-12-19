@@ -17,16 +17,6 @@ Args:
 
 Returns:
     The number of interior rings.
-
-Examples:
-    >>> # Polygon with one hole
-    >>> exterior = Ring(np.array([0.0, 4.0, 4.0, 0.0, 0.0]),
-    ...                 np.array([0.0, 0.0, 4.0, 4.0, 0.0]))
-    >>> hole = Ring(np.array([1.0, 3.0, 3.0, 1.0, 1.0]),
-    ...             np.array([1.0, 1.0, 3.0, 3.0, 1.0]))
-    >>> poly = Polygon(exterior, [hole])
-    >>> num_interior_rings(poly)
-    1
 )doc";
 
 /// @brief Initialize the num_interior_rings algorithm in the given module

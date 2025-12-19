@@ -19,12 +19,6 @@ Args:
 
 Returns:
     The number of points.
-
-Examples:
-    >>> ls = LineString(np.array([0.0, 1.0, 2.0]),
-    ...                 np.array([0.0, 1.0, 0.0]))
-    >>> num_points(ls)
-    3
 )doc";
 
 /// @brief Initialize the num_points algorithm in the given module

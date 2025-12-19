@@ -30,12 +30,6 @@ Returns:
     - 7: covers
     - 8: covered_by
     - 9: equals
-
-Examples:
-    >>> poly1 = Polygon(...)
-    >>> poly2 = Polygon(...)
-    >>> rel = relation(poly1, poly2)
-    >>> # Returns integer indicating relationship
 )doc";
 
 /// @brief Macro for geometry pairs that support relation

@@ -20,13 +20,6 @@ Args:
 
 Returns:
     The centroid of the geometry.
-
-Examples:
-    >>> # Centroid of a polygon
-    >>> lon = np.array([0.0, 0.0, 2.0, 2.0, 0.0])
-    >>> lat = np.array([0.0, 2.0, 2.0, 0.0, 0.0])
-    >>> polygon = Polygon(Ring(lon, lat))
-    >>> centroid(polygon)
 )doc";
 
 template <typename Geometry, typename Point>

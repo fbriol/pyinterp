@@ -15,16 +15,6 @@ Args:
 
 Returns:
     True if the geometry is empty, false otherwise.
-
-Examples:
-    >>> # Empty ring
-    >>> empty_ring = Ring(np.array([]), np.array([]))
-    >>> is_empty(empty_ring)
-    True
-    >>> # Non-empty point
-    >>> point = Point(1.0, 2.0)
-    >>> is_empty(point)
-    False
 )doc";
 
 /// @brief Initialize the is_empty algorithm in the given module

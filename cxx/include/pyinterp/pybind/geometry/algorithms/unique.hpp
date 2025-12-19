@@ -17,13 +17,6 @@ This operation modifies the geometry in-place.
 
 Args:
     geometry: Geometric object to process.
-
-Examples:
-    >>> # LineString with duplicate consecutive points
-    >>> ls = LineString(np.array([0.0, 0.0, 1.0, 1.0, 2.0]),
-    ...                 np.array([0.0, 0.0, 1.0, 1.0, 0.0]))
-    >>> unique(ls)
-    >>> # Duplicates removed: (0.0, 0.0), (1.0, 1.0), (2.0, 0.0)
 )doc";
 
 /// @brief Initialize the unique algorithm in the given module

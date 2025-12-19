@@ -20,12 +20,6 @@ Args:
 
 Returns:
     True if the geometries overlap, False otherwise.
-
-Examples:
-    >>> box1 = Box(Point(0.0, 0.0), Point(2.0, 2.0))
-    >>> box2 = Box(Point(1.0, 1.0), Point(3.0, 3.0))
-    >>> overlaps(box1, box2)
-    True
 )doc";
 
 /// @brief Macro to create geometry pairs for the overlaps predicate
