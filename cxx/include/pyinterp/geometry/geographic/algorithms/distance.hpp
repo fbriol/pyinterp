@@ -40,9 +40,9 @@ template <StrategyMethod Method>
 /// @param[in] geometry2 Second geometric object
 /// @param[in] spheroid Optional Spheroid for geodetic calculations
 /// @return Calculated distance
-template <typename Geometry, StrategyMethod Method>
-[[nodiscard]] inline auto distance(const Geometry &geometry1,
-                                   const Geometry &geometry2,
+template <typename Geometry1, typename Geometry2, StrategyMethod Method>
+[[nodiscard]] inline auto distance(const Geometry1 &geometry1,
+                                   const Geometry2 &geometry2,
                                    const std::optional<Spheroid> &spheroid)
     -> double {
   return boost::geometry::distance(
@@ -57,21 +57,25 @@ template <typename Geometry, StrategyMethod Method>
 /// @param[in] spheroid Optional Spheroid for geodetic calculations
 /// @param[in] strategy Strategy method to use
 /// @return Calculated distance
-template <typename Geometry>
-[[nodiscard]] inline auto distance(const Geometry &geometry1,
-                                   const Geometry &geometry2,
+template <typename Geometry1, typename Geometry2>
+[[nodiscard]] inline auto distance(const Geometry1 &geometry1,
+                                   const Geometry2 &geometry2,
                                    const std::optional<Spheroid> &spheroid,
                                    const StrategyMethod strategy) -> double {
   using enum StrategyMethod;
   switch (strategy) {
     case kAndoyer:
-      return distance<Geometry, kAndoyer>(geometry1, geometry2, spheroid);
+      return distance<Geometry1, Geometry2, kAndoyer>(geometry1, geometry2,
+                                                      spheroid);
     case kKarney:
-      return distance<Geometry, kKarney>(geometry1, geometry2, spheroid);
+      return distance<Geometry1, Geometry2, kKarney>(geometry1, geometry2,
+                                                     spheroid);
     case kThomas:
-      return distance<Geometry, kThomas>(geometry1, geometry2, spheroid);
+      return distance<Geometry1, Geometry2, kThomas>(geometry1, geometry2,
+                                                     spheroid);
     case kVincenty:
-      return distance<Geometry, kVincenty>(geometry1, geometry2, spheroid);
+      return distance<Geometry1, Geometry2, kVincenty>(geometry1, geometry2,
+                                                       spheroid);
   }
   std::unreachable();
 }

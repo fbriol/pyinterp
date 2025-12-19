@@ -493,6 +493,125 @@ def disjoint(geometry1: MultiPolygon, geometry2: Point) -> bool: ...
 def disjoint(geometry1: MultiPolygon, geometry2: Polygon) -> bool: ...
 @overload
 def disjoint(geometry1: MultiPolygon, geometry2: MultiPolygon) -> bool: ...
+@overload
+def distance(
+    geometry1: Point,
+    geometry2: Point,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Point,
+    geometry2: Box,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Point,
+    geometry2: Polygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Point,
+    geometry2: MultiPolygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Box,
+    geometry2: Point,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Box,
+    geometry2: Box,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Box,
+    geometry2: Polygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: LineString,
+    geometry2: LineString,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: LineString,
+    geometry2: Polygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: LineString,
+    geometry2: Box,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Polygon,
+    geometry2: Point,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Polygon,
+    geometry2: Box,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Polygon,
+    geometry2: Polygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: Polygon,
+    geometry2: MultiPolygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: MultiPolygon,
+    geometry2: Point,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: MultiPolygon,
+    geometry2: Polygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
+@overload
+def distance(
+    geometry1: MultiPolygon,
+    geometry2: MultiPolygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> float: ...
 def envelope(geometry: _Concept) -> Box: ...
 @overload
 def equals(geometry1: Point, geometry2: Point) -> bool: ...

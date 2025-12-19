@@ -34,14 +34,15 @@ Returns:
 auto init_distance(nb::module_& m) -> void {
   auto distance_impl = [](const auto& geometry1, const auto& geometry2,
                           const std::optional<Spheroid>& wgs,
-                          StrategyMethod strategy) -> double {
+                          const StrategyMethod strategy) -> double {
     nb::gil_scoped_release release;
     return distance(geometry1, geometry2, wgs, strategy);
   };
 
   geometry::pybind::define_binary_predicate_with_strategy<
-      decltype(distance_impl), Spheroid, StrategyMethod>(
-      m, "distance", kDistanceDoc, std::move(distance_impl));
+      decltype(distance_impl), Spheroid, StrategyMethod,
+      GEOMETRY_PAIRS(geographic)>(m, "distance", kDistanceDoc,
+                                  std::move(distance_impl));
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

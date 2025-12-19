@@ -484,6 +484,7 @@ def to_geojson(
     geometry: Point
     | LineString
     | Polygon
+    | MultiPoint
     | MultiLineString
     | MultiPolygon,
 ) -> str: ...
