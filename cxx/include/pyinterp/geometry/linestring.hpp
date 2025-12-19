@@ -1,7 +1,12 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <ranges>
+#include <stdexcept>
 #include <vector>
 
+#include "pyinterp/broadcast.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geometry {
@@ -29,6 +34,18 @@ class LineString {
   /// @param[in] points Vector of points defining the linestring
   explicit constexpr LineString(std::vector<Point> points)
       : points_{std::move(points)} {}
+
+  /// @brief Constructor from separate coordinate arrays
+  /// @param[in] xs X coordinate array
+  /// @param[in] ys Y coordinate array
+  inline LineString(const Eigen::Ref<const Vector<double>>& xs,
+                    const Eigen::Ref<const Vector<double>>& ys) {
+    broadcast::check_eigen_shape("xs", xs, "ys", ys);
+    points_.reserve(xs.size());
+    for (auto [x, y] : std::ranges::views::zip(xs, ys)) {
+      points_.emplace_back(x, y);
+    }
+  }
 
   /// @brief Add a point to the linestring
   /// @param[in] pt Point to add

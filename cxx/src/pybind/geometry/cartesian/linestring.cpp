@@ -62,20 +62,12 @@ auto init_linestring(nb::module_& m) -> void {
 
       .def(
           "__init__",
-          [](LineString* self, const Eigen::Ref<const Eigen::VectorXd>& x,
-             const Eigen::Ref<const Eigen::VectorXd>& y) {
-            if (x.size() != y.size()) {
-              throw std::invalid_argument(
-                  "x and y arrays must have the same size");
-            }
-            std::vector<Point> points;
-            points.reserve(static_cast<size_t>(x.size()));
-            for (Eigen::Index i = 0; i < x.size(); ++i) {
-              points.emplace_back(x[i], y[i]);
-            }
-            new (self) LineString(std::move(points));
+          [](LineString* self, const Eigen::Ref<const Eigen::VectorXd>& xs,
+             const Eigen::Ref<const Eigen::VectorXd>& ys) {
+            nb::gil_scoped_release release;
+            new (self) LineString(xs, ys);
           },
-          "x"_a, "y"_a, kLineStringInitDoc)
+          "xs"_a, "ys"_a, kLineStringInitDoc)
 
       // Container operations
       .def("__len__", &LineString::size,

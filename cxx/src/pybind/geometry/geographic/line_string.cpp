@@ -67,12 +67,8 @@ auto init_linestring(nb::module_& m) -> void {
               throw std::invalid_argument(
                   "lon and lat arrays must have the same size");
             }
-            std::vector<Point> points;
-            points.reserve(static_cast<size_t>(lon.size()));
-            for (Eigen::Index i = 0; i < lon.size(); ++i) {
-              points.emplace_back(lon[i], lat[i]);
-            }
-            new (self) LineString(std::move(points));
+            nb::gil_scoped_release release;
+            new (self) LineString(lon, lat);
           },
           "lon"_a, "lat"_a, kLineStringInitDoc)
 
