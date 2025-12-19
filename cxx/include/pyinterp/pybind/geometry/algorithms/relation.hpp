@@ -1,5 +1,6 @@
 #pragma once
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>
 
 #include <boost/geometry.hpp>
 #include <string>
@@ -53,8 +54,6 @@ inline auto define_relation_for_pairs(nanobind::module_& m, const char* doc)
   auto relation_impl = [](const auto& g1, const auto& g2) -> std::string {
     nanobind::gil_scoped_release release;
     auto de9im = boost::geometry::relation(g1, g2);
-    nanobind::gil_scoped_acquire acquire;
-
     // Convert DE-9IM matrix to string representation
     return de9im.str();
   };
