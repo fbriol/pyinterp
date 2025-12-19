@@ -1,0 +1,23 @@
+// Copyright (c) 2025 CNES
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+#include "pyinterp/pybind/geometry/algorithms/convex_hull.hpp"
+
+#include <nanobind/nanobind.h>
+
+#include <boost/geometry.hpp>
+
+#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
+
+namespace nb = nanobind;
+using nb::literals::operator""_a;
+using pyinterp::geometry::pybind::GeometryNamespace;
+
+namespace pyinterp::geometry::geographic::pybind {
+
+auto init_convex_hull(nb::module_& m) -> void {
+  geometry::pybind::init_convex_hull<GeometryNamespace::kGeographic>(m);
+}
+
+}  // namespace pyinterp::geometry::geographic::pybind
