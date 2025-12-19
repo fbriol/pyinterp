@@ -22,7 +22,8 @@ Different geodetic calculation strategies are available for accuracy/performance
 trade-offs.
 
 Args:
-    geometry: Geometric object.
+    geometry1: First geometric object.
+    geometry2: Second geometric object.
     spheroid: Optional spheroid for geodetic calculations. If not provided, uses
         WGS84 ellipsoid.
     strategy: Calculation strategy.
@@ -31,21 +32,21 @@ Returns:
 )doc";
 
 auto init_distance(nb::module_& m) -> void {
-  auto distance_impl = [](const auto& geometry,
+  auto distance_impl = [](const auto& geometry1, const auto& geometry2,
                           const std::optional<Spheroid>& wgs,
                           StrategyMethod strategy) -> double {
     nb::gil_scoped_release release;
-    return distance(geometry, wgs, strategy);
+    return distance(geometry1, geometry2, wgs, strategy);
   };
 
   ([&]<typename... Geometry>() {
     (..., m.def(
               "distance",
-              [=](const Geometry& g, const std::optional<Spheroid>& wgs,
-                  StrategyMethod strategy) -> double {
-                return distance_impl(g, wgs, strategy);
-              },
-              "geometry"_a, nb::kw_only(), "spheroid"_a = std::nullopt,
+              [=](const Geometry& g1, const Geometry& g2,
+                  const std::optional<Spheroid>& wgs, StrategyMethod strategy)
+                  -> double { return distance_impl(g1, g2, wgs, strategy); },
+              "geometry1"_a, "geometry2"_a, nb::kw_only(),
+              "spheroid"_a = std::nullopt,
               "strategy"_a = StrategyMethod::kVincenty, kDistanceDoc));
   }).template operator()<GEOMETRY_TYPES(geographic)>();
 }
