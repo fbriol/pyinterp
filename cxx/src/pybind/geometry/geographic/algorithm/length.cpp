@@ -39,8 +39,9 @@ auto init_length(nb::module_& m) -> void {
   };
 
   geometry::pybind::define_unary_predicate_with_strategy<
-      decltype(length_impl), Spheroid, StrategyMethod>(m, "length", kLengthDoc,
-                                                       std::move(length_impl));
+      decltype(length_impl), Spheroid, StrategyMethod,
+      GEOMETRY_TYPES(geographic)>(m, "length", kLengthDoc,
+                                  std::move(length_impl));
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind
