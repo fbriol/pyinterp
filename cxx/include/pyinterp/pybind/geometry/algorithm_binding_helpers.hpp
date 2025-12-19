@@ -151,7 +151,7 @@ inline auto define_binary_predicate_with_strategy(nb::module_& m,
 /// @param NS Namespace containing the geometry types (e.g., geographic,
 /// cartesian)
 #define GEOMETRY_TYPES(NS)                                                \
-  NS::Point, NS::Box, NS::Segment, NS::LineString, NS::Ring, NS::Polygon, \
+  NS::Point, NS::Segment, NS::Box, NS::LineString, NS::Ring, NS::Polygon, \
       NS::MultiPoint, NS::MultiLineString, NS::MultiPolygon
 
 /// @brief Macro to create common binary geometry pairs
