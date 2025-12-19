@@ -79,8 +79,8 @@ auto init_multilinestring(nb::module_& m) -> void {
       .def(nb::init<>(), "Construct an empty multilinestring.")
       .def(
           "__init__",
-          [](MultiLineString* self, const std::vector<LineString>& lines) {
-            new (self) MultiLineString(lines);
+          [](MultiLineString* self, std::vector<LineString> lines) {
+            new (self) MultiLineString(std::move(lines));
           },
           "lines"_a = std::vector<LineString>{}, kMultiLineStringInitDoc)
 

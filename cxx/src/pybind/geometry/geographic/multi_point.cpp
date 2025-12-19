@@ -84,8 +84,8 @@ auto init_multipoint(nb::module_& m) -> void {
       .def(nb::init<>(), "Construct an empty multipoint.")
       .def(
           "__init__",
-          [](MultiPoint* self, const std::vector<Point>& points) {
-            new (self) MultiPoint(points);
+          [](MultiPoint* self, std::vector<Point> points) {
+            new (self) MultiPoint(std::move(points));
           },
           "points"_a = std::vector<Point>{}, kMultiPointInitDoc)
       .def(

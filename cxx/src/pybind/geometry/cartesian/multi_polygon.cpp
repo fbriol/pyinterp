@@ -78,8 +78,8 @@ auto init_multipolygon(nb::module_& m) -> void {
       .def(nb::init<>(), "Construct an empty multipolygon.")
       .def(
           "__init__",
-          [](MultiPolygon* self, const std::vector<Polygon>& polygons) {
-            new (self) MultiPolygon(polygons);
+          [](MultiPolygon* self, std::vector<Polygon> polygons) {
+            new (self) MultiPolygon(std::move(polygons));
           },
           "polygons"_a = std::vector<Polygon>{}, kMultiPolygonInitDoc)
 

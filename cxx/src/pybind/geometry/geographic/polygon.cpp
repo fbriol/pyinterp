@@ -92,9 +92,8 @@ auto init_polygon(nb::module_& m) -> void {
 
       .def(
           "__init__",
-          [](Polygon* self, const Ring& exterior,
-             const std::vector<Ring>& interiors) {
-            new (self) Polygon(exterior, interiors);
+          [](Polygon* self, Ring exterior, std::vector<Ring> interiors) {
+            new (self) Polygon(std::move(exterior), std::move(interiors));
           },
           "exterior"_a, "interiors"_a = std::vector<Ring>{}, kPolygonInitDoc)
 

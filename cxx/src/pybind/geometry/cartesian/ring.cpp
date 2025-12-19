@@ -14,7 +14,6 @@
 #include <boost/geometry.hpp>
 #include <format>
 #include <sstream>
-#include <vector>
 
 #include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
