@@ -876,7 +876,7 @@ def simplify(
     strategy: Strategy = Strategy.ANDOYER,
 ) -> MultiPolygon: ...
 def to_geojson(
-    geometry: Point | LineString | Polygon | MultiLineString | MultiPolygon,
+    geometry: Point | LineString | Polygon | MultiPoint | MultiLineString | MultiPolygon,
 ) -> str: ...
 def to_wkt(
     geometry: Point

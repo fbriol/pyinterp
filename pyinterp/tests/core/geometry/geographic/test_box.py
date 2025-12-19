@@ -11,15 +11,15 @@ def test_box_construction() -> None:
     """Test Box construction."""
     # Default construction
     b1 = Box()
-    assert b1.min_corner() == Point(0.0, 0.0)
-    assert b1.max_corner() == Point(0.0, 0.0)
+    assert b1.min_corner == Point(0.0, 0.0)
+    assert b1.max_corner == Point(0.0, 0.0)
 
     # Construction with numpy arrays
     b2 = Box((-10.0, 40.0), (10.0, 50.0))
-    assert b2.min_corner().lon == -10.0
-    assert b2.min_corner().lat == 40.0
-    assert b2.max_corner().lon == 10.0
-    assert b2.max_corner().lat == 50.0
+    assert b2.min_corner.lon == -10.0
+    assert b2.min_corner.lat == 40.0
+    assert b2.max_corner.lon == 10.0
+    assert b2.max_corner.lat == 50.0
 
 
 def test_box_construction_validation() -> None:
@@ -33,11 +33,11 @@ def test_box_corners() -> None:
     """Test Box corner accessors."""
     box = Box((-122.5, 37.7), (-122.3, 37.8))
 
-    min_corner = box.min_corner()
+    min_corner = box.min_corner
     assert min_corner.lon == -122.5
     assert min_corner.lat == 37.7
 
-    max_corner = box.max_corner()
+    max_corner = box.max_corner
     assert max_corner.lon == -122.3
     assert max_corner.lat == 37.8
 
@@ -99,8 +99,8 @@ def test_box_pickle() -> None:
     pickled = pickle.dumps(original)
     restored = pickle.loads(pickled)
 
-    assert restored.min_corner() == original.min_corner()
-    assert restored.max_corner() == original.max_corner()
+    assert restored.min_corner == original.min_corner
+    assert restored.max_corner == original.max_corner
     assert restored == original
 
 
@@ -109,10 +109,10 @@ def test_box_getstate_setstate() -> None:
     original = Box((-180.0, -90.0), (180.0, 90.0))
 
     new_box = pickle.loads(pickle.dumps(original))
-    assert new_box.min_corner().lon == -180.0
-    assert new_box.min_corner().lat == -90.0
-    assert new_box.max_corner().lon == 180.0
-    assert new_box.max_corner().lat == 90.0
+    assert new_box.min_corner.lon == -180.0
+    assert new_box.min_corner.lat == -90.0
+    assert new_box.max_corner.lon == 180.0
+    assert new_box.max_corner.lat == 90.0
     assert new_box == original
 
 
@@ -120,14 +120,14 @@ def test_box_edge_cases() -> None:
     """Test Box with edge case values."""
     # Test with global extent
     global_box = Box((-180.0, -90.0), (180.0, 90.0))
-    assert global_box.min_corner().lon == -180.0
-    assert global_box.max_corner().lat == 90.0
+    assert global_box.min_corner.lon == -180.0
+    assert global_box.max_corner.lat == 90.0
 
     # Test with very small box
     tiny_box = Box((0.0, 0.0), (1e-10, 1e-10))
-    assert abs(tiny_box.max_corner().lon - 1e-10) < 1e-15
-    assert abs(tiny_box.max_corner().lat - 1e-10) < 1e-15
+    assert abs(tiny_box.max_corner.lon - 1e-10) < 1e-15
+    assert abs(tiny_box.max_corner.lat - 1e-10) < 1e-15
 
     # Test with same min/max (degenerate box)
     point_box = Box((5.0, 10.0), (5.0, 10.0))
-    assert point_box.min_corner() == point_box.max_corner()
+    assert point_box.min_corner == point_box.max_corner
