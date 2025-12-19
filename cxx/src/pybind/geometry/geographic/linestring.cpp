@@ -13,7 +13,6 @@
 #include <format>
 #include <sstream>
 #include <stdexcept>
-#include <vector>
 
 #include "pyinterp/geometry/geographic/linestring.hpp"
 #include "pyinterp/geometry/geographic/point.hpp"

@@ -15,7 +15,6 @@
 #include <format>
 #include <sstream>
 #include <stdexcept>
-#include <vector>
 
 #include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
