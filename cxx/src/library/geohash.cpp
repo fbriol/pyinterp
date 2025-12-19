@@ -69,8 +69,10 @@ auto GeoHash::neighbors() const -> std::vector<GeoHash> {
 }
 
 auto GeoHash::area(
-    const std::optional<geometry::geographic::Spheroid>& wgs) const -> double {
-  return geohash::area(std::span<const char>(code_.data(), precision()), wgs);
+    const std::optional<geometry::geographic::Spheroid>& spheroid) const
+    -> double {
+  return geohash::area(std::span<const char>(code_.data(), precision()),
+                       spheroid);
 }
 
 auto GeoHash::grid_properties(const geometry::geographic::Box& box,

@@ -182,7 +182,7 @@ auto init_geohash_class(nb::module_& m) -> void {
 
       .def("neighbors", &GeoHash::neighbors, kNeighborsDoc)
 
-      .def("area", &GeoHash::area, "wgs"_a = nb::none(), kAreaDoc)
+      .def("area", &GeoHash::area, "spheroid"_a = nb::none(), kAreaDoc)
 
       .def_static("grid_properties", &GeoHash::grid_properties, "box"_a,
                   "precision"_a, kGridPropertiesDoc)

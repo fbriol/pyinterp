@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         OneDim,
         np.dtype[np.int64],
     ]
+    NDArray1DStr: TypeAlias = np.ndarray[OneDim, np.dtype[np.str_]]
     NDArray1DTimeDelta64: TypeAlias = np.ndarray[
         OneDim,
         np.dtype[np.timedelta64],
@@ -66,6 +67,7 @@ if TYPE_CHECKING:
         TwoDims,
         np.dtype[np.int64],
     ]
+    NDArray2DStr: TypeAlias = np.ndarray[TwoDims, np.dtype[np.str_]]
     NDArray2DUInt64: TypeAlias = np.ndarray[
         TwoDims,
         np.dtype[np.int64],

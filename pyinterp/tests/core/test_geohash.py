@@ -38,7 +38,10 @@ def test_string_numpy() -> None:
         )
 
     with pytest.raises(ValueError):
-        geohash.decode(geohashes.reshape(5, 2), round=True)
+        geohash.decode(
+            geohashes.reshape(5, 2),  # type: ignore[arg-type]
+            round=True,
+        )
 
     with pytest.raises(ValueError):
         geohash.decode(np.array([b"0" * 24], dtype="S"), round=True)
@@ -53,7 +56,13 @@ def test_string_numpy() -> None:
         geohash.where(stacked_geohashes.astype("U"))
 
     with pytest.raises(ValueError):
-        geohash.where(geohashes.reshape(1, 2, 5))
+        geohash.where(
+            geohashes.reshape(  # type: ignore[arg-type]
+                1,
+                2,
+                5,
+            ),
+        )
 
 
 def test_bounding_zoom() -> None:

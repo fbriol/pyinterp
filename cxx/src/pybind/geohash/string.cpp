@@ -295,14 +295,14 @@ auto init_geohash_string(nb::module_& m) -> void {
   m.def(
       "area",
       [](const nb::object& hash,
-         const std::optional<geometry::geographic::Spheroid>& wgs) {
+         const std::optional<geometry::geographic::Spheroid>& spheroid) {
         auto hashes = from_numpy<1>(hash);
         {
           nb::gil_scoped_release release;
-          return geohash::area(hashes, wgs);
+          return geohash::area(hashes, spheroid);
         }
       },
-      nb::arg("hash"), nb::arg("wgs") = nb::none(), kAreaDoc);
+      nb::arg("hash"), nb::arg("spheroid") = nb::none(), kAreaDoc);
 
   m.def(
       "bounding_boxes",
