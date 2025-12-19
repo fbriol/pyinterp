@@ -62,20 +62,12 @@ auto init_ring(nb::module_& m) -> void {
 
       .def(
           "__init__",
-          [](Ring* self, const Eigen::Ref<const Eigen::VectorXd>& x,
-             const Eigen::Ref<const Eigen::VectorXd>& y) {
-            if (x.size() != y.size()) {
-              throw std::invalid_argument(
-                  "x and y arrays must have the same size");
-            }
-            std::vector<Point> points;
-            points.reserve(static_cast<size_t>(x.size()));
-            for (Eigen::Index i = 0; i < x.size(); ++i) {
-              points.emplace_back(x[i], y[i]);
-            }
-            new (self) Ring(std::move(points));
+          [](Ring* self, const Eigen::Ref<const Eigen::VectorXd>& xs,
+             const Eigen::Ref<const Eigen::VectorXd>& ys) {
+            nb::gil_scoped_release release;
+            new (self) Ring(xs, ys);
           },
-          "x"_a, "y"_a, kRingInitDoc)
+          "xs"_a, "ys"_a, kRingInitDoc)
 
       // Container operations
       .def("__len__", &Ring::size, "Return the number of points in the ring.")

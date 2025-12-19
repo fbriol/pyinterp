@@ -92,6 +92,10 @@ auto init_multipoint(nb::module_& m) -> void {
           "__init__",
           [](MultiPoint* self, const Eigen::Ref<const Vector<double>>& lons,
              const Eigen::Ref<const Vector<double>>& lats) {
+            if (lons.size() != lats.size()) {
+              throw std::invalid_argument(
+                  "lons and lats arrays must have the same size");
+            }
             nb::gil_scoped_release release;
             new (self) MultiPoint(lons, lats);
           },

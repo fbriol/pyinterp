@@ -68,12 +68,7 @@ auto init_ring(nb::module_& m) -> void {
               throw std::invalid_argument(
                   "lon and lat arrays must have the same size");
             }
-            std::vector<Point> points;
-            points.reserve(static_cast<size_t>(lon.size()));
-            for (Eigen::Index i = 0; i < lon.size(); ++i) {
-              points.emplace_back(lon[i], lat[i]);
-            }
-            new (self) Ring(std::move(points));
+            new (self) Ring(lon, lat);
           },
           "lon"_a, "lat"_a, kRingInitDoc)
 

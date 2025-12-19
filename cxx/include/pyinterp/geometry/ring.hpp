@@ -1,7 +1,12 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <ranges>
+#include <stdexcept>
 #include <vector>
 
+#include "pyinterp/broadcast.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geometry {
@@ -33,6 +38,18 @@ class Ring {
   /// @param[in] points Vector of points (copied/moved into the ring).
   constexpr explicit Ring(std::vector<Point> points)
       : points_{std::move(points)} {}
+
+  /// @brief Construct a ring from two separate coordinate arrays.
+  /// @param[in] xs X coordinate array.
+  /// @param[in] ys Y coordinate array.
+  inline Ring(const Eigen::Ref<const Vector<double>>& xs,
+              const Eigen::Ref<const Vector<double>>& ys) {
+    broadcast::check_eigen_shape("xs", xs, "ys", ys);
+    points_.reserve(xs.size());
+    for (auto [x, y] : std::ranges::views::zip(xs, ys)) {
+      points_.emplace_back(x, y);
+    }
+  }
 
   /// @brief Append a point to the ring.
   /// @param[in] pt Point to append.
