@@ -12,8 +12,13 @@ class LineString {
  public:
   /// @brief Alias for the underlying container type
   using container_type = std::vector<Point>;
+
+  /// @brief Alias for the point type
+  using value_type = Point;
+
   /// @brief Alias for iterator types
   using iterator = container_type::iterator;
+
   /// @brief Alias for const iterator types
   using const_iterator = container_type::const_iterator;
 
