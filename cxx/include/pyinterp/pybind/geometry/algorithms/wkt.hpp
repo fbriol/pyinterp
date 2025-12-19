@@ -1,10 +1,14 @@
 #pragma once
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/variant.h>
 
+#include <algorithm>
 #include <boost/geometry.hpp>
+#include <optional>
 #include <sstream>
 #include <string>
+#include <variant>
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
@@ -36,19 +40,25 @@ constexpr auto kFromWktDoc = R"doc(
 Creates a geometry from Well-Known Text (WKT) representation.
 
 Parses a WKT string and constructs the corresponding geometry object.
+The function automatically detects the geometry type from the WKT string
+and returns the appropriate geometry object.
 
 Args:
     wkt: WKT string representation of the geometry.
 
 Returns:
-    The geometry object constructed from the WKT string.
+    A variant containing one of: Point, LineString, Ring, Polygon, MultiPoint,
+    MultiLineString, or MultiPolygon depending on the WKT content.
 
 Examples:
-    >>> point = from_wkt_point("POINT(1 2)")
+    >>> point = from_wkt("POINT(1 2)")
     >>> # Returns Point(1.0, 2.0)
 
-    >>> polygon = from_wkt_polygon("POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))")
+    >>> polygon = from_wkt("POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))")
     >>> # Returns Polygon object
+
+    >>> linestring = from_wkt("LINESTRING(0 0, 1 1, 2 2)")
+    >>> # Returns LineString object
 )doc";
 
 /// @brief Macro for all geometry types supporting WKT
@@ -75,21 +85,74 @@ inline auto define_to_wkt(nanobind::module_& m, const char* doc) -> void {
        "geometry"_a, doc));
 }
 
-/// @brief Helper to define from_wkt for a specific geometry type
-/// @tparam Geometry Geometry type
+/// @brief Helper to define unified from_wkt using std::variant
+/// @tparam Geometries All geometry types to support
 /// @param[in] m Python module
-/// @param[in] name Function name (e.g., "from_wkt_point")
 /// @param[in] doc Documentation string
-template <typename Geometry>
-inline auto define_from_wkt(nanobind::module_& m, const char* name,
-                            const char* doc) -> void {
+template <typename... Geometries>
+inline auto define_from_wkt(nanobind::module_& m, const char* doc) -> void {
+  using GeometryVariant = std::variant<Geometries...>;
+
   m.def(
-      name,
-      [](const std::string& wkt) -> Geometry {
+      "from_wkt",
+      [](const std::string& wkt) -> GeometryVariant {
         nanobind::gil_scoped_release release;
-        Geometry geom;
-        boost::geometry::read_wkt(wkt, geom);
-        return geom;
+
+        // Try to parse as each geometry type in order
+        // We detect the type by looking at the WKT prefix
+        std::string wkt_upper = wkt;
+        std::ranges::transform(wkt_upper, wkt_upper.begin(), ::toupper);
+
+        // Helper to try parsing as a specific geometry type
+        auto try_parse =
+            []<typename Geometry>(
+                const std::string& wkt_str) -> std::optional<Geometry> {
+          try {
+            Geometry geometry;
+            boost::geometry::read_wkt(wkt_str, geometry);
+            return geometry;
+          } catch (...) {
+            return std::nullopt;
+          }
+        };
+
+        // Try each geometry type based on WKT prefix
+        if (wkt_upper.starts_with("POINT")) {
+          using Point = std::tuple_element_t<0, std::tuple<Geometries...>>;
+          if (auto geom = try_parse.template operator()<Point>(wkt)) {
+            return *geom;
+          }
+        } else if (wkt_upper.starts_with("LINESTRING")) {
+          using LineString = std::tuple_element_t<1, std::tuple<Geometries...>>;
+          if (auto geom = try_parse.template operator()<LineString>(wkt)) {
+            return *geom;
+          }
+        } else if (wkt_upper.starts_with("POLYGON")) {
+          // Try Polygon first (more common than Ring)
+          using Polygon = std::tuple_element_t<3, std::tuple<Geometries...>>;
+          if (auto geom = try_parse.template operator()<Polygon>(wkt)) {
+            return *geom;
+          }
+        } else if (wkt_upper.starts_with("MULTIPOINT")) {
+          using MultiPoint = std::tuple_element_t<4, std::tuple<Geometries...>>;
+          if (auto geom = try_parse.template operator()<MultiPoint>(wkt)) {
+            return *geom;
+          }
+        } else if (wkt_upper.starts_with("MULTILINESTRING")) {
+          using MultiLineString =
+              std::tuple_element_t<5, std::tuple<Geometries...>>;
+          if (auto geom = try_parse.template operator()<MultiLineString>(wkt)) {
+            return *geom;
+          }
+        } else if (wkt_upper.starts_with("MULTIPOLYGON")) {
+          using MultiPolygon =
+              std::tuple_element_t<6, std::tuple<Geometries...>>;
+          if (auto geom = try_parse.template operator()<MultiPolygon>(wkt)) {
+            return *geom;
+          }
+        }
+
+        throw std::runtime_error("Unable to parse WKT string: " + wkt);
       },
       "wkt"_a, doc);
 }
@@ -103,34 +166,14 @@ inline auto init_wkt(nanobind::module_& m) -> void {
     // to_wkt for all geometry types
     define_to_wkt<WKT_TYPES(cartesian)>(m, kToWktDoc);
 
-    // from_wkt for each geometry type
-    define_from_wkt<cartesian::Point>(m, "from_wkt_point", kFromWktDoc);
-    define_from_wkt<cartesian::LineString>(m, "from_wkt_linestring",
-                                           kFromWktDoc);
-    define_from_wkt<cartesian::Ring>(m, "from_wkt_ring", kFromWktDoc);
-    define_from_wkt<cartesian::Polygon>(m, "from_wkt_polygon", kFromWktDoc);
-    define_from_wkt<cartesian::MultiPoint>(m, "from_wkt_multipoint",
-                                           kFromWktDoc);
-    define_from_wkt<cartesian::MultiLineString>(m, "from_wkt_multilinestring",
-                                                kFromWktDoc);
-    define_from_wkt<cartesian::MultiPolygon>(m, "from_wkt_multipolygon",
-                                             kFromWktDoc);
+    // Unified from_wkt using variant
+    define_from_wkt<WKT_TYPES(cartesian)>(m, kFromWktDoc);
   } else {
     // to_wkt for all geometry types
     define_to_wkt<WKT_TYPES(geographic)>(m, kToWktDoc);
 
-    // from_wkt for each geometry type
-    define_from_wkt<geographic::Point>(m, "from_wkt_point", kFromWktDoc);
-    define_from_wkt<geographic::LineString>(m, "from_wkt_linestring",
-                                            kFromWktDoc);
-    define_from_wkt<geographic::Ring>(m, "from_wkt_ring", kFromWktDoc);
-    define_from_wkt<geographic::Polygon>(m, "from_wkt_polygon", kFromWktDoc);
-    define_from_wkt<geographic::MultiPoint>(m, "from_wkt_multipoint",
-                                            kFromWktDoc);
-    define_from_wkt<geographic::MultiLineString>(m, "from_wkt_multilinestring",
-                                                 kFromWktDoc);
-    define_from_wkt<geographic::MultiPolygon>(m, "from_wkt_multipolygon",
-                                              kFromWktDoc);
+    // Unified from_wkt using variant
+    define_from_wkt<WKT_TYPES(geographic)>(m, kFromWktDoc);
   }
 }
 
