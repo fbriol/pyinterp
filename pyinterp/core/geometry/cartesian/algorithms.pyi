@@ -483,7 +483,6 @@ def simplify(geometry: MultiPolygon, distance: float) -> MultiPolygon: ...
 def to_geojson(
     geometry: Point
     | LineString
-    | Ring
     | Polygon
     | MultiLineString
     | MultiPolygon,
