@@ -46,17 +46,11 @@ Args:
 )doc";
 
 constexpr auto kMinCornerDoc = R"doc(
-Get the minimum corner (bottom-left) of the box.
-
-Returns:
-    Point: The minimum corner point.
+Minimum corner (bottom-left) of the box.
 )doc";
 
 constexpr auto kMaxCornerDoc = R"doc(
-Get the maximum corner (top-right) of the box.
-
-Returns:
-    Point: The maximum corner point.
+Maximum corner (top-right) of the box.
 )doc";
 
 auto init_box(nb::module_& m) -> void {
@@ -74,12 +68,14 @@ auto init_box(nb::module_& m) -> void {
           "min_corner"_a, "max_corner"_a, kBoxInitDoc)
 
       // Corner accessors (read-only to avoid returning references)
-      .def(
+      .def_prop_rw(
           "min_corner", [](const Box& self) { return self.min_corner(); },
+          [](Box& self, const Point& pt) { self.min_corner() = pt; },
           kMinCornerDoc)
 
-      .def(
+      .def_prop_rw(
           "max_corner", [](const Box& self) { return self.max_corner(); },
+          [](Box& self, const Point& pt) { self.max_corner() = pt; },
           kMaxCornerDoc)
 
       // Comparison operators
