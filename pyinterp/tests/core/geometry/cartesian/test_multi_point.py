@@ -2,6 +2,8 @@
 
 import pickle
 
+import numpy as np
+
 from pyinterp.core.geometry.cartesian import MultiPoint, Point
 
 
@@ -15,6 +17,14 @@ def test_multipoint_construction() -> None:
     points = [Point(0.0, 0.0), Point(10.0, 10.0), Point(20.0, 20.0)]
     mp2 = MultiPoint(points)
     assert len(mp2) == 3
+
+    # Construction with separate coordinate arrays
+    xs = np.arange(0.0, 30.0, 10.0, dtype=np.float64)
+    ys = np.arange(0.0, 30.0, 10.0, dtype=np.float64)
+    mp3 = MultiPoint(xs, ys)
+    assert len(mp3) == 3
+    for i in range(3):
+        assert mp3[i] == Point(xs[i], ys[i])
 
 
 def test_multipoint_indexing() -> None:

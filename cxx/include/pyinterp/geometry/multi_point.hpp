@@ -1,7 +1,13 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <cstdint>
+#include <ranges>
+#include <stdexcept>
 #include <vector>
 
+#include "pyinterp/broadcast.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geometry {
@@ -30,6 +36,18 @@ class MultiPoint {
   /// @param[in] points Vector of points to move into the multipoint.
   explicit constexpr MultiPoint(std::vector<Point> points)
       : points_{std::move(points)} {}
+
+  /// @brief Construct from two array of coordinates.
+  /// @param[in] xs Array of x-coordinates.
+  /// @param[in] ys Array of y-coordinates.
+  constexpr MultiPoint(const Eigen::Ref<const Vector<double>>& xs,
+                       const Eigen::Ref<const Vector<double>>& ys) {
+    broadcast::check_eigen_shape("xs", xs, "ys", ys);
+    points_.reserve(xs.size());
+    for (auto [x, y] : std::ranges::views::zip(xs, ys)) {
+      points_.emplace_back(x, y);
+    }
+  }
 
   /// @brief Append a point to the collection.
   /// @param[in] pt Point to append.

@@ -2,6 +2,8 @@
 
 import pickle
 
+import numpy as np
+
 from pyinterp.core.geometry.geographic import Point, MultiPoint
 
 
@@ -24,6 +26,14 @@ def test_multipoint_creation_and_len() -> None:
 
     assert bool(multipoint) is True
     assert len(multipoint) == 2
+
+    # Construction with separate coordinate arrays
+    lons = np.arange(0.0, 30.0, 10.0, dtype=np.float64)
+    lats = np.arange(0.0, 30.0, 10.0, dtype=np.float64)
+    mp3 = MultiPoint(lons, lats)
+    assert len(mp3) == 3
+    for i in range(3):
+        assert mp3[i] == Point(lons[i], lats[i])
 
 
 def test_multipoint_indexing_and_view() -> None:

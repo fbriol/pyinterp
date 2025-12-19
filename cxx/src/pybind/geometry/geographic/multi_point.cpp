@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/geometry/geographic/multi_point.hpp"
 
+#include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
@@ -43,6 +44,14 @@ Args:
     points: Optional sequence of `Point` objects.
 )doc";
 
+constexpr auto kMultiPointInitFromLonsLatsDoc = R"doc(
+Construct a multipoint from separate longitude and latitude arrays.
+
+Args:
+    lons: Longitude array.
+    lats: Latitude array.
+)doc";
+
 // Traits for PointsView
 struct PointsTraits {
   static auto size_getter(MultiPoint* mp) -> size_t { return mp->size(); }
@@ -79,6 +88,14 @@ auto init_multipoint(nb::module_& m) -> void {
             new (self) MultiPoint(points);
           },
           "points"_a = std::vector<Point>{}, kMultiPointInitDoc)
+      .def(
+          "__init__",
+          [](MultiPoint* self, const Eigen::Ref<const Vector<double>>& lons,
+             const Eigen::Ref<const Vector<double>>& lats) {
+            nb::gil_scoped_release release;
+            new (self) MultiPoint(lons, lats);
+          },
+          "lons"_a, "lats"_a, kMultiPointInitFromLonsLatsDoc)
 
       // Container-like operations
       .def("__len__", &MultiPoint::size, "Number of points.")
