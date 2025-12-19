@@ -9,32 +9,32 @@
 namespace pyinterp::geometry::pybind {
 
 constexpr auto kRelateDoc = R"doc(
-Computes the DE-9IM (Dimensionally Extended nine-Intersection Model) matrix
-for two geometries.
+Checks if two geometries satisfy a DE-9IM (Dimensionally Extended nine-Intersection
+Model) relationship mask.
 
-The DE-9IM is a topological model that describes the spatial relationship between
-two geometries using a 3x3 matrix. Each cell in the matrix describes the dimension
-of the intersection between interior/boundary/exterior of the two geometries.
+The DE-9IM mask is a 9-character pattern that specifies the required relationship
+between the interior/boundary/exterior of two geometries. This function returns
+true if the actual relationship matches the mask pattern.
 
 Args:
     geometry1: First geometry.
     geometry2: Second geometry.
+    mask: DE-9IM mask pattern as a 9-character string (e.g., "T*F**F***" for within).
+          Each character can be:
+          - 'T' (true): non-empty intersection required
+          - 'F' (false): empty intersection required
+          - '*': any dimension (don't care)
+          - '0', '1', '2': specific dimension required
 
 Returns:
-    A string representing the 9-character DE-9IM matrix pattern (e.g., "FF2F11212").
-    Each character can be:
-    - 'F' (false): empty set
-    - '0': point intersection
-    - '1': line intersection
-    - '2': area intersection
-    - '*': any dimension (don't care)
+    Boolean indicating if the geometries satisfy the mask relationship.
 
 Examples:
-    >>> poly1 = Polygon(...)
-    >>> poly2 = Polygon(...)
-    >>> de9im = relate(poly1, poly2)
-    >>> # Returns string like "212101212" for overlapping polygons
-    >>> # Use the pattern to determine topological relationship
+    >>> point = Point(4.0, 1.0)
+    >>> polygon = Polygon(...)
+    >>> # Check if point is within polygon
+    >>> is_within = relate(point, polygon, "T*F**F***")
+    >>> # Returns True if point is inside polygon
 )doc";
 
 /// @brief Macro for geometry pairs that support relate
@@ -51,22 +51,21 @@ Examples:
 template <typename... GeometryPairs>
 inline auto define_relate_for_pairs(nanobind::module_& m, const char* doc)
     -> void {
-  auto relate_impl = [](const auto& g1, const auto& g2) -> std::string {
+  auto relate_impl = [](const auto& g1, const auto& g2,
+                        const std::string& mask) -> bool {
     nanobind::gil_scoped_release release;
-    auto de9im = boost::geometry::relation(g1, g2);
-    nanobind::gil_scoped_acquire acquire;
-
-    // Convert DE-9IM matrix to string representation
-    return de9im.str();
+    boost::geometry::de9im::mask de9im_mask(mask);
+    return boost::geometry::relate(g1, g2, de9im_mask);
   };
 
   (..., m.def(
             "relate",
             [relate_impl](const typename GeometryPairs::first_type& g1,
-                          const typename GeometryPairs::second_type& g2) {
-              return relate_impl(g1, g2);
+                          const typename GeometryPairs::second_type& g2,
+                          const std::string& mask) {
+              return relate_impl(g1, g2, mask);
             },
-            "geometry1"_a, "geometry2"_a, doc));
+            "geometry1"_a, "geometry2"_a, "mask"_a, doc));
 }
 
 /// @brief Initialize the relate algorithm in the given module

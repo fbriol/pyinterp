@@ -2,34 +2,38 @@
 #include <nanobind/nanobind.h>
 
 #include <boost/geometry.hpp>
+#include <string>
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace pyinterp::geometry::pybind {
 
 constexpr auto kRelationDoc = R"doc(
-Returns the spatial relationship between two geometries.
+Computes the DE-9IM (Dimensionally Extended nine-Intersection Model) matrix
+for two geometries.
 
-The relation operation returns a value from the DE-9IM (Dimensionally Extended
-nine-Intersection Model) indicating the topological relationship between two
-geometries. The result is returned as an integer representing the relation type.
+The DE-9IM is a topological model that describes the spatial relationship between
+two geometries using a 3x3 matrix. Each cell in the matrix describes the dimension
+of the intersection between interior/boundary/exterior of the two geometries.
 
 Args:
     geometry1: First geometry.
     geometry2: Second geometry.
 
 Returns:
-    Integer representing the relation type:
-    - 0: disjoint
-    - 1: intersects
-    - 2: touches
-    - 3: crosses
-    - 4: within
-    - 5: contains
-    - 6: overlaps
-    - 7: covers
-    - 8: covered_by
-    - 9: equals
+    A string representing the 9-character DE-9IM matrix pattern (e.g., "FF2F11212").
+    Each character can be:
+    - 'F' (false): empty set (no intersection)
+    - '0': point (0-dimensional) intersection
+    - '1': line (1-dimensional) intersection
+    - '2': area (2-dimensional) intersection
+
+Examples:
+    >>> point = Point(4.0, 1.0)
+    >>> polygon = Polygon(...)
+    >>> matrix = relation(point, polygon)
+    >>> # Returns string like "0FFFFF212" indicating the topological
+    >>> # relationship
 )doc";
 
 /// @brief Macro for geometry pairs that support relation
@@ -46,22 +50,13 @@ Returns:
 template <typename... GeometryPairs>
 inline auto define_relation_for_pairs(nanobind::module_& m, const char* doc)
     -> void {
-  auto relation_impl = [](const auto& g1, const auto& g2) -> int {
+  auto relation_impl = [](const auto& g1, const auto& g2) -> std::string {
     nanobind::gil_scoped_release release;
     auto de9im = boost::geometry::relation(g1, g2);
+    nanobind::gil_scoped_acquire acquire;
 
-    // Convert DE-9IM mask to simple relation type
-    // Note: This is a simplified mapping for common cases
-    if (boost::geometry::disjoint(g1, g2)) return 0;    // disjoint
-    if (boost::geometry::equals(g1, g2)) return 9;      // equals
-    if (boost::geometry::within(g1, g2)) return 4;      // within
-    if (boost::geometry::covered_by(g1, g2)) return 8;  // covered_by
-    if (boost::geometry::touches(g1, g2)) return 2;     // touches
-    if (boost::geometry::crosses(g1, g2)) return 3;     // crosses
-    if (boost::geometry::overlaps(g1, g2)) return 6;    // overlaps
-    if (boost::geometry::intersects(g1, g2)) return 1;  // intersects
-
-    return -1;  // unknown
+    // Convert DE-9IM matrix to string representation
+    return de9im.str();
   };
 
   (..., m.def(
