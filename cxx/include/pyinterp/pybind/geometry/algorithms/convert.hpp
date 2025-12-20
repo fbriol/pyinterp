@@ -3,7 +3,24 @@
 
 #include <boost/geometry.hpp>
 
-#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
+#include "pyinterp/geometry/cartesian/box.hpp"
+#include "pyinterp/geometry/cartesian/linestring.hpp"
+#include "pyinterp/geometry/cartesian/multi_linestring.hpp"
+#include "pyinterp/geometry/cartesian/multi_point.hpp"
+#include "pyinterp/geometry/cartesian/multi_polygon.hpp"
+#include "pyinterp/geometry/cartesian/point.hpp"
+#include "pyinterp/geometry/cartesian/polygon.hpp"
+#include "pyinterp/geometry/cartesian/ring.hpp"
+#include "pyinterp/geometry/cartesian/segment.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/linestring.hpp"
+#include "pyinterp/geometry/geographic/multi_linestring.hpp"
+#include "pyinterp/geometry/geographic/multi_point.hpp"
+#include "pyinterp/geometry/geographic/multi_polygon.hpp"
+#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/geographic/polygon.hpp"
+#include "pyinterp/geometry/geographic/ring.hpp"
+#include "pyinterp/geometry/geographic/segment.hpp"
 
 namespace pyinterp::geometry::pybind {
 
@@ -51,7 +68,7 @@ inline auto add_geographic_converter(nanobind::module_& m, const char* doc)
    m.def(
        "convert_to_geographic",
        [convert_impl](const CartesianGeometries& g) { return convert_impl(g); },
-       "geometry"_a, doc));
+       nanobind::arg("geometry"), doc));
 }
 
 /// @brief Helper to define convert from Geographic to Cartesian
@@ -71,7 +88,7 @@ inline auto add_cartesian_converter(nanobind::module_& m, const char* doc)
             [convert_impl](const GeographicGeometries& g) {
               return convert_impl(g);
             },
-            "geometry"_a, doc));
+            nanobind::arg("geometry"), doc));
 }
 
 /// @brief Initialize convert operations for Cartesian namespace
