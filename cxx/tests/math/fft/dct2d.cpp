@@ -1,4 +1,4 @@
-#include "pyinterp/math/fft2d.hpp"
+#include "pyinterp/math/dct2d.hpp"
 
 #include <gtest/gtest.h>
 
@@ -18,7 +18,7 @@ void compare_matrices(const pyinterp::RowMajorMatrix<T>& result,
   }
 }
 
-inline auto fft_data() -> RowMajorMatrix<double> {
+inline auto dct_data() -> RowMajorMatrix<double> {
   RowMajorMatrix<double> data(8, 4);
   data << 0.5488135, 0.71518937, 0.60276338, 0.54488318, 0.4236548, 0.64589411,
       0.43758721, 0.891773, 0.96366276, 0.38344152, 0.79172504, 0.52889492,
@@ -29,47 +29,45 @@ inline auto fft_data() -> RowMajorMatrix<double> {
   return data;
 }
 
-TEST(FFT2D, RoundtripDouble) {
+TEST(DCT2D, RoundtripDouble) {
   RecordProperty("description",
-                 "Test 2D FFT forward/inverse roundtrip for double");
+                 "Test 2D DCT forward/inverse roundtrip for double");
   RecordProperty("type", "Nominal");
 
   constexpr int64_t rows = 8;
   constexpr int64_t cols = 4;
 
-  auto data = fft_data();
+  auto data = dct_data();
   auto expected = data;  // The expected result is the original data
 
-  // Create the FFT plan
-  FFT2D<double> fft(rows, cols);
-  RowMajorComplexMatrix<double> c_data(rows, fft.c_cols());
+  // Create the DCT plan
+  DCT2D<double> dct(rows, cols);
 
   // Perform roundtrip
-  fft.forward(data, c_data);
-  fft.inverse(c_data, data);  // Normalization is handled inside
+  dct.forward(data);
+  dct.inverse(data);  // Normalization is handled inside
 
   // Compare
   compare_matrices(data, expected, 1e-12);
 }
 
-TEST(FFT2D, RoundtripFloat) {
+TEST(DCT2D, RoundtripFloat) {
   RecordProperty("description",
-                 "Test 2D FFT forward/inverse roundtrip for float");
+                 "Test 2D DCT forward/inverse roundtrip for float");
   RecordProperty("type", "Nominal");
 
   constexpr int64_t rows = 8;
   constexpr int64_t cols = 4;
 
-  RowMajorMatrix<float> data = fft_data().cast<float>();
+  RowMajorMatrix<float> data = dct_data().cast<float>();
   auto expected = data;  // The expected result is the original data
 
   // Create the DCT plan
-  FFT2D<float> fft(rows, cols);
-  RowMajorComplexMatrix<float> c_data(rows, fft.c_cols());
+  DCT2D<float> dct(rows, cols);
 
   // Perform roundtrip
-  fft.forward(data, c_data);
-  fft.inverse(c_data, data);  // Normalization is handled inside
+  dct.forward(data);
+  dct.inverse(data);  // Normalization is handled inside
 
   // Compare
   compare_matrices(data, expected, 1e-6f);
