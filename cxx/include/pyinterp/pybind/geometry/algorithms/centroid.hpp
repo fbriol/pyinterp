@@ -4,7 +4,6 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/algorithms/centroid.hpp>
 
-#include "pyinterp/geometry/box.hpp"
 #include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/geometry/geographic/box.hpp"
 #include "pyinterp/geometry/geographic/segment.hpp"
