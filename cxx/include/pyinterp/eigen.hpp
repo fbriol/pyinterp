@@ -24,4 +24,10 @@ template <typename T>
 using RowMajorMatrix =
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
+/// @brief Alias for a RowMajor Eigen Complex Matrix.
+/// @tparam T The data type of the matrix elements.
+template <typename T>
+using RowMajorComplexMatrix = Eigen::Matrix<std::complex<T>, Eigen::Dynamic,
+                                            Eigen::Dynamic, Eigen::RowMajor>;
+
 }  // namespace pyinterp

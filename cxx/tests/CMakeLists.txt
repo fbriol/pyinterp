@@ -56,3 +56,7 @@ add_testcase(geodetic "${geodetic_src}")
 # geohash
 file(GLOB_RECURSE geohash_src "${CMAKE_CURRENT_SOURCE_DIR}/geohash/*.cpp")
 add_testcase(geohash "${geohash_src}" pyinterp)
+
+# fft
+file(GLOB_RECURSE fft_src "${CMAKE_CURRENT_SOURCE_DIR}/math/fft/*.cpp")
+add_testcase(fft "${fft_src}" BLAS::BLAS ${FFT_LIBRARIES})
