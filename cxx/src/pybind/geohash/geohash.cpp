@@ -14,7 +14,7 @@ namespace nb = nanobind;
 
 using nb::literals::operator""_a;
 
-namespace pyinterp::geohash::pybind {
+namespace pyinterp::pybind::geohash {
 
 constexpr auto kGeohashClassDoc = R"doc(
 Geohashing is a geocoding method used to encode geographic coordinates
@@ -160,7 +160,7 @@ Raises:
     ValueError: If precision > 12.
 )doc";
 
-auto init_geohash_class(nb::module_& m) -> void {
+auto init_class(nb::module_& m) -> void {
   nb::class_<GeoHash>(m, "GeoHash", kGeohashClassDoc)
       .def(nb::init<double, double, uint32_t>(), "lon"_a, "lat"_a,
            "precision"_a, kIinitDoc)
@@ -217,4 +217,4 @@ auto init_geohash_class(nb::module_& m) -> void {
           });
 }
 
-}  // namespace pyinterp::geohash::pybind
+}  // namespace pyinterp::pybind::geohash

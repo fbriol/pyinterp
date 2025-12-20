@@ -19,10 +19,18 @@
 #include "pyinterp/geometry/geographic/polygon.hpp"
 
 namespace nb = nanobind;
-namespace geohash = pyinterp::geohash;
-namespace geodetic = pyinterp::geometry::geographic;
 
-namespace pyinterp::geohash::pybind {
+namespace pyinterp::pybind::geohash {
+
+using pyinterp::geohash::area;
+using pyinterp::geohash::bounding_boxes;
+using pyinterp::geohash::decode;
+using pyinterp::geohash::encode;
+using pyinterp::geohash::EncodedHashes;
+using pyinterp::geohash::EncodedHashesView;
+using pyinterp::geohash::HashRegionBounds;
+using pyinterp::geohash::transform;
+using pyinterp::geohash::where;
 
 // Checking the value defining the precision of a geohash.
 constexpr static auto check_range(uint32_t precision) -> void {
@@ -266,7 +274,7 @@ Raises:
     ValueError: If the given precision is not within [1, 12].
 )__doc__";
 
-auto init_geohash_string(nb::module_& m) -> void {
+auto init_string(nb::module_& m) -> void {
   m.def(
       "encode",
       [](const Eigen::Ref<const Eigen::VectorXd>& lon,
@@ -275,7 +283,7 @@ auto init_geohash_string(nb::module_& m) -> void {
         EncodedHashes result;
         {
           nb::gil_scoped_release release;
-          result = geohash::encode(lon, lat, precision);
+          result = encode(lon, lat, precision);
         }
         return to_numpy(std::move(result));
       },
@@ -287,7 +295,7 @@ auto init_geohash_string(nb::module_& m) -> void {
         auto hashes = from_numpy<1>(hash);
         {
           nb::gil_scoped_release release;
-          return geohash::decode(hashes, round);
+          return decode(hashes, round);
         }
       },
       nb::arg("hash"), nb::arg("round") = false, kDecodeDoc);
@@ -299,7 +307,7 @@ auto init_geohash_string(nb::module_& m) -> void {
         auto hashes = from_numpy<1>(hash);
         {
           nb::gil_scoped_release release;
-          return geohash::area(hashes, spheroid);
+          return area(hashes, spheroid);
         }
       },
       nb::arg("hash"), nb::arg("spheroid") = nb::none(), kAreaDoc);
@@ -312,7 +320,7 @@ auto init_geohash_string(nb::module_& m) -> void {
         EncodedHashes result;
         {
           nb::gil_scoped_release release;
-          result = geohash::bounding_boxes(box, precision);
+          result = bounding_boxes(box, precision);
         }
         return to_numpy(std::move(result));
       },
@@ -327,7 +335,7 @@ auto init_geohash_string(nb::module_& m) -> void {
         EncodedHashes result;
         {
           nb::gil_scoped_release release;
-          result = geohash::bounding_boxes(polygon, precision, num_threads);
+          result = bounding_boxes(polygon, precision, num_threads);
         }
         return to_numpy(std::move(result));
       },
@@ -342,7 +350,7 @@ auto init_geohash_string(nb::module_& m) -> void {
         EncodedHashes result;
         {
           nb::gil_scoped_release release;
-          result = geohash::bounding_boxes(polygons, precision, num_threads);
+          result = bounding_boxes(polygons, precision, num_threads);
         }
         return to_numpy(std::move(result));
       },
@@ -356,7 +364,7 @@ auto init_geohash_string(nb::module_& m) -> void {
         HashRegionBounds result_map;
         {
           nb::gil_scoped_release release;
-          result_map = geohash::where(hashes, hashes.count, hashes.precision);
+          result_map = where(hashes, hashes.count, hashes.precision);
         }
 
         // Convert to dict with bytes keys
@@ -376,11 +384,11 @@ auto init_geohash_string(nb::module_& m) -> void {
         EncodedHashes result;
         {
           nb::gil_scoped_release release;
-          result = geohash::transform(hashes, precision);
+          result = transform(hashes, precision);
         }
         return to_numpy(std::move(result));
       },
       nb::arg("hash"), nb::arg("precision") = 1, kTransformDoc);
 }
 
-}  // namespace pyinterp::geohash::pybind
+}  // namespace pyinterp::pybind::geohash
