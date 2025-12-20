@@ -14,7 +14,7 @@ namespace nb = nanobind;
 
 using nb::literals::operator""_a;
 
-namespace pyinterp::pybind::geohash {
+namespace pyinterp::geohash::pybind {
 
 constexpr auto kGeohashClassDoc = R"doc(
 Geohashing is a geocoding method used to encode geographic coordinates
@@ -217,4 +217,4 @@ auto init_class(nb::module_& m) -> void {
           });
 }
 
-}  // namespace pyinterp::pybind::geohash
+}  // namespace pyinterp::geohash::pybind

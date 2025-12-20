@@ -6,8 +6,7 @@
 
 #include <nanobind/nanobind.h>
 
-namespace pyinterp::pybind {
-namespace geohash {
+namespace pyinterp::geohash::pybind {
 
 /// @brief Initialize geohash string bindings
 /// @param[in,out] m Python module
@@ -17,7 +16,9 @@ auto init_string(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_class(nanobind::module_& m) -> void;
 
-}  // namespace geohash
+}  // namespace pyinterp::geohash::pybind
+
+namespace pyinterp::pybind {
 
 /// @brief Initialize geohash bindings
 /// @param[in,out] m Python module

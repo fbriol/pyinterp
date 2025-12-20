@@ -20,7 +20,7 @@
 
 namespace nb = nanobind;
 
-namespace pyinterp::pybind::geohash {
+namespace pyinterp::geohash::pybind {
 
 using pyinterp::geohash::area;
 using pyinterp::geohash::bounding_boxes;
@@ -391,4 +391,4 @@ auto init_string(nb::module_& m) -> void {
       nb::arg("hash"), nb::arg("precision") = 1, kTransformDoc);
 }
 
-}  // namespace pyinterp::pybind::geohash
+}  // namespace pyinterp::geohash::pybind
