@@ -22,7 +22,7 @@ namespace detail {
 
 /// @brief Alias for the interpolation result type
 template <typename T>
-using InterpolationResult = pyinterp::math::interpolate::InterpolationResult<T>;
+using InterpolationResult = math::interpolate::InterpolationResult<T>;
 
 /// @brief Single-point bivariate interpolation
 /// @tparam Point Point type (e.g., Point2D)
