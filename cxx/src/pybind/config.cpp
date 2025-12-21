@@ -7,6 +7,7 @@
 
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/pybind/config/common.hpp"
+#include "pyinterp/pybind/config/fill.hpp"
 #include "pyinterp/pybind/config/geometric.hpp"
 #include "pyinterp/pybind/config/rtree.hpp"
 #include "pyinterp/pybind/config/windowed.hpp"
@@ -371,6 +372,124 @@ auto bind(nb::module_& m) -> void {
 }
 
 }  // namespace rtree
+
+namespace fill {
+
+/// @brief Add common fill methods to a configuration class
+/// @tparam Class The configuration class type
+/// @param pyclass The nanobind class wrapper
+/// @return Reference to the modified class wrapper
+template <typename Class>
+auto add_fill_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
+  pyclass
+      .def("with_first_guess", &Class::with_first_guess, nb::arg("value"),
+           "Set the first guess strategy.",
+           nb::call_guard<nb::gil_scoped_release>())
+      .def("with_max_iterations", &Class::with_max_iterations, nb::arg("value"),
+           "Set the maximum number of iterations.",
+           nb::call_guard<nb::gil_scoped_release>())
+      .def("with_epsilon", &Class::with_epsilon, nb::arg("value"),
+           "Set the convergence threshold (epsilon).",
+           nb::call_guard<nb::gil_scoped_release>())
+      .def("with_num_threads", &Class::with_num_threads, nb::arg("value"),
+           "Number of threads to use. A value of 0 means that all available "
+           "cores will be used.",
+           nb::call_guard<nb::gil_scoped_release>())
+      .def("first_guess", &Class::first_guess, "Get the first guess strategy.",
+           nb::call_guard<nb::gil_scoped_release>())
+      .def("max_iterations", &Class::max_iterations,
+           "Get the maximum number of iterations.",
+           nb::call_guard<nb::gil_scoped_release>())
+      .def("epsilon", &Class::epsilon, "Get the convergence threshold.",
+           nb::call_guard<nb::gil_scoped_release>());
+  return pyclass;
+}
+
+auto bind(nb::module_& m) -> void {
+  // Bind FirstGuess enum
+  nb::enum_<FirstGuess>(m, "FirstGuess",
+                        "Initial guess strategy for iterative fill methods.")
+      .value("ZONAL_AVERAGE", FirstGuess::kZonalAverage,
+             "Use zonal average of defined values.")
+      .value("ZERO", FirstGuess::kZero, "Use zero as initial guess.");
+
+  // Bind LoessValueType enum
+  nb::enum_<LoessValueType>(m, "LoessValueType",
+                            "Type of values processed by the LOESS filter.")
+      .value("UNDEFINED", LoessValueType::kUndefined,
+             "Fill only undefined (NaN) values.")
+      .value("DEFINED", LoessValueType::kDefined, "Smooth only defined values.")
+      .value("ALL", LoessValueType::kAll, "Smooth and fill all values.");
+
+  // Bind Loess configuration
+  add_fill_methods(
+      nb::class_<Loess>(m, "Loess", "Configuration for LOESS fill method.")
+          .def(nb::init<>(), "Default constructor.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_value_type", &Loess::with_value_type, nb::arg("value"),
+               "Set the value type to process.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_nx", &Loess::with_nx, nb::arg("value"),
+               "Set the half-window size along x-axis.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_ny", &Loess::with_ny, nb::arg("value"),
+               "Set the half-window size along y-axis.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("value_type", &Loess::value_type,
+               "Get the value type to process.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("nx", &Loess::nx, "Get the half-window size along x-axis.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("ny", &Loess::ny, "Get the half-window size along y-axis.",
+               nb::call_guard<nb::gil_scoped_release>()));
+
+  // Bind FFTInpaint configuration
+  add_fill_methods(
+      nb::class_<FFTInpaint>(m, "FFTInpaint",
+                             "Configuration for FFT Inpaint fill method.")
+          .def(nb::init<>(), "Default constructor.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_sigma", &FFTInpaint::with_sigma, nb::arg("value"),
+               "Set the sigma parameter.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("sigma", &FFTInpaint::sigma, "Get the sigma parameter.",
+               nb::call_guard<nb::gil_scoped_release>()));
+
+  // Bind GaussSeidel configuration
+  add_fill_methods(
+      nb::class_<GaussSeidel>(m, "GaussSeidel",
+                              "Configuration for Gauss-Seidel fill method.")
+          .def(nb::init<>(), "Default constructor.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_relaxation", &GaussSeidel::with_relaxation,
+               nb::arg("value"), "Set the relaxation parameter.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("relaxation", &GaussSeidel::relaxation,
+               "Get the relaxation parameter.",
+               nb::call_guard<nb::gil_scoped_release>()));
+
+  // Bind Multigrid configuration
+  add_fill_methods(
+      nb::class_<Multigrid>(m, "Multigrid",
+                            "Configuration for Multigrid fill method.")
+          .def(nb::init<>(), "Default constructor.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_pre_smooth", &Multigrid::with_pre_smooth, nb::arg("value"),
+               "Set the number of pre-smoothing iterations.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_post_smooth", &Multigrid::with_post_smooth,
+               nb::arg("value"), "Set the number of post-smoothing iterations.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("pre_smooth", &Multigrid::pre_smooth,
+               "Get the number of pre-smoothing iterations.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("post_smooth", &Multigrid::post_smooth,
+               "Get the number of post-smoothing iterations.",
+               nb::call_guard<nb::gil_scoped_release>()));
+}
+
+}  // namespace fill
+
 }  // namespace config
 
 auto init_config(nb::module_& m) -> void {
@@ -381,9 +500,11 @@ auto init_config(nb::module_& m) -> void {
       "windowed", "Configuration for windowed interpolation.");
   auto rtree =
       config.def_submodule("rtree", "Configuration for RTree interpolation.");
+  auto fill = config.def_submodule("fill", "Configuration for fill methods.");
   config::geometric::bind(geometric);
   config::windowed::bind(windowed);
   config::rtree::bind(rtree);
+  config::fill::bind(fill);
 }
 
 }  // namespace pyinterp::pybind

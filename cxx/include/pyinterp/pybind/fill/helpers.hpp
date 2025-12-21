@@ -125,4 +125,4 @@ constexpr auto check_windows_size(const std::string &name1, uint32_t size,
   check_windows_size(args...);
 }
 
-}  // namespace pyinterp::fill::pybind
+}  // namespace pyinterp::pybind::fill

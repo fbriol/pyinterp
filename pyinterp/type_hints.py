@@ -72,3 +72,8 @@ if TYPE_CHECKING:
         TwoDims,
         np.dtype[np.int64],
     ]
+
+    NDArray2DFloating: TypeAlias = np.ndarray[
+        TwoDims,
+        np.dtype[np.floating[Any]],
+    ]

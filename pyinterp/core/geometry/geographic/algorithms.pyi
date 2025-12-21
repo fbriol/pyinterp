@@ -784,7 +784,8 @@ def is_simple(geometry: _Concept) -> bool: ...
 def is_valid(geometry: _Concept, return_reason: bool) -> tuple[bool, str]: ...
 @overload
 def is_valid(geometry: _Concept) -> bool: ...
-def length(geometry: _Concept,
+def length(
+    geometry: _Concept,
     spheroid: Spheroid | None = None,
     strategy: Strategy = Strategy.VINCENTY,
 ) -> float: ...
@@ -876,7 +877,12 @@ def simplify(
     strategy: Strategy = Strategy.ANDOYER,
 ) -> MultiPolygon: ...
 def to_geojson(
-    geometry: Point | LineString | Polygon | MultiPoint | MultiLineString | MultiPolygon,
+    geometry: Point
+    | LineString
+    | Polygon
+    | MultiPoint
+    | MultiLineString
+    | MultiPolygon,
 ) -> str: ...
 def to_wkt(
     geometry: Point

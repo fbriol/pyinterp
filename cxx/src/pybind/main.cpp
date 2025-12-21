@@ -4,6 +4,7 @@
 #include "pyinterp/pybind/binning.hpp"
 #include "pyinterp/pybind/config.hpp"
 #include "pyinterp/pybind/descriptive_statistics.hpp"
+#include "pyinterp/pybind/fill.hpp"
 #include "pyinterp/pybind/geohash.hpp"
 #include "pyinterp/pybind/geometric.hpp"
 #include "pyinterp/pybind/geometry.hpp"
@@ -28,4 +29,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_binning(m);
   pyinterp::pybind::init_descriptive_statistics(m);
   pyinterp::pybind::init_tdigest(m);
+  pyinterp::pybind::init_fill(m);
 }
