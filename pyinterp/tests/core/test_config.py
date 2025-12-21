@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from pyinterp.core.config import geometric, rtree, windowed
+from pyinterp.core.config import fill, geometric, rtree, windowed
 
 
 class TestGeometric:
@@ -632,3 +632,267 @@ class TestRTree:
 
         config_window = rtree.InterpolationWindow().with_radius(500.0)
         assert isinstance(config_window, rtree.InterpolationWindow)
+
+
+class TestFill:
+    """Test fill method configurations."""
+
+    def test_first_guess_enum(self) -> None:
+        """Test FirstGuess enum values."""
+        assert fill.FirstGuess.ZERO
+        assert fill.FirstGuess.ZONAL_AVERAGE
+
+        # Test that enum values are unique
+        values = [
+            fill.FirstGuess.ZERO,
+            fill.FirstGuess.ZONAL_AVERAGE,
+        ]
+        assert len(set(values)) == 2
+
+    def test_loess_value_type_enum(self) -> None:
+        """Test LoessValueType enum values."""
+        assert fill.LoessValueType.ALL
+        assert fill.LoessValueType.DEFINED
+        assert fill.LoessValueType.UNDEFINED
+
+        # Test that enum values are unique
+        values = [
+            fill.LoessValueType.ALL,
+            fill.LoessValueType.DEFINED,
+            fill.LoessValueType.UNDEFINED,
+        ]
+        assert len(set(values)) == 3
+
+    def test_gauss_seidel_creation(self) -> None:
+        """Test GaussSeidel configuration creation."""
+        config = fill.GaussSeidel()
+        assert isinstance(config, fill.GaussSeidel)
+
+    def test_gauss_seidel_instance_methods(self) -> None:
+        """Test GaussSeidel instance methods."""
+        config = fill.GaussSeidel()
+
+        # Test with_epsilon
+        config_epsilon = config.with_epsilon(1e-6)
+        assert isinstance(config_epsilon, fill.GaussSeidel)
+        assert config_epsilon is not config
+
+        # Test with_first_guess
+        config_fg = config.with_first_guess(fill.FirstGuess.ZONAL_AVERAGE)
+        assert isinstance(config_fg, fill.GaussSeidel)
+        assert config_fg is not config
+
+        # Test with_max_iterations
+        config_iter = config.with_max_iterations(100)
+        assert isinstance(config_iter, fill.GaussSeidel)
+        assert config_iter is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(4)
+        assert isinstance(config_threads, fill.GaussSeidel)
+        assert config_threads is not config
+
+        # Test with_relaxation
+        config_relax = config.with_relaxation(1.5)
+        assert isinstance(config_relax, fill.GaussSeidel)
+        assert config_relax is not config
+
+    def test_gauss_seidel_method_chaining(self) -> None:
+        """Test GaussSeidel method chaining."""
+        config = (
+            fill.GaussSeidel()
+            .with_epsilon(1e-5)
+            .with_first_guess(fill.FirstGuess.ZERO)
+            .with_max_iterations(200)
+            .with_num_threads(8)
+            .with_relaxation(1.8)
+        )
+        assert isinstance(config, fill.GaussSeidel)
+
+    def test_fft_inpaint_creation(self) -> None:
+        """Test FFTInpaint configuration creation."""
+        config = fill.FFTInpaint()
+        assert isinstance(config, fill.FFTInpaint)
+
+    def test_fft_inpaint_instance_methods(self) -> None:
+        """Test FFTInpaint instance methods."""
+        config = fill.FFTInpaint()
+
+        # Test with_epsilon
+        config_epsilon = config.with_epsilon(1e-4)
+        assert isinstance(config_epsilon, fill.FFTInpaint)
+        assert config_epsilon is not config
+
+        # Test with_first_guess
+        config_fg = config.with_first_guess(fill.FirstGuess.ZONAL_AVERAGE)
+        assert isinstance(config_fg, fill.FFTInpaint)
+        assert config_fg is not config
+
+        # Test with_max_iterations
+        config_iter = config.with_max_iterations(50)
+        assert isinstance(config_iter, fill.FFTInpaint)
+        assert config_iter is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(2)
+        assert isinstance(config_threads, fill.FFTInpaint)
+        assert config_threads is not config
+
+        # Test with_sigma
+        config_sigma = config.with_sigma(2.0)
+        assert isinstance(config_sigma, fill.FFTInpaint)
+        assert config_sigma is not config
+
+    def test_fft_inpaint_method_chaining(self) -> None:
+        """Test FFTInpaint method chaining."""
+        config = (
+            fill.FFTInpaint()
+            .with_epsilon(1e-3)
+            .with_first_guess(fill.FirstGuess.ZERO)
+            .with_max_iterations(75)
+            .with_num_threads(4)
+            .with_sigma(3.0)
+        )
+        assert isinstance(config, fill.FFTInpaint)
+
+    def test_loess_creation(self) -> None:
+        """Test Loess configuration creation."""
+        config = fill.Loess()
+        assert isinstance(config, fill.Loess)
+
+    def test_loess_instance_methods(self) -> None:
+        """Test Loess instance methods."""
+        config = fill.Loess()
+
+        # Test with_epsilon
+        config_epsilon = config.with_epsilon(1e-7)
+        assert isinstance(config_epsilon, fill.Loess)
+        assert config_epsilon is not config
+
+        # Test with_first_guess
+        config_fg = config.with_first_guess(fill.FirstGuess.ZONAL_AVERAGE)
+        assert isinstance(config_fg, fill.Loess)
+        assert config_fg is not config
+
+        # Test with_max_iterations
+        config_iter = config.with_max_iterations(150)
+        assert isinstance(config_iter, fill.Loess)
+        assert config_iter is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(6)
+        assert isinstance(config_threads, fill.Loess)
+        assert config_threads is not config
+
+        # Test with_nx
+        config_nx = config.with_nx(10)
+        assert isinstance(config_nx, fill.Loess)
+        assert config_nx is not config
+
+        # Test with_ny
+        config_ny = config.with_ny(8)
+        assert isinstance(config_ny, fill.Loess)
+        assert config_ny is not config
+
+        # Test with_value_type
+        config_vt = config.with_value_type(fill.LoessValueType.DEFINED)
+        assert isinstance(config_vt, fill.Loess)
+        assert config_vt is not config
+
+    def test_loess_method_chaining(self) -> None:
+        """Test Loess method chaining."""
+        config = (
+            fill.Loess()
+            .with_epsilon(1e-6)
+            .with_first_guess(fill.FirstGuess.ZERO)
+            .with_max_iterations(100)
+            .with_num_threads(4)
+            .with_nx(12)
+            .with_ny(10)
+            .with_value_type(fill.LoessValueType.ALL)
+        )
+        assert isinstance(config, fill.Loess)
+
+    def test_loess_value_types(self) -> None:
+        """Test different value types for Loess."""
+        value_types = [
+            fill.LoessValueType.ALL,
+            fill.LoessValueType.DEFINED,
+            fill.LoessValueType.UNDEFINED,
+        ]
+
+        for value_type in value_types:
+            config = fill.Loess().with_value_type(value_type)
+            assert isinstance(config, fill.Loess)
+
+    def test_multigrid_creation(self) -> None:
+        """Test Multigrid configuration creation."""
+        config = fill.Multigrid()
+        assert isinstance(config, fill.Multigrid)
+
+    def test_multigrid_instance_methods(self) -> None:
+        """Test Multigrid instance methods."""
+        config = fill.Multigrid()
+
+        # Test with_epsilon
+        config_epsilon = config.with_epsilon(1e-8)
+        assert isinstance(config_epsilon, fill.Multigrid)
+        assert config_epsilon is not config
+
+        # Test with_first_guess
+        config_fg = config.with_first_guess(fill.FirstGuess.ZONAL_AVERAGE)
+        assert isinstance(config_fg, fill.Multigrid)
+        assert config_fg is not config
+
+        # Test with_max_iterations
+        config_iter = config.with_max_iterations(50)
+        assert isinstance(config_iter, fill.Multigrid)
+        assert config_iter is not config
+
+        # Test with_num_threads
+        config_threads = config.with_num_threads(8)
+        assert isinstance(config_threads, fill.Multigrid)
+        assert config_threads is not config
+
+        # Test with_pre_smooth
+        config_pre = config.with_pre_smooth(3)
+        assert isinstance(config_pre, fill.Multigrid)
+        assert config_pre is not config
+
+        # Test with_post_smooth
+        config_post = config.with_post_smooth(2)
+        assert isinstance(config_post, fill.Multigrid)
+        assert config_post is not config
+
+    def test_multigrid_method_chaining(self) -> None:
+        """Test Multigrid method chaining."""
+        config = (
+            fill.Multigrid()
+            .with_epsilon(1e-5)
+            .with_first_guess(fill.FirstGuess.ZERO)
+            .with_max_iterations(100)
+            .with_num_threads(4)
+            .with_pre_smooth(5)
+            .with_post_smooth(3)
+        )
+        assert isinstance(config, fill.Multigrid)
+
+    def test_first_guess_variations(self) -> None:
+        """Test different first guess strategies across all configs."""
+        first_guesses = [
+            fill.FirstGuess.ZERO,
+            fill.FirstGuess.ZONAL_AVERAGE,
+        ]
+
+        for fg in first_guesses:
+            config_gs = fill.GaussSeidel().with_first_guess(fg)
+            assert isinstance(config_gs, fill.GaussSeidel)
+
+            config_fft = fill.FFTInpaint().with_first_guess(fg)
+            assert isinstance(config_fft, fill.FFTInpaint)
+
+            config_loess = fill.Loess().with_first_guess(fg)
+            assert isinstance(config_loess, fill.Loess)
+
+            config_mg = fill.Multigrid().with_first_guess(fg)
+            assert isinstance(config_mg, fill.Multigrid)
