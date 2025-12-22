@@ -9,7 +9,7 @@ namespace pyinterp::pybind {
 auto init_fill(nb::module_& m) -> void {
   auto fill = m.def_submodule("fill", "Methods to fill missing data.");
 
-  fill::bind_loess(fill);
+  fill::pybind::bind_loess(fill);
 }
 
 }  // namespace pyinterp::pybind

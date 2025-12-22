@@ -3,9 +3,12 @@
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 
+#include "pyinterp/eigen.hpp"
+#include "pyinterp/fill/loess.hpp"
+
 namespace nb = nanobind;
 
-namespace pyinterp::pybind::fill {
+namespace pyinterp::fill::pybind {
 
 constexpr const char* const kLoessDocstring = R"(
 Fill undefined values using locally weighted regression (LOESS).
@@ -36,12 +39,14 @@ Returns:
 /// Bind LOESS function to Python module.
 /// @tparam T Scalar type
 /// @param m Python module
-template <LoessScalar T>
+template <std::floating_point T>
 void bind_loess(nanobind::module_& m) {
   m.def(
       "loess",
-      [](const RowMajorMatrix<T>& data, const config::fill::Loess& config)
-          -> RowMajorMatrix<T> { return loess(data, config); },
+      [](const EigenDRef<const RowMajorMatrix<T>>& data,
+         const config::fill::Loess& config) -> RowMajorMatrix<T> {
+        return loess(data, config);
+      },
       nanobind::arg("data"), nanobind::arg("config"), kLoessDocstring,
       nanobind::call_guard<nanobind::gil_scoped_release>());
 }
@@ -51,4 +56,4 @@ void bind_loess(nanobind::module_& m) {
   bind_loess<float>(m);
 }
 
-}  // namespace pyinterp::pybind::fill
+}  // namespace pyinterp::fill::pybind

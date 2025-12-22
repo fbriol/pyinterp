@@ -11,7 +11,7 @@
 #include "pyinterp/math.hpp"
 #include "pyinterp/parallel_for.hpp"
 
-namespace pyinterp::pybind::fill {
+namespace pyinterp::fill {
 
 /// @brief Calculate the zonal average in x direction.
 ///
@@ -33,6 +33,7 @@ void set_zonal_average(Eigen::RefBase<Derived> &grid_ref, Matrix<bool> &mask,
   auto except = std::exception_ptr(nullptr);
 
   parallel_for(
+      grid.cols(),
       [&](size_t y_start, size_t y_end) {
         try {
           // Calculation of longitude band means.
@@ -63,7 +64,7 @@ void set_zonal_average(Eigen::RefBase<Derived> &grid_ref, Matrix<bool> &mask,
           except = std::current_exception();
         }
       },
-      grid.cols(), num_threads);
+      num_threads);
 
   if (except != nullptr) {
     std::rethrow_exception(except);
@@ -125,4 +126,4 @@ constexpr auto check_windows_size(const std::string &name1, uint32_t size,
   check_windows_size(args...);
 }
 
-}  // namespace pyinterp::pybind::fill
+}  // namespace pyinterp::fill

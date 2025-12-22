@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <thread>
 
 namespace pyinterp::config {
 
@@ -80,13 +81,16 @@ class ThreadConfig {
   [[nodiscard]] constexpr auto with_num_threads(size_t value) const
       -> ThreadConfig {
     auto copy = *this;
+    if (value == 0) {
+      value = std::thread::hardware_concurrency();
+    }
     copy.num_threads_ = value;
     return copy;
   }
 
  private:
-  /// Number of threads to use (0 means use all available threads).
-  size_t num_threads_{0};
+  /// Number of threads to use (default: all available threads)
+  size_t num_threads_{std::thread::hardware_concurrency()};
 };
 
 /// Common configuration shared across all dimensions
