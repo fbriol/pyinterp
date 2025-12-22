@@ -13,7 +13,7 @@
 namespace pyinterp::fill {
 
 /// Test the detail::gauss_seidel_core function for homogeneous case (rhs=0)
-TEST(GaussSeidlCoreTest, HomogeneousSimpleGrid) {
+TEST(GaussSeidelCoreTest, HomogeneousSimpleGrid) {
   // Simple 3x3 grid with interior NaN
   RowMajorMatrix<double> grid(3, 3);
   grid << 1.0, 2.0, 3.0,  //
@@ -42,7 +42,7 @@ TEST(GaussSeidlCoreTest, HomogeneousSimpleGrid) {
 }
 
 /// Test gauss_seidel_core with relaxation parameter
-TEST(GaussSeidlCoreTest, WithRelaxation) {
+TEST(GaussSeidelCoreTest, WithRelaxation) {
   RowMajorMatrix<double> grid(3, 3);
   grid << 1.0, 2.0, 3.0,  //
       4.0, 5.0, 6.0,      //
@@ -68,7 +68,7 @@ TEST(GaussSeidlCoreTest, WithRelaxation) {
 }
 
 /// Test gauss_seidel_core with RHS
-TEST(GaussSeidlCoreTest, WithRHS) {
+TEST(GaussSeidelCoreTest, WithRHS) {
   RowMajorMatrix<double> grid(3, 3);
   grid << 1.0, 2.0, 3.0,  //
       4.0, 0.0, 6.0,      //
@@ -93,7 +93,7 @@ TEST(GaussSeidlCoreTest, WithRHS) {
 }
 
 /// Test periodic boundary condition
-TEST(GaussSeidlCoreTest, PeriodicBoundaryX) {
+TEST(GaussSeidelCoreTest, PeriodicBoundaryX) {
   RowMajorMatrix<double> grid(3, 3);
   grid << 1.0, 2.0, 3.0,  //
       4.0, 0.0, 6.0,      //
