@@ -3,10 +3,10 @@
 #include <stdexcept>
 #include <string_view>
 
+#include "pyinterp/config/common.hpp"
 #include "pyinterp/math/interpolate/geometric/bivariate.hpp"
-#include "pyinterp/pybind/config/common.hpp"
 
-namespace pyinterp::pybind::config {
+namespace pyinterp::config {
 namespace geometric {
 
 /// Method for 2D spatial interpolation.
@@ -322,4 +322,4 @@ class Quadrivariate : public BivariateBase<Quadrivariate> {
 };
 
 }  // namespace geometric
-}  // namespace pyinterp::pybind::config
+}  // namespace pyinterp::config

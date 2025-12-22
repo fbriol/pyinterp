@@ -5,9 +5,9 @@
 #include <string>
 #include <string_view>
 
-#include "pyinterp/pybind/config/common.hpp"
+#include "pyinterp/config/common.hpp"
 
-namespace pyinterp::pybind::config::fill {
+namespace pyinterp::config::fill {
 
 /// Initial guess strategy for iterative fill methods
 enum class FirstGuess : uint8_t {
@@ -316,4 +316,4 @@ class Multigrid : public FillBase<Multigrid> {
   uint32_t post_smooth_{2};
 };
 
-}  // namespace pyinterp::pybind::config::fill
+}  // namespace pyinterp::config::fill

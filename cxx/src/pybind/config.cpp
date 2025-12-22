@@ -5,16 +5,16 @@
 
 #include <optional>
 
+#include "pyinterp/config/common.hpp"
+#include "pyinterp/config/fill.hpp"
+#include "pyinterp/config/geometric.hpp"
+#include "pyinterp/config/rtree.hpp"
+#include "pyinterp/config/windowed.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
-#include "pyinterp/pybind/config/common.hpp"
-#include "pyinterp/pybind/config/fill.hpp"
-#include "pyinterp/pybind/config/geometric.hpp"
-#include "pyinterp/pybind/config/rtree.hpp"
-#include "pyinterp/pybind/config/windowed.hpp"
 
 namespace nb = nanobind;
 
-namespace pyinterp::pybind {
+namespace pyinterp {
 namespace config {
 
 template <typename Class>
@@ -30,7 +30,7 @@ auto add_common_attributes(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
   return pyclass;
 }
 
-namespace geometric {
+namespace geometric::pybind {
 
 template <typename Class>
 inline auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
@@ -72,9 +72,9 @@ inline auto bind(nb::module_& m) -> void {
                            nb::call_guard<nb::gil_scoped_release>())));
 }
 
-}  // namespace geometric
+}  // namespace geometric::pybind
 
-namespace windowed {
+namespace windowed::pybind {
 
 template <typename Class>
 auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
@@ -189,9 +189,9 @@ auto bind(nb::module_& m) -> void {
            nb::call_guard<nb::gil_scoped_release>());
 }
 
-}  // namespace windowed
+}  // namespace windowed::pybind
 
-namespace rtree {
+namespace rtree::pybind {
 
 /// @brief Add common RTree methods (k, radius, num_threads) to a class
 /// @tparam Class The configuration class type
@@ -371,9 +371,9 @@ auto bind(nb::module_& m) -> void {
                              nb::call_guard<nb::gil_scoped_release>()));
 }
 
-}  // namespace rtree
+}  // namespace rtree::pybind
 
-namespace fill {
+namespace fill::pybind {
 
 /// @brief Add common fill methods to a configuration class
 /// @tparam Class The configuration class type
@@ -488,9 +488,10 @@ auto bind(nb::module_& m) -> void {
                nb::call_guard<nb::gil_scoped_release>()));
 }
 
-}  // namespace fill
-
+}  // namespace fill::pybind
 }  // namespace config
+
+namespace pybind {
 
 auto init_config(nb::module_& m) -> void {
   auto config = m.def_submodule("config", "Interpolation configurations.");
@@ -501,10 +502,11 @@ auto init_config(nb::module_& m) -> void {
   auto rtree =
       config.def_submodule("rtree", "Configuration for RTree interpolation.");
   auto fill = config.def_submodule("fill", "Configuration for fill methods.");
-  config::geometric::bind(geometric);
-  config::windowed::bind(windowed);
-  config::rtree::bind(rtree);
-  config::fill::bind(fill);
+  config::geometric::pybind::bind(geometric);
+  config::windowed::pybind::bind(windowed);
+  config::rtree::pybind::bind(rtree);
+  config::fill::pybind::bind(fill);
 }
 
-}  // namespace pyinterp::pybind
+}  // namespace pybind
+}  // namespace pyinterp

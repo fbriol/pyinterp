@@ -11,9 +11,9 @@
 #include <cstdint>
 #include <vector>
 
+#include "pyinterp/config/fill.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/parallel_for.hpp"
-#include "pyinterp/pybind/config/fill.hpp"
 #include "pyinterp/pybind/fill/helpers.hpp"
 
 namespace pyinterp::pybind::fill {

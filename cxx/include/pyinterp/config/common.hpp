@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace pyinterp::pybind::config {
+namespace pyinterp::config {
 
 /// Method for interpolation along a single axis.
 enum class AxisMethod : uint8_t {
@@ -181,4 +181,4 @@ class Base {
 template <typename T>
 struct InterpolationTraits;
 
-}  // namespace pyinterp::pybind::config
+}  // namespace pyinterp::config

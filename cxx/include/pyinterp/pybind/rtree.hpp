@@ -14,6 +14,7 @@
 #include <tuple>
 #include <vector>
 
+#include "pyinterp/config/rtree.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geometry/geographic/coordinates.hpp"
 #include "pyinterp/geometry/geographic/spheroid.hpp"
@@ -22,7 +23,6 @@
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
 #include "pyinterp/parallel_for.hpp"
-#include "pyinterp/pybind/config/rtree.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 #include "pyinterp/serialization_buffer.hpp"
 

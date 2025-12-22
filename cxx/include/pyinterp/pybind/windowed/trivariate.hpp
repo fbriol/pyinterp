@@ -4,6 +4,7 @@
 #include <nanobind/nanobind.h>
 
 #include "pyinterp/broadcast.hpp"
+#include "pyinterp/config/windowed.hpp"
 #include "pyinterp/math/interpolate/bivariate.hpp"
 #include "pyinterp/math/interpolate/cache.hpp"
 #include "pyinterp/math/interpolate/cache_loader.hpp"
@@ -11,7 +12,6 @@
 #include "pyinterp/math/interpolate/linear.hpp"
 #include "pyinterp/math/interpolate/nearest.hpp"
 #include "pyinterp/parallel_for.hpp"
-#include "pyinterp/pybind/config/windowed.hpp"
 
 namespace pyinterp::pybind::windowed {
 namespace detail {

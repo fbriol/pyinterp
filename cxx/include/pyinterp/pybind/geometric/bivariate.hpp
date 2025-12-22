@@ -10,11 +10,11 @@
 #include <optional>
 
 #include "pyinterp/broadcast.hpp"
+#include "pyinterp/config/geometric.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/math/interpolate/geometric/bivariate.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
-#include "pyinterp/pybind/config/geometric.hpp"
 #include "pyinterp/pybind/grid.hpp"
 
 namespace pyinterp::pybind::geometric {

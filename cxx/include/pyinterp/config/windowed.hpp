@@ -4,11 +4,11 @@
 #include <string_view>
 #include <variant>
 
+#include "pyinterp/config/common.hpp"
 #include "pyinterp/math/axis.hpp"
 #include "pyinterp/math/interpolate/factory.hpp"
-#include "pyinterp/pybind/config/common.hpp"
 
-namespace pyinterp::pybind::config {
+namespace pyinterp::config {
 namespace windowed {
 
 /// Type alias for boundary mode
@@ -563,4 +563,4 @@ class Quadrivariate : public WindowBase<Quadrivariate>,
 };
 
 }  // namespace windowed
-}  // namespace pyinterp::pybind::config
+}  // namespace pyinterp::config

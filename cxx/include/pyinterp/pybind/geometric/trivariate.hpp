@@ -9,12 +9,12 @@
 #include <optional>
 
 #include "pyinterp/broadcast.hpp"
+#include "pyinterp/config/geometric.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/math/interpolate/geometric/bivariate.hpp"
 #include "pyinterp/math/interpolate/geometric/multivariate.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
-#include "pyinterp/pybind/config/geometric.hpp"
 
 namespace pyinterp::pybind::geometric {
 namespace detail {

@@ -13,20 +13,17 @@
 #include <tuple>
 #include <vector>
 
+#include "pyinterp/config/rtree.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geometry/geographic/point.hpp"
 #include "pyinterp/geometry/rtree.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
 #include "pyinterp/parallel_for.hpp"
-#include "pyinterp/pybind/config/rtree.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 #include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::geometry::geographic::pybind {
-
-/// Alias for configuration namespace
-namespace config = pyinterp::pybind::config;
 
 using pyinterp::pybind::NanobindArray1DUInt8;
 

@@ -3,13 +3,13 @@
 #include <cstdint>
 #include <optional>
 
+#include "pyinterp/config/common.hpp"
 #include "pyinterp/geometry/rtree.hpp"
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
-#include "pyinterp/pybind/config/common.hpp"
 
-namespace pyinterp::pybind::config::rtree {
+namespace pyinterp::config::rtree {
 
 /// @brief Base class for RTree interpolation configurations using CRTP.
 /// @tparam Derived The derived configuration class.
@@ -352,4 +352,4 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
   double arg_{0};
 };
 
-}  // namespace pyinterp::pybind::config::rtree
+}  // namespace pyinterp::config::rtree
