@@ -16,7 +16,7 @@
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
 
-namespace pyinterp::pybind::geometric {
+namespace pyinterp::geometric::pybind {
 namespace detail {
 
 /// @brief Result type for single-point trivariate interpolation.
@@ -247,4 +247,4 @@ auto bind_trivariate(nanobind::module_& m) -> void {
       detail::kTrivariateDocstring);
 }
 
-}  // namespace pyinterp::pybind::geometric
+}  // namespace pyinterp::geometric::pybind

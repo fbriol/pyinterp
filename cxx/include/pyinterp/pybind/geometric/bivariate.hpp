@@ -17,7 +17,13 @@
 #include "pyinterp/parallel_for.hpp"
 #include "pyinterp/pybind/grid.hpp"
 
-namespace pyinterp::pybind::geometric {
+namespace pyinterp::geometric::pybind {
+
+/// @brief Alias for the two-dimensional grid type
+/// @tparam DataType Data type stored in the grid
+template <typename DataType>
+using Grid2D = pyinterp::pybind::Grid2D<DataType>;
+
 namespace detail {
 
 /// @brief Alias for the interpolation result type
@@ -166,4 +172,4 @@ auto bind_bivariate(nanobind::module_& m) -> void {
       nanobind::call_guard<nanobind::gil_scoped_release>());
 }
 
-}  // namespace pyinterp::pybind::geometric
+}  // namespace pyinterp::geometric::pybind

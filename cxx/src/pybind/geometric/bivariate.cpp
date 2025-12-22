@@ -6,11 +6,18 @@
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/grid_dispatch.hpp"
 
-namespace pyinterp::pybind::geometric {
+namespace pyinterp::geometric::pybind {
 
 // Define Point alias for convenience
 template <typename T>
 using Point = geometry::SphericalPoint<T>;
+
+// Define GridHolder alias for convenience
+using GridHolder = pyinterp::pybind::GridHolder;
+
+// Define GridDispatcher alias for convenience
+template <template <class> class PointType>
+using GridDispatcher = pyinterp::pybind::GridDispatcher<PointType>;
 
 namespace {
 
@@ -45,4 +52,4 @@ auto init_bivariate(nanobind::module_& m) -> void {
       detail::kBivariateDocstring);
 }
 
-}  // namespace pyinterp::pybind::geometric
+}  // namespace pyinterp::geometric::pybind

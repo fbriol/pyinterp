@@ -13,7 +13,7 @@
 #include "pyinterp/math/interpolate/nearest.hpp"
 #include "pyinterp/parallel_for.hpp"
 
-namespace pyinterp::pybind::windowed {
+namespace pyinterp::windowed::pybind {
 namespace detail {
 
 /// @brief Alias for the interpolation result type
@@ -193,4 +193,4 @@ auto bind_trivariate(nanobind::module_& m) -> void {
       detail::kTrivariateDocstring);
 }
 
-}  // namespace pyinterp::pybind::windowed
+}  // namespace pyinterp::windowed::pybind

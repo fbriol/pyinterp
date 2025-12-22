@@ -2,10 +2,32 @@
 
 #include <nanobind/nanobind.h>
 
-namespace pyinterp::pybind::windowed {
+namespace pyinterp {
+namespace windowed::pybind {
 
+/// @brief Initialize bivariate bindings.
+/// @param[in,out] m Nanobind module
 auto init_bivariate(nanobind::module_& m) -> void;
+
+/// @brief Initialize trivariate bindings.
+/// @param[in,out] m Nanobind module
 auto init_trivariate(nanobind::module_& m) -> void;
+
+/// @brief Initialize quadrivariate bindings.
+/// @param[in,out] m Nanobind module
 auto init_quadrivariate(nanobind::module_& m) -> void;
 
-}  // namespace pyinterp::pybind::windowed
+}  // namespace windowed::pybind
+
+namespace pybind {
+
+/// @brief Initialize windowed bindings.
+/// @param[in,out] m Nanobind module
+inline auto init_windowed(nanobind::module_& m) -> void {
+  windowed::pybind::init_bivariate(m);
+  windowed::pybind::init_trivariate(m);
+  windowed::pybind::init_quadrivariate(m);
+}
+
+}  // namespace pybind
+}  // namespace pyinterp

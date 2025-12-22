@@ -5,11 +5,18 @@
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/grid_dispatch.hpp"
 
-namespace pyinterp::pybind::windowed {
+namespace pyinterp::windowed::pybind {
 
 // Dummy point type for dispatcher (windowed doesn't use Point template)
 template <typename T>
 struct DummyPoint {};
+
+// Define GridHolder alias for convenience
+using GridHolder = pyinterp::pybind::GridHolder;
+
+// Define GridDispatcher alias for convenience
+template <template <class> class PointType>
+using GridDispatcher = pyinterp::pybind::GridDispatcher<PointType>;
 
 namespace {
 
@@ -49,4 +56,4 @@ auto init_quadrivariate(nanobind::module_& m) -> void {
       nb::arg("config"), detail::kQuadrivariateDocstring);
 }
 
-}  // namespace pyinterp::pybind::windowed
+}  // namespace pyinterp::windowed::pybind

@@ -17,12 +17,8 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_config(m);
   pyinterp::pybind::init_axis(m);
   pyinterp::pybind::init_grids(m);
-  pyinterp::pybind::geometric::init_bivariate(m);
-  pyinterp::pybind::geometric::init_trivariate(m);
-  pyinterp::pybind::geometric::init_quadrivariate(m);
-  pyinterp::pybind::windowed::init_bivariate(m);
-  pyinterp::pybind::windowed::init_trivariate(m);
-  pyinterp::pybind::windowed::init_quadrivariate(m);
+  pyinterp::pybind::init_geometric(m);
+  pyinterp::pybind::init_windowed(m);
   pyinterp::pybind::init_geometry(m);
   pyinterp::pybind::init_geohash(m);
   pyinterp::pybind::init_rtree_3d(m);

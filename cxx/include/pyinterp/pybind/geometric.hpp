@@ -2,7 +2,8 @@
 
 #include <nanobind/nanobind.h>
 
-namespace pyinterp::pybind::geometric {
+namespace pyinterp {
+namespace geometric::pybind {
 
 /// @brief Initialize bivariate bindings.
 /// @param[in,out] m Nanobind module
@@ -16,4 +17,17 @@ auto init_trivariate(nanobind::module_& m) -> void;
 /// @param[in,out] m Nanobind module
 auto init_quadrivariate(nanobind::module_& m) -> void;
 
-}  // namespace pyinterp::pybind::geometric
+}  // namespace geometric::pybind
+
+namespace pybind {
+
+/// @brief Initialize geometric bindings.
+/// @param[in,out] m Nanobind module
+inline auto init_geometric(nanobind::module_& m) -> void {
+  geometric::pybind::init_bivariate(m);
+  geometric::pybind::init_trivariate(m);
+  geometric::pybind::init_quadrivariate(m);
+}
+
+}  // namespace pybind
+}  // namespace pyinterp
