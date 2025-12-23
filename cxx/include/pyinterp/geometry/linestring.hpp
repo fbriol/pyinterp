@@ -147,11 +147,13 @@ class LineString {
   /// @throw std::invalid_argument If the state is invalid or empty.
   [[nodiscard]] static auto unpack(serialization::Reader& state) -> LineString {
     if (state.size() == 0) {
-      throw std::invalid_argument("Cannot restore ring from empty state.");
+      throw std::invalid_argument(
+          "Cannot restore linestring from empty state.");
     }
     auto magic_number = state.read<uint32_t>();
     if (magic_number != kMagicNumber) {
-      throw std::invalid_argument("Invalid ring state (bad magic number).");
+      throw std::invalid_argument(
+          "Invalid linestring state (bad magic number).");
     }
     auto points = state.read_vector<Point>();
     return LineString(std::move(points));
