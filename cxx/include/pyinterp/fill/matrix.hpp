@@ -110,13 +110,7 @@ void matrix(EigenDRef<Matrix<T>> x, const T &fill_value) {
 /// @param[in] fill_value Value to use for missing data.
 template <std::floating_point T>
 inline auto vector(Eigen::Ref<Vector<T>> array, const T &fill_value) {
-  Vector<bool> mask;
-  if (std::isnan(fill_value)) {
-    mask = Eigen::isnan(array.array());
-  } else {
-    mask = array.array() == fill_value;
-  }
-  detail::fill_line<T>(array, mask);
+  matrix(EigenDRef<Matrix<T>>(array), fill_value);
 }
 
 }  // namespace pyinterp::fill
