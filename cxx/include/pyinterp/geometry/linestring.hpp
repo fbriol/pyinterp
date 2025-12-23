@@ -107,6 +107,30 @@ class LineString {
     return points_.end();
   }
 
+  /// @brief Get a reference to the first point
+  /// @returns Reference to the first point
+  [[nodiscard]] constexpr auto front() noexcept -> Point& {
+    return points_.front();
+  }
+
+  /// @brief Get a const reference to the first point
+  /// @returns Const reference to the first point
+  [[nodiscard]] constexpr auto front() const noexcept -> const Point& {
+    return points_.front();
+  }
+
+  /// @brief Get a reference to the last point
+  /// @returns Reference to the last point
+  [[nodiscard]] constexpr auto back() noexcept -> Point& {
+    return points_.back();
+  }
+
+  /// @brief Get a const reference to the last point
+  /// @returns Const reference to the last point
+  [[nodiscard]] constexpr auto back() const noexcept -> const Point& {
+    return points_.back();
+  }
+
   /// @brief Serialize the ring state for storage or transmission.
   /// @return Serialized state as a vector of points.
   [[nodiscard]] constexpr auto pack() const -> serialization::Writer {

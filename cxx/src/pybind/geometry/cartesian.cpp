@@ -16,6 +16,7 @@ void init_cartesian(nanobind::module_& m) {
   geometry::cartesian::pybind::init_polygon(cartesian_module);
   geometry::cartesian::pybind::init_multipoint(cartesian_module);
   geometry::cartesian::pybind::init_multipolygon(cartesian_module);
+  geometry::cartesian::pybind::init_crossover(cartesian_module);
   geometry::cartesian::pybind::init_algorithms(algorithms_module);
 }
 

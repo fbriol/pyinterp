@@ -2,6 +2,8 @@
 
 #include <boost/geometry.hpp>
 
+#include "pyinterp/geometry/point.hpp"
+
 namespace pyinterp::geometry::cartesian {
 
 /// @brief Type representing a point in cartesian coordinates
@@ -51,6 +53,13 @@ class Point {
     I == 0 ? x_ = v : y_ = v;
   }
 
+  /// @brief Equality operator
+  /// @param[in] other Point to compare with
+  /// @return True if both points are equal
+  constexpr auto operator==(const Point& other) const noexcept -> bool {
+    return x_ == other.x_ && y_ == other.y_;
+  }
+
  private:
   /// @brief X coordinate
   double x_{};
@@ -92,3 +101,11 @@ struct access<pyinterp::geometry::cartesian::Point, I> {
 };
 
 }  // namespace boost::geometry::traits
+
+template <>
+struct std::hash<pyinterp::geometry::cartesian::Point> {
+  auto operator()(const pyinterp::geometry::cartesian::Point& point)
+      const noexcept -> std::size_t {
+    return pyinterp::geometry::hash(point);
+  }
+};

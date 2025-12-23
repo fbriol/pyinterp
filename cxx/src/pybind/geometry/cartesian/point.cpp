@@ -83,9 +83,8 @@ auto init_point(nb::module_& m) -> void {
       // Hash support for use in sets/dicts
       .def("__hash__",
            [](const Point& self) {
-             auto h1 = std::hash<double>{}(self.x());
-             auto h2 = std::hash<double>{}(self.y());
-             return h1 ^ (h2 << 1);
+             std::hash<Point> hasher;
+             return hasher(self);
            })
 
       // Pickle support

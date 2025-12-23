@@ -1,8 +1,9 @@
 import collections.abc
-from typing import Generic, Iterator, TypeVar, overload, Literal
+from typing import Iterator, TypeVar, overload, Literal
 from ....type_hints import NDArray1DFloat64, NDArray1DUInt32, NDArray2DFloat64
 import numpy as np
 from ... import config
+from .algorithms import Strategy
 
 _ConceptElement = TypeVar("_ConceptElement", Point, LineString, Polygon)
 
@@ -64,6 +65,28 @@ class Coordinates:
     ) -> tuple[NDArray1DFloat64, NDArray1DFloat64, NDArray1DFloat64]: ...
     @property
     def spheroid(self) -> Spheroid: ...
+
+class Crossover:
+    def __init__(self, line1: LineString, line2: LineString) -> None: ...
+    def find_all(
+        self,
+        point: Point,
+        spheroid: Spheroid | None = ...,
+        strategy: Strategy = ...,
+    ) -> MultiPoint: ...
+    def find_unique(
+        self,
+        point: Point,
+        spheroid: Spheroid | None = ...,
+        strategy: Strategy = ...,
+    ) -> Point: ...
+    def nearest(
+        self, point: Point, predicate: float
+    ) -> tuple[int, int] | None: ...
+    @property
+    def line1(self) -> LineString: ...
+    @property
+    def line2(self) -> LineString: ...
 
 class LineString:
     @overload

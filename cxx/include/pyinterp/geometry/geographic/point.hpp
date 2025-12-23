@@ -2,6 +2,8 @@
 
 #include <boost/geometry.hpp>
 
+#include "pyinterp/geometry/point.hpp"
+
 namespace pyinterp::geometry::geographic {
 
 /// @brief Type representing a point in geographic coordinates
@@ -52,6 +54,13 @@ class Point {
     I == 0 ? lon_ = v : lat_ = v;
   }
 
+  /// @brief Equality operator
+  /// @param[in] other Point to compare with
+  /// @return True if both points are equal
+  constexpr auto operator==(const Point& other) const noexcept -> bool {
+    return lon_ == other.lon_ && lat_ == other.lat_;
+  }
+
  private:
   /// @brief Longitude in degrees
   double lon_{};
@@ -94,3 +103,11 @@ struct access<pyinterp::geometry::geographic::Point, I> {
 };
 
 }  // namespace boost::geometry::traits
+
+template <>
+struct std::hash<pyinterp::geometry::geographic::Point> {
+  auto operator()(const pyinterp::geometry::geographic::Point& point)
+      const noexcept -> std::size_t {
+    return pyinterp::geometry::hash(point);
+  }
+};

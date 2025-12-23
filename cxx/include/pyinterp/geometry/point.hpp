@@ -1,10 +1,11 @@
 #pragma once
 
 #include <boost/geometry.hpp>
+#include <boost/geometry/core/cs.hpp>
+#include <boost/geometry/geometries/point.hpp>
 #include <concepts>
 
-#include "boost/geometry/core/cs.hpp"
-#include "boost/geometry/geometries/point.hpp"
+#include "pyinterp/geometry/point_traits.hpp"
 
 namespace pyinterp::geometry {
 
@@ -36,5 +37,21 @@ using GeographicPoint = boost::geometry::model::point<
 template <std::floating_point T>
 using SphericalPoint = boost::geometry::model::point<
     T, 2, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
+
+/// @brief Hash function for a point
+/// @tparam Point Type of point
+/// @param[in] point Point to hash
+/// @return Hash value
+template <typename Point>
+constexpr auto hash(const Point& point) noexcept -> size_t {
+  size_t seed = 0;
+  auto combine = [&](double v) {
+    seed ^= std::hash<double>{}(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  };
+  for (size_t ix = 0; ix < boost::geometry::dimension<Point>::value; ++ix) {
+    combine(geometry::point::get(point, ix));
+  }
+  return seed;
+}
 
 }  // namespace pyinterp::geometry
