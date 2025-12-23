@@ -395,12 +395,8 @@ auto add_fill_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
            "Number of threads to use. A value of 0 means that all available "
            "cores will be used.",
            nb::call_guard<nb::gil_scoped_release>())
-      .def("first_guess", &Class::first_guess, "Get the first guess strategy.",
-           nb::call_guard<nb::gil_scoped_release>())
-      .def("max_iterations", &Class::max_iterations,
-           "Get the maximum number of iterations.",
-           nb::call_guard<nb::gil_scoped_release>())
-      .def("epsilon", &Class::epsilon, "Get the convergence threshold.",
+      .def("with_is_periodic", &Class::with_is_periodic, nb::arg("value"),
+           "Set whether the X-axis is periodic.",
            nb::call_guard<nb::gil_scoped_release>());
   return pyclass;
 }
