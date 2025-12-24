@@ -45,9 +45,6 @@ Raises:
 constexpr auto kFindUniqueDoc = R"doc(
 Find a unique crossover point between the two linestrings.
 
-Args:
-    point: Reference point (currently not used in implementation).
-
 Returns:
     The unique crossover point if found; an undefined point otherwise.
 
@@ -57,9 +54,6 @@ Raises:
 
 constexpr auto kFindAllDoc = R"doc(
 Find all crossover points between the two linestrings.
-
-Args:
-    point: Reference point (currently not used in implementation).
 
 Returns:
     MultiPoint containing all crossover points found.
@@ -92,20 +86,19 @@ auto init_crossover(nb::module_& m) -> void {
 
       .def(
           "find_unique",
-          [](const Crossover& self, const Point& point) {
+          [](const Crossover& self) {
             nb::gil_scoped_release release;
-            return self.find_unique(point);
+            return self.find_unique();
           },
-          "point"_a, kFindUniqueDoc)
+          kFindUniqueDoc)
 
       .def(
           "find_all",
-          [](const Crossover& self, const Point& point) {
+          [](const Crossover& self) {
             nb::gil_scoped_release release;
-            return self.find_all(point);
+            return self.find_all();
           },
-          "point"_a, kFindAllDoc)
-
+          kFindAllDoc)
       .def(
           "nearest",
           [](const Crossover& self, const Point& point, double predicate) {

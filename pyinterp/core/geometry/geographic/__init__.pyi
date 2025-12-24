@@ -70,13 +70,11 @@ class Crossover:
     def __init__(self, line1: LineString, line2: LineString) -> None: ...
     def find_all(
         self,
-        point: Point,
         spheroid: Spheroid | None = ...,
         strategy: Strategy = ...,
     ) -> MultiPoint: ...
     def find_unique(
         self,
-        point: Point,
         spheroid: Spheroid | None = ...,
         strategy: Strategy = ...,
     ) -> Point: ...

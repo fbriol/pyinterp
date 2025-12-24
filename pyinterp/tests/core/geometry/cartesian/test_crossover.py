@@ -69,9 +69,7 @@ def test_crossover_find_unique() -> None:
     line2 = LineString(x2, y2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(5.0, 5.0)
-
-    intersection = crossover.find_unique(reference_point)
+    intersection = crossover.find_unique()
 
     # Should find the intersection at (10, 10)
     assert intersection.x == 10.0
@@ -90,9 +88,7 @@ def test_crossover_find_unique_no_intersection() -> None:
     line2 = LineString(x2, y2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(5.0, 2.5)
-
-    intersection = crossover.find_unique(reference_point)
+    intersection = crossover.find_unique()
 
     # Should return undefined point (check that it exists but is invalid)
     # An undefined point typically has x=0, y=0 or similar
@@ -112,12 +108,11 @@ def test_crossover_find_unique_multiple_error() -> None:
     line2 = LineString(x2, y2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 2.5)
 
     # This might raise a RuntimeError if multiple distinct points are found
     # Or it might return a single point if they're considered the same
     try:
-        intersection = crossover.find_unique(reference_point)
+        intersection = crossover.find_unique()
         assert intersection is not None
     except RuntimeError as e:
         assert "Multiple crossover points" in str(e)
@@ -135,9 +130,7 @@ def test_crossover_find_all() -> None:
     line2 = LineString(x2, y2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 10.0)
-
-    all_intersections = crossover.find_all(reference_point)
+    all_intersections = crossover.find_all()
 
     # Should find at least one intersection
     assert len(all_intersections) >= 1
@@ -155,9 +148,7 @@ def test_crossover_find_all_no_intersection() -> None:
     line2 = LineString(x2, y2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 2.5)
-
-    all_intersections = crossover.find_all(reference_point)
+    all_intersections = crossover.find_all()
 
     # Should return empty MultiPoint or MultiPoint with 0 points
     assert len(all_intersections) == 0
@@ -266,7 +257,5 @@ def test_crossover_antimeridian_handling() -> None:
     # Should handle antimeridian crossing without error
     crossover = Crossover(line1, line2)
     assert crossover is not None
-
-    reference_point = Point(180.0, 5.0)
-    intersection = crossover.find_unique(reference_point)
+    intersection = crossover.find_unique()
     assert intersection is not None

@@ -60,10 +60,7 @@ def test_crossover_find_unique() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 5.0)
-
-    # Use default spheroid and strategy
-    intersection = crossover.find_unique(reference_point)
+    intersection = crossover.find_unique()
 
     # Should find an intersection
     assert intersection is not None
@@ -80,12 +77,10 @@ def test_crossover_find_unique_with_spheroid() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 5.0)
 
     # Use WGS84 spheroid explicitly
     spheroid = Spheroid()  # Default is WGS84
     intersection = crossover.find_unique(
-        reference_point,
         spheroid,
         Strategy.ANDOYER,
     )
@@ -104,7 +99,6 @@ def test_crossover_find_unique_with_strategy() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 5.0)
 
     # Test with different strategies
     strategies = [
@@ -115,7 +109,6 @@ def test_crossover_find_unique_with_strategy() -> None:
 
     for strategy in strategies:
         intersection = crossover.find_unique(
-            reference_point,
             None,  # Use default spheroid
             strategy,
         )
@@ -134,9 +127,7 @@ def test_crossover_find_unique_no_intersection() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 5.0)
-
-    intersection = crossover.find_unique(reference_point)
+    intersection = crossover.find_unique()
 
     # Should return undefined point when no intersection
     assert intersection is not None
@@ -154,11 +145,10 @@ def test_crossover_find_unique_multiple_error() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 2.5)
 
     # This might raise a RuntimeError if multiple distinct points are found
     try:
-        intersection = crossover.find_unique(reference_point)
+        intersection = crossover.find_unique()
         assert intersection is not None
     except RuntimeError as e:
         assert "Multiple crossover points" in str(e)
@@ -176,9 +166,7 @@ def test_crossover_find_all() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 5.0)
-
-    all_intersections = crossover.find_all(reference_point)
+    all_intersections = crossover.find_all()
 
     # Should find at least one intersection or be empty
     assert all_intersections is not None
@@ -196,11 +184,9 @@ def test_crossover_find_all_with_parameters() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 5.0)
 
     spheroid = Spheroid()
     all_intersections = crossover.find_all(
-        reference_point,
         spheroid,
         Strategy.THOMAS,
     )
@@ -220,9 +206,7 @@ def test_crossover_find_all_no_intersection() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(10.0, 2.5)
-
-    all_intersections = crossover.find_all(reference_point)
+    all_intersections = crossover.find_all()
 
     # Should return empty MultiPoint
     assert len(all_intersections) == 0
@@ -290,8 +274,7 @@ def test_crossover_antimeridian_handling() -> None:
     crossover = Crossover(line1, line2)
     assert crossover is not None
 
-    reference_point = Point(180.0, 5.0)
-    intersection = crossover.find_unique(reference_point)
+    intersection = crossover.find_unique()
     assert intersection is not None
 
 
@@ -349,14 +332,13 @@ def test_crossover_polar_regions() -> None:
     line2 = LineString(lon2, lat2)
 
     crossover = Crossover(line1, line2)
-    reference_point = Point(90.0, 85.8)
 
     # Should handle polar calculations and find all intersections
-    all_intersections = crossover.find_all(reference_point)
+    all_intersections = crossover.find_all()
 
     # Boost finds 3 intersections in polar regions
     assert len(all_intersections) == 3
 
     # find_unique should raise RuntimeError with multiple distinct intersections
     with pytest.raises(RuntimeError, match="Multiple crossover points"):
-        crossover.find_unique(reference_point)
+        crossover.find_unique()

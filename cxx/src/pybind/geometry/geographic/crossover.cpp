@@ -46,7 +46,6 @@ constexpr auto kFindUniqueDoc = R"doc(
 Find a unique crossover point between the two linestrings.
 
 Args:
-    point: Reference point (currently not used in implementation).
     spheroid: Optional spheroid for geodetic calculations. If not provided,
         uses WGS84.
     strategy: Calculation strategy (default: Andoyer).
@@ -62,7 +61,6 @@ constexpr auto kFindAllDoc = R"doc(
 Find all crossover points between the two linestrings.
 
 Args:
-    point: Reference point (currently not used in implementation).
     spheroid: Optional spheroid for geodetic calculations. If not provided,
         uses WGS84.
     strategy: Calculation strategy (default: Andoyer).
@@ -98,25 +96,23 @@ auto init_crossover(nb::module_& m) -> void {
 
       .def(
           "find_unique",
-          [](const Crossover& self, const Point& point,
-             const std::optional<Spheroid>& spheroid,
+          [](const Crossover& self, const std::optional<Spheroid>& spheroid,
              const StrategyMethod strategy) {
             nb::gil_scoped_release release;
-            return self.find_unique(point, spheroid, strategy);
+            return self.find_unique(spheroid, strategy);
           },
-          "point"_a, "spheroid"_a = std::nullopt,
-          "strategy"_a = StrategyMethod::kAndoyer, kFindUniqueDoc)
+          "spheroid"_a = std::nullopt, "strategy"_a = StrategyMethod::kAndoyer,
+          kFindUniqueDoc)
 
       .def(
           "find_all",
-          [](const Crossover& self, const Point& point,
-             const std::optional<Spheroid>& spheroid,
+          [](const Crossover& self, const std::optional<Spheroid>& spheroid,
              const StrategyMethod strategy) {
             nb::gil_scoped_release release;
-            return self.find_all(point, spheroid, strategy);
+            return self.find_all(spheroid, strategy);
           },
-          "point"_a, "spheroid"_a = std::nullopt,
-          "strategy"_a = StrategyMethod::kAndoyer, kFindAllDoc)
+          "spheroid"_a = std::nullopt, "strategy"_a = StrategyMethod::kAndoyer,
+          kFindAllDoc)
 
       .def(
           "nearest",

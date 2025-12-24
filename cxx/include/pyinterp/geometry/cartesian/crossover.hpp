@@ -32,10 +32,9 @@ class Crossover : public geometry::Crossover<Point> {
   }
 
   /// @brief Find a unique crossover point between the two linestrings
-  /// @param[in] point The point to which the nearest crossover is sought
   /// @return The unique crossover point if found; an undefined point otherwise
   /// @throws std::runtime_error if multiple crossover points are found
-  [[nodiscard]] auto find_unique(const Point &point) const -> Point {
+  [[nodiscard]] auto find_unique() const -> Point {
     auto points = Crossover::intersection_point(line1_, line2_);
     if (points.empty()) {
       return {};
@@ -57,9 +56,8 @@ class Crossover : public geometry::Crossover<Point> {
   }
 
   /// @brief Find all crossover points between the two linestrings
-  /// @param[in] point The point to which the nearest crossover is sought
   /// @return All crossover points found as a MultiPoint object
-  [[nodiscard]] auto find_all(const Point &point) const -> MultiPoint {
+  [[nodiscard]] auto find_all() const -> MultiPoint {
     auto points = Crossover::intersection_point(line1(), line2());
     return MultiPoint(std::move(points));
   }
