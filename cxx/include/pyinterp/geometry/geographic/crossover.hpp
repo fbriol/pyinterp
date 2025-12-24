@@ -32,13 +32,14 @@ class Crossover : public geometry::Crossover<Point> {
   /// @brief Find a unique crossover point between the two linestrings
   /// @param[in] spheroid Optional spheroid for geodetic calculations
   /// @param[in] strategy Calculation strategy
-  /// @return The unique crossover point if found; an undefined point otherwise
+  /// @return The unique crossover point if found; std::nullopt otherwise
   /// @throws std::runtime_error if multiple crossover points are found
   [[nodiscard]] auto find_unique(const std::optional<Spheroid>& spheroid,
-                                 const StrategyMethod strategy) const -> Point {
+                                 const StrategyMethod strategy) const
+      -> std::optional<Point> {
     auto points = intersection_point(line1_, line2_, spheroid, strategy);
     if (points.empty()) {
-      return {};
+      return std::nullopt;
     }
     if (points.size() == 1) {
       return points.front();

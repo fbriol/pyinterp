@@ -70,6 +70,7 @@ def test_crossover_find_unique() -> None:
 
     crossover = Crossover(line1, line2)
     intersection = crossover.find_unique()
+    assert intersection is not None
 
     # Should find the intersection at (10, 10)
     assert intersection.x == 10.0
@@ -90,9 +91,8 @@ def test_crossover_find_unique_no_intersection() -> None:
     crossover = Crossover(line1, line2)
     intersection = crossover.find_unique()
 
-    # Should return undefined point (check that it exists but is invalid)
-    # An undefined point typically has x=0, y=0 or similar
-    assert intersection is not None
+    # Should return None when no intersection
+    assert intersection is None
 
 
 def test_crossover_find_unique_multiple_error() -> None:

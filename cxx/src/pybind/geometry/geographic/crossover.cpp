@@ -51,7 +51,7 @@ Args:
     strategy: Calculation strategy (default: Andoyer).
 
 Returns:
-    The unique crossover point if found; an undefined point otherwise.
+    The unique crossover point if found; None otherwise.
 
 Raises:
     RuntimeError: If multiple distinct crossover points are found.

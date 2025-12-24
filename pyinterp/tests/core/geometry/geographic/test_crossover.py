@@ -129,8 +129,8 @@ def test_crossover_find_unique_no_intersection() -> None:
     crossover = Crossover(line1, line2)
     intersection = crossover.find_unique()
 
-    # Should return undefined point when no intersection
-    assert intersection is not None
+    # Should return None when no intersection
+    assert intersection is None
 
 
 def test_crossover_find_unique_multiple_error() -> None:
