@@ -49,10 +49,6 @@ add_testcase(statistics "${statistics_src}")
 file(GLOB_RECURSE geometry_src "${CMAKE_CURRENT_SOURCE_DIR}/geometry/*.cpp")
 add_testcase(geometry "${geometry_src}" BLAS::BLAS)
 
-# geodetic
-file(GLOB_RECURSE geodetic_src "${CMAKE_CURRENT_SOURCE_DIR}/geodetic/*.cpp")
-add_testcase(geodetic "${geodetic_src}")
-
 # geohash
 file(GLOB_RECURSE geohash_src "${CMAKE_CURRENT_SOURCE_DIR}/geohash/*.cpp")
 add_testcase(geohash "${geohash_src}" pyinterp)
