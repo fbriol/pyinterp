@@ -40,19 +40,13 @@ class Crossover {
   /// @brief Finds the nearest vertices in both linestrings to a given point
   /// using the golden-section search algorithm.
   /// @param[in] point The point to which the nearest vertices are sought
-  /// @param[in] predicate Maximum acceptable distance to consider a vertex as
-  /// nearest
-  /// @return An optional tuple containing the indices of the nearest vertices
-  /// in both linestrings if they are within the specified predicate distance;
-  /// std::nullopt otherwise
-  [[nodiscard]] auto nearest(const Point& point, const double predicate) const
-      -> std::optional<std::tuple<size_t, size_t>> {
+  /// @return A tuple containing the indices of the nearest vertices
+  /// in both linestrings
+  [[nodiscard]] auto nearest(const Point& point) const
+      -> std::tuple<size_t, size_t> {
     auto p1 = Crossover::nearest_vertex_golden(point, line1_);
     auto p2 = Crossover::nearest_vertex_golden(point, line2_);
-    if (p1.second <= predicate && p2.second <= predicate) {
-      return {std::make_tuple(p1.first, p2.first)};
-    }
-    return std::nullopt;
+    return {p1.first, p2.first};
   }
 
   /// @brief Serialize the Crossover state for storage or transmission.

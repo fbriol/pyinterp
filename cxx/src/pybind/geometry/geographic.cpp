@@ -20,7 +20,6 @@ void init_geographic(nanobind::module_& m) {
   geometry::geographic::pybind::init_coordinates(geographic_module);
   geometry::geographic::pybind::init_rtree(geographic_module);
   geometry::geographic::pybind::init_algorithms(algorithms_module);
-  geometry::geographic::pybind::init_crossover(geographic_module);
 }
 
 }  // namespace pyinterp::geometry::pybind

@@ -1,1 +1,1 @@
-from . import geographic, cartesian
+from . import geographic, cartesian, satellite

@@ -45,7 +45,7 @@ template <std::floating_point T>
 /// (meters)
 /// @param[in] half_gap Half of the gap between the nadir and the first pixel
 /// (meters)
-/// @param[in] half_swath Half of the swath width (meters)
+/// @param[in] half_swath Half of the swath width (pixels)
 /// @param[in] spheroid Optional spheroid model
 /// @return Tuple of longitude and latitude matrices of the swath
 template <std::floating_point T>

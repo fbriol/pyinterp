@@ -1,0 +1,11 @@
+#pragma once
+
+#include <nanobind/nanobind.h>
+
+namespace pyinterp::geometry::pybind {
+
+/// @brief Initialize the satellite submodule.
+/// @param[in,out] m The parent nanobind module.
+auto init_satellite(nanobind::module_& m) -> void;
+
+}  // namespace pyinterp::geometry::pybind

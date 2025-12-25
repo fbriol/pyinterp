@@ -66,26 +66,6 @@ class Coordinates:
     @property
     def spheroid(self) -> Spheroid: ...
 
-class Crossover:
-    def __init__(self, line1: LineString, line2: LineString) -> None: ...
-    def find_all(
-        self,
-        spheroid: Spheroid | None = ...,
-        strategy: Strategy = ...,
-    ) -> MultiPoint: ...
-    def find_unique(
-        self,
-        spheroid: Spheroid | None = ...,
-        strategy: Strategy = ...,
-    ) -> Point | None: ...
-    def nearest(
-        self, point: Point, predicate: float
-    ) -> tuple[int, int] | None: ...
-    @property
-    def line1(self) -> LineString: ...
-    @property
-    def line2(self) -> LineString: ...
-
 class LineString:
     @overload
     def __init__(self) -> None: ...
