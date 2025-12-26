@@ -4,59 +4,15 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 
-#include <mutex>
 #include <ranges>
 
 #include "pyinterp/math/temporal_axis.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
+#include "pyinterp/pybind/numpy.hpp"
 
 namespace nb = nanobind;
 
 namespace pyinterp::pybind {
-
-// singleton to hold numpy module reference
-struct NumpyContext {
-  nb::object module;  /// Reference to numpy module
-
-  // Get the singleton instance
-  static auto get() -> const NumpyContext & {
-    static NumpyContext ctx;
-    static std::once_flag init_flag;
-
-    std::call_once(init_flag,
-                   []() { ctx.module = nb::module_::import_("numpy"); });
-    return ctx;
-  }
-};
-
-// Convert and validate the dtype of a numpy datetime64/timedelta64 array
-// @param[in] name Variable name
-// @param[in] array Numpy array to validate
-// @return The datetime64 or timedelta64 dtype of the array
-inline auto retrieve_dtype(const std::string &name, const nb::object &array)
-    -> dateutils::DType {
-  nb::object arr_dtype = array.attr("dtype");
-  auto arr_kind = nb::cast<std::string>(nb::str(arr_dtype));
-  try {
-    return dateutils::DType(arr_kind);
-  } catch (const std::invalid_argument &e) {
-    throw std::invalid_argument(
-        name + " must be a numpy.datetime64 or numpy.timedelta64 array, got " +
-        arr_kind);
-  }
-}
-
-// Convert a numpy datetime64/timedelta64 array to an Eigen vector of
-// int64_t values
-// @param[in] array Numpy array to convert
-// @return Eigen vector of int64_t values
-inline auto numpy_to_vector(const nb::object &array) -> Vector<int64_t> {
-  auto viewed =
-      nb::cast<nb::ndarray<nb::numpy, int64_t, nb::ndim<1>, nb::c_contig>>(
-          array.attr("view")("int64"));
-  return Eigen::Map<const Vector<int64_t>>(
-      viewed.data(), static_cast<int64_t>(viewed.shape(0)));
-}
 
 // Convert timedelta64 scalar to int64_t with resolution validation
 // @param[in] param_name Name of the parameter (for error messages)
@@ -107,26 +63,6 @@ inline auto convert_timedelta64(const std::string &param_name,
   auto data = nb::cast<int64_t>(timedelta.attr("view")("int64").attr("item")());
   // Convert to target resolution if needed
   return dateutils::convert(data, cxx_dtype, target_dtype.as_timedelta64());
-}
-
-// Return a numpy datetime64/timedelta64 array from an Eigen vector of
-// int64_t values
-inline auto vector_to_numpy(Vector<int64_t> &&vector, dateutils::DType dtype)
-    -> nb::object {
-  // Create an int64 ndarray
-  auto size = static_cast<size_t>(vector.size());
-  auto ptr = std::make_unique<Vector<int64_t>>(std::move(vector));
-
-  auto *data = ptr->data();
-  nb::capsule capsule(ptr.get(), [](void *data) noexcept {
-    delete static_cast<Vector<int64_t> *>(data);
-  });
-  ptr.release();
-
-  nb::ndarray<nb::numpy, int64_t, nb::ndim<1>> arr(data, {size}, capsule);
-
-  // Convert to numpy object and view as datetime64/timedelta64
-  return arr.cast().attr("view")(std::string(dtype));
 }
 
 // Return the numpy dtype of the axis (datetime64 or timedelta64)

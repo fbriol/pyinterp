@@ -26,10 +26,6 @@ if TYPE_CHECKING:
         OneDim,
         np.dtype[np.int8],
     ]
-    NDArray1DDateTime: TypeAlias = np.ndarray[
-        OneDim,
-        np.dtype[np.datetime64],
-    ]
     NDArray1DDateTime64: TypeAlias = np.ndarray[
         OneDim,
         np.dtype[np.datetime64],
@@ -41,6 +37,10 @@ if TYPE_CHECKING:
     NDArray1DFloat64: TypeAlias = np.ndarray[
         OneDim,
         np.dtype[np.float64],
+    ]
+    NDArray1DInt32: TypeAlias = np.ndarray[
+        OneDim,
+        np.dtype[np.int32],
     ]
     NDArray1DInt64: TypeAlias = np.ndarray[
         OneDim,
@@ -54,6 +54,10 @@ if TYPE_CHECKING:
     NDArray1DUInt32: TypeAlias = np.ndarray[
         OneDim,
         np.dtype[np.uint32],
+    ]
+    NDArray1DUInt8: TypeAlias = np.ndarray[
+        OneDim,
+        np.dtype[np.uint8],
     ]
     NDArray2DFloat32: TypeAlias = np.ndarray[
         TwoDims,

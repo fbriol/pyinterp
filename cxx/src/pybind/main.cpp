@@ -3,6 +3,7 @@
 #include "pyinterp/pybind/axis.hpp"
 #include "pyinterp/pybind/binning.hpp"
 #include "pyinterp/pybind/config.hpp"
+#include "pyinterp/pybind/dateutils.hpp"
 #include "pyinterp/pybind/descriptive_statistics.hpp"
 #include "pyinterp/pybind/fill.hpp"
 #include "pyinterp/pybind/geohash.hpp"
@@ -26,4 +27,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_descriptive_statistics(m);
   pyinterp::pybind::init_tdigest(m);
   pyinterp::pybind::init_fill(m);
+  pyinterp::pybind::init_dateutils(m);
 }
