@@ -382,8 +382,6 @@ class TestRTreeInterpolation:
         )
 
         interpolated, counts = tree.window_function(query_coords, config)
-        print(counts, interpolated)
-
         assert interpolated.shape == (1,)
         assert counts.shape == (1,)
         assert counts[0] == 3
