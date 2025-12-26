@@ -1,7 +1,7 @@
 """Tests for centroid algorithm."""
 
-from pyinterp.core.geometry.geographic import Box, Point, Segment
-from pyinterp.core.geometry.geographic.algorithms import centroid
+from .......core.geometry.geographic import Box, Point, Segment
+from .......core.geometry.geographic.algorithms import centroid
 
 
 def test_centroid_box_equator(box_equator: Box) -> None:

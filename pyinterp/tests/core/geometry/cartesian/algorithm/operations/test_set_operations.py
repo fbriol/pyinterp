@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import Polygon, Ring
-from pyinterp.core.geometry.cartesian.algorithms import (
+from .......core.geometry.cartesian import Polygon, Ring
+from .......core.geometry.cartesian.algorithms import (
     difference,
     intersection,
     union,

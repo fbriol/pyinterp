@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pyinterp.core import geohash
+from ...core import geohash
 
 TEST_CASES: list[tuple[str, float, float]] = [
     ("77mkh2hcj7mz", -26.015434642, -26.173663656),

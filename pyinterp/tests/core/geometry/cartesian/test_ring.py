@@ -3,7 +3,7 @@
 import pickle
 
 import numpy as np
-from pyinterp.core.geometry.cartesian import Point, Ring
+from .....core.geometry.cartesian import Point, Ring
 
 
 def test_ring_construction() -> None:

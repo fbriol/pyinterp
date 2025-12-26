@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import LineString, Point, Polygon, Ring
-from pyinterp.core.geometry.geographic.algorithms import relate, relation
+from .......core.geometry.geographic import LineString, Point, Polygon, Ring
+from .......core.geometry.geographic.algorithms import relate, relation
 
 
 # Relate tests (DE-9IM pattern matching)

@@ -2,7 +2,7 @@
 
 import pickle
 
-from pyinterp.core.geometry.cartesian import Point
+from .....core.geometry.cartesian import Point
 
 
 def test_point_construction() -> None:

@@ -6,7 +6,7 @@ import pickle
 import numpy as np
 import pytest
 
-from pyinterp import core
+from ... import core
 
 
 # Fixtures for Binning2D tests

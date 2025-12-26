@@ -3,7 +3,7 @@
 import pickle
 import pytest
 
-from pyinterp.core.geometry.geographic import Segment, Point
+from .....core.geometry.geographic import Segment, Point
 
 
 def test_segment_construction() -> None:

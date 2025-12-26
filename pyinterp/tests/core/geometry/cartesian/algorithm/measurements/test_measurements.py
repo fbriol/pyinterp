@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import (
+from .......core.geometry.cartesian import (
     Box,
     LineString,
     MultiLineString,
@@ -11,7 +11,7 @@ from pyinterp.core.geometry.cartesian import (
     Polygon,
     Ring,
 )
-from pyinterp.core.geometry.cartesian.algorithms import (
+from .......core.geometry.cartesian.algorithms import (
     envelope,
     length,
     num_geometries,

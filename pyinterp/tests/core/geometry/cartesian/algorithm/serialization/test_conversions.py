@@ -2,9 +2,9 @@
 
 import numpy as np
 
-from pyinterp.core.geometry import cartesian, geographic
-from pyinterp.core.geometry.cartesian.algorithms import convert_to_geographic
-from pyinterp.core.geometry.geographic.algorithms import convert_to_cartesian
+from .......core.geometry import cartesian, geographic
+from .......core.geometry.cartesian.algorithms import convert_to_geographic
+from .......core.geometry.geographic.algorithms import convert_to_cartesian
 
 
 def test_convert_point_to_geographic() -> None:

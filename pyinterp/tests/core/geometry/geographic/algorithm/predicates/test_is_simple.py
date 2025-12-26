@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     Point,
     Box,
     Ring,
@@ -13,7 +13,7 @@ from pyinterp.core.geometry.geographic import (
     MultiLineString,
     MultiPolygon,
 )
-from pyinterp.core.geometry.geographic.algorithms import is_simple
+from .......core.geometry.geographic.algorithms import is_simple
 
 
 def test_is_simple_point(point_basic: Point) -> None:

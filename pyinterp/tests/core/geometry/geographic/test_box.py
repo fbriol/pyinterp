@@ -4,7 +4,7 @@ import pickle
 
 import pytest
 
-from pyinterp.core.geometry.geographic import Box, Point
+from .....core.geometry.geographic import Box, Point
 
 
 def test_box_construction() -> None:

@@ -4,7 +4,7 @@ import pickle
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import LineString, Point
+from .....core.geometry.geographic import LineString, Point
 
 
 def test_linestring_construction() -> None:

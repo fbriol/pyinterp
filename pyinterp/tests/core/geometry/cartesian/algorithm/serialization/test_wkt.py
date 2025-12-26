@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import (
+from .......core.geometry.cartesian import (
     LineString,
     MultiLineString,
     MultiPoint,
@@ -10,7 +10,7 @@ from pyinterp.core.geometry.cartesian import (
     Point,
     Polygon,
 )
-from pyinterp.core.geometry.cartesian.algorithms import from_wkt, to_wkt
+from .......core.geometry.cartesian.algorithms import from_wkt, to_wkt
 
 
 def test_point_to_wkt() -> None:

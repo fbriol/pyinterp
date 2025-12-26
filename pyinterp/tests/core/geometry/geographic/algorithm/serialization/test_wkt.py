@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     LineString,
     MultiLineString,
     MultiPoint,
@@ -10,7 +10,7 @@ from pyinterp.core.geometry.geographic import (
     Point,
     Polygon,
 )
-from pyinterp.core.geometry.geographic.algorithms import from_wkt, to_wkt
+from .......core.geometry.geographic.algorithms import from_wkt, to_wkt
 
 
 def test_point_to_wkt() -> None:

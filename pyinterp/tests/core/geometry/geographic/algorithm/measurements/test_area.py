@@ -1,6 +1,6 @@
 """Tests for area algorithm."""
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     Box,
     MultiPolygon,
     Point,
@@ -12,7 +12,7 @@ from pyinterp.core.geometry.geographic import (
     MultiLineString,
     Segment,
 )
-from pyinterp.core.geometry.geographic.algorithms import area, Strategy
+from .......core.geometry.geographic.algorithms import area, Strategy
 
 
 def test_strategy_enum() -> None:

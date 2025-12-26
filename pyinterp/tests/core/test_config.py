@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from pyinterp.core.config import fill, geometric, rtree, windowed
+from ...core.config import fill, geometric, rtree, windowed
 
 
 class TestGeometric:

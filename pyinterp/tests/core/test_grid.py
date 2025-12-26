@@ -7,7 +7,7 @@
 import numpy as np
 import pytest
 
-from pyinterp import core
+from ... import core
 
 from .. import load_grid2d, load_grid3d, load_grid4d
 

@@ -3,7 +3,7 @@
 import pickle
 
 import numpy as np
-from pyinterp.core.geometry.cartesian import Point, Polygon, Ring
+from .....core.geometry.cartesian import Point, Polygon, Ring
 
 
 def test_polygon_construction() -> None:

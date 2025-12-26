@@ -2,14 +2,14 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import (
+from .......core.geometry.cartesian import (
     Box,
     LineString,
     Point,
     Polygon,
     Ring,
 )
-from pyinterp.core.geometry.cartesian.algorithms import (
+from .......core.geometry.cartesian.algorithms import (
     covered_by,
     crosses,
     disjoint,

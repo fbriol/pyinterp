@@ -3,7 +3,7 @@
 import pickle
 
 import numpy as np
-from pyinterp.core.geometry.cartesian import LineString, Point
+from .....core.geometry.cartesian import LineString, Point
 
 
 def test_linestring_construction() -> None:

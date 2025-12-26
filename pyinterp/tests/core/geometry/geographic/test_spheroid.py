@@ -10,7 +10,7 @@ import math
 
 import pytest
 
-from pyinterp.core.geometry.geographic import Spheroid
+from .....core.geometry.geographic import Spheroid
 
 # WGS84 constants
 WGS84_SEMI_MAJOR_AXIS = 6378137.0

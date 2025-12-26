@@ -3,7 +3,7 @@
 import numpy as np
 import pickle
 
-from pyinterp.core.geometry.geographic import Ring, Polygon, MultiPolygon
+from .....core.geometry.geographic import Ring, Polygon, MultiPolygon
 
 
 def make_square_ring(

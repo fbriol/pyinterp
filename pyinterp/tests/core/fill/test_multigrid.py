@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from pyinterp.core import config, fill
+from ....core import config, fill
 
 
 class TestMultigrid:

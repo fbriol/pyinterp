@@ -2,7 +2,7 @@
 
 import math
 
-from pyinterp.core.geometry.cartesian import (
+from .......core.geometry.cartesian import (
     Box,
     LineString,
     MultiLineString,
@@ -13,7 +13,7 @@ from pyinterp.core.geometry.cartesian import (
     Ring,
     Segment,
 )
-from pyinterp.core.geometry.cartesian.algorithms import area
+from .......core.geometry.cartesian.algorithms import area
 
 
 def test_area_point() -> None:

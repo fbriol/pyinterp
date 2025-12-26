@@ -3,7 +3,7 @@
 import pickle
 
 import numpy as np
-from pyinterp.core.geometry.cartesian import LineString, MultiLineString
+from .....core.geometry.cartesian import LineString, MultiLineString
 
 
 def test_multilinestring_construction() -> None:

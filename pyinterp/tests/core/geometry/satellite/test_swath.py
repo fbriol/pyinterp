@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from pyinterp.core.geometry import satellite
-from pyinterp.core.geometry.geographic import Coordinates, Spheroid
+from .....core.geometry import satellite
+from .....core.geometry.geographic import Coordinates, Spheroid
 
 
 class TestCalculateSwath:

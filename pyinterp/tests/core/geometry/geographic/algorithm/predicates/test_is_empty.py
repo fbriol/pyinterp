@@ -1,6 +1,6 @@
 """Test is_empty algorithm."""
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     Point,
     Box,
     Ring,
@@ -11,7 +11,7 @@ from pyinterp.core.geometry.geographic import (
     MultiPolygon,
     LineString,
 )
-from pyinterp.core.geometry.geographic.algorithms import is_empty
+from .......core.geometry.geographic.algorithms import is_empty
 
 
 def test_is_empty_point(point_basic: Point, point_origin: Point) -> None:

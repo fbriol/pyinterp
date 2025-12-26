@@ -10,7 +10,7 @@ import pickle
 import numpy as np
 import pytest
 
-from pyinterp import core
+from ... import core
 
 
 def test_temporal_axis_datetime64_regular() -> None:
@@ -381,7 +381,7 @@ def test_temporal_axis_cast_to_temporal_axis_validation() -> None:
 
     # Non-datetime64 array should raise ValueError
     with pytest.raises(ValueError):
-        axis.cast_to_temporal_axis(np.arange(2))
+        axis.cast_to_temporal_axis(np.arange(2))  # type: ignore[arg-type]
 
     # Valid conversion from days to seconds
     values_days = np.array(["2000-01-01", "2000-02-01"], dtype="datetime64[D]")

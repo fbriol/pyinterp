@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import (
+from .......core.geometry.cartesian import (
     LineString,
     MultiLineString,
     MultiPoint,
@@ -14,7 +14,7 @@ from pyinterp.core.geometry.cartesian import (
 )
 
 
-from pyinterp.core.geometry.cartesian.algorithms import closest_points
+from .......core.geometry.cartesian.algorithms import closest_points
 
 
 def test_closest_points_polygon_to_polygon() -> None:

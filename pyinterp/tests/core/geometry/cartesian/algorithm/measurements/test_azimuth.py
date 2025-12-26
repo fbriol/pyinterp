@@ -2,8 +2,8 @@
 
 import math
 
-from pyinterp.core.geometry.cartesian import Segment
-from pyinterp.core.geometry.cartesian.algorithms import azimuth
+from .......core.geometry.cartesian import Segment
+from .......core.geometry.cartesian.algorithms import azimuth
 
 
 def test_azimuth_segment_horizontal() -> None:

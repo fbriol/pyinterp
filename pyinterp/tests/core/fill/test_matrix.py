@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pyinterp.core import fill
+from ....core import fill
 
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])

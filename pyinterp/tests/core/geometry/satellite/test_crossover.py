@@ -3,9 +3,9 @@
 import numpy as np
 import pytest
 
-from pyinterp.core.geometry import satellite
-from pyinterp.core.geometry.geographic import Spheroid
-from pyinterp.core.geometry.geographic.algorithms import Strategy
+from .....core.geometry import satellite
+from .....core.geometry.geographic import Spheroid
+from .....core.geometry.geographic.algorithms import Strategy
 
 
 class TestFindCrossovers:

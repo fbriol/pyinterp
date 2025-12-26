@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from pyinterp.core import RTree3D, RTree3DFloat64, RTree3DFloat32
-from pyinterp.core.geometry.geographic import Spheroid
+from ...core import RTree3D, RTree3DFloat64, RTree3DFloat32
+from ...core.geometry.geographic import Spheroid
 
 
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
-    from pyinterp.core import RTree3DHolder
+    from ...core import RTree3DHolder
 
 
 @pytest.fixture(params=["float64", "float32"])

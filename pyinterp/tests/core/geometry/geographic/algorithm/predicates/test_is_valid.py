@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     Point,
     Box,
     Ring,
@@ -13,7 +13,7 @@ from pyinterp.core.geometry.geographic import (
     LineString,
     Segment,
 )
-from pyinterp.core.geometry.geographic.algorithms import is_valid
+from .......core.geometry.geographic.algorithms import is_valid
 
 
 def test_is_valid_point(point_basic: Point) -> None:

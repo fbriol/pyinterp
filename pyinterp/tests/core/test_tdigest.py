@@ -12,7 +12,7 @@ import pickle
 import numpy as np
 import pytest
 
-from pyinterp import core
+from ... import core
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray

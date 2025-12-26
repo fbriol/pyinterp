@@ -1,7 +1,7 @@
 """Tests for centroid algorithm."""
 
-from pyinterp.core.geometry.cartesian import Box, Point, Segment
-from pyinterp.core.geometry.cartesian.algorithms import centroid
+from .......core.geometry.cartesian import Box, Point, Segment
+from .......core.geometry.cartesian.algorithms import centroid
 
 
 def test_centroid_box_1x1(box_1x1: Box) -> None:

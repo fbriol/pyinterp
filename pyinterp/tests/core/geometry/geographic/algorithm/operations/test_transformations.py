@@ -2,14 +2,14 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     LineString,
     MultiPoint,
     Point,
     Polygon,
     Ring,
 )
-from pyinterp.core.geometry.geographic.algorithms import (
+from .......core.geometry.geographic.algorithms import (
     clear,
     convex_hull,
     correct,

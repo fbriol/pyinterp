@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import Polygon, Ring
-from pyinterp.core.geometry.geographic.algorithms import (
+from .......core.geometry.geographic import Polygon, Ring
+from .......core.geometry.geographic.algorithms import (
     difference,
     intersection,
     union,

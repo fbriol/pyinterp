@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import (
+from .......core.geometry.cartesian import (
     LineString,
     MultiLineString,
     MultiPoint,
@@ -12,7 +12,7 @@ from pyinterp.core.geometry.cartesian import (
     Ring,
     Segment,
 )
-from pyinterp.core.geometry.cartesian.algorithms import is_simple
+from .......core.geometry.cartesian.algorithms import is_simple
 
 
 def test_is_simple_point() -> None:

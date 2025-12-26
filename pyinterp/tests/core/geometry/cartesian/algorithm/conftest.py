@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pyinterp.core.geometry.cartesian import (
+from ......core.geometry.cartesian import (
     Box,
     LineString,
     MultiLineString,

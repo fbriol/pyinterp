@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import LineString, Point, Polygon, Ring
-from pyinterp.core.geometry.cartesian.algorithms import relate, relation
+from .......core.geometry.cartesian import LineString, Point, Polygon, Ring
+from .......core.geometry.cartesian.algorithms import relate, relation
 
 
 # Relate tests (DE-9IM pattern matching)

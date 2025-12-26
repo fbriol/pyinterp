@@ -3,7 +3,7 @@
 import copyreg
 from typing import Any
 
-from pyinterp import core
+from . import core
 
 
 def _unpickle_grid(state: tuple[Any, ...]) -> core.GridHolder:

@@ -4,7 +4,7 @@ import pickle
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import MultiPoint, Point
+from .....core.geometry.cartesian import MultiPoint, Point
 
 
 def test_multipoint_construction() -> None:

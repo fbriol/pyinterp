@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     LineString,
     MultiLineString,
     MultiPoint,
@@ -15,7 +15,7 @@ from pyinterp.core.geometry.geographic import (
 )
 
 
-from pyinterp.core.geometry.geographic.algorithms import (
+from .......core.geometry.geographic.algorithms import (
     closest_points,
     Strategy,
 )

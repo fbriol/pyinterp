@@ -3,7 +3,7 @@
 import numpy as np
 import pickle
 
-from pyinterp.core.geometry.geographic import LineString, MultiLineString
+from .....core.geometry.geographic import LineString, MultiLineString
 
 
 def make_line(a: float = 0.0) -> LineString:

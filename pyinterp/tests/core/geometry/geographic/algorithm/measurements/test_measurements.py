@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import (
+from .......core.geometry.geographic import (
     Box,
     LineString,
     MultiLineString,
@@ -11,7 +11,7 @@ from pyinterp.core.geometry.geographic import (
     Polygon,
     Ring,
 )
-from pyinterp.core.geometry.geographic.algorithms import (
+from .......core.geometry.geographic.algorithms import (
     envelope,
     length,
     num_geometries,

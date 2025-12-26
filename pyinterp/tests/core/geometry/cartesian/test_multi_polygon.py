@@ -3,7 +3,7 @@
 import pickle
 
 import numpy as np
-from pyinterp.core.geometry.cartesian import MultiPolygon, Polygon, Ring
+from .....core.geometry.cartesian import MultiPolygon, Polygon, Ring
 
 
 def test_multipolygon_construction() -> None:

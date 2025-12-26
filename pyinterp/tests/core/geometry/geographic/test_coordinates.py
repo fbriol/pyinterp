@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from pyinterp.core.geometry.geographic import Coordinates, Spheroid
+from .....core.geometry.geographic import Coordinates, Spheroid
 
 
 class TestCoordinates:

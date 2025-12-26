@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from pyinterp import core
-from pyinterp.core.config import windowed
+from .... import core
+from ....core.config import windowed
 
 from ... import load_grid3d
 

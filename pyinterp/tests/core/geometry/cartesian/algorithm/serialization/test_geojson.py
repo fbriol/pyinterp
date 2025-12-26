@@ -4,7 +4,7 @@ import json
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import (
+from .......core.geometry.cartesian import (
     LineString,
     MultiLineString,
     MultiPoint,
@@ -13,7 +13,7 @@ from pyinterp.core.geometry.cartesian import (
     Polygon,
     Ring,
 )
-from pyinterp.core.geometry.cartesian.algorithms import from_geojson, to_geojson
+from .......core.geometry.cartesian.algorithms import from_geojson, to_geojson
 
 
 def test_point_to_geojson() -> None:

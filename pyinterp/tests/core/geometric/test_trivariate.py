@@ -9,8 +9,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from pyinterp import core
-from pyinterp.core.config import geometric
+from .... import core
+from ....core.config import geometric
 
 from ... import load_grid3d
 

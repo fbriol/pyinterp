@@ -2,7 +2,7 @@
 
 import pickle
 
-from pyinterp.core.geometry.geographic import Point
+from .....core.geometry.geographic import Point
 
 
 def test_point_construction() -> None:

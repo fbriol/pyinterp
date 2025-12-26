@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from pyinterp.core.geometry.cartesian import LineString, Point, Polygon, Ring
-from pyinterp.core.geometry.cartesian.algorithms import (
+from .......core.geometry.cartesian import LineString, Point, Polygon, Ring
+from .......core.geometry.cartesian.algorithms import (
     DistanceAsymmetric,
     DistanceSymmetric,
     EndFlat,

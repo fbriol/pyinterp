@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from pyinterp.core.geometry.geographic import (
+from ......core.geometry.geographic import (
     Box,
     LineString,
     MultiLineString,

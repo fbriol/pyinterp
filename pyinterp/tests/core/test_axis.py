@@ -11,7 +11,7 @@ import pickle
 import numpy as np
 import pytest
 
-from pyinterp import core
+from ... import core
 
 MERCATOR_LATITUDES = np.array(
     [

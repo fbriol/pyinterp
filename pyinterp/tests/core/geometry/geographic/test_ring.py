@@ -4,7 +4,7 @@ import pickle
 
 import numpy as np
 
-from pyinterp.core.geometry.geographic import Point, Ring
+from .....core.geometry.geographic import Point, Ring
 
 
 def test_ring_construction() -> None:

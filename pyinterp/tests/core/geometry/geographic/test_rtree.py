@@ -11,8 +11,8 @@ import pickle
 import numpy as np
 import pytest
 
-from pyinterp.core.geometry.geographic import RTree
-from pyinterp.core.config.rtree import (
+from .....core.geometry.geographic import RTree
+from .....core.config.rtree import (
     Query,
     InverseDistanceWeighting,
     Kriging,
