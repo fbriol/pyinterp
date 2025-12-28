@@ -18,7 +18,76 @@
 
 #include "pyinterp/eigen.hpp"
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+#if (__has_builtin(__builtin_add_overflow) && \
+     __has_builtin(__builtin_sub_overflow) && \
+     __has_builtin(__builtin_mul_overflow))
+#define PYINTERP_HAVE_BUILTIN_OVERFLOW 1
+#else
+#define PYINTERP_HAVE_BUILTIN_OVERFLOW 0
+#endif
+
 namespace pyinterp::dateutils {
+namespace detail {
+
+/// @brief Checked addition of two integers
+/// @param[in] a First integer
+/// @param[in] b Second integer
+/// @return The sum of a and b
+/// @throw std::overflow_error if the addition overflows
+[[nodiscard]] constexpr auto ckd_add(const int64_t a, const int64_t b)
+    -> int64_t {
+#if PYINTERP_HAVE_BUILTIN_OVERFLOW
+  int64_t result;
+  if (__builtin_add_overflow(a, b, &result)) {
+    throw std::overflow_error("integer overflow");
+  }
+  return result;
+#else
+  if ((b > 0 && a > std::numeric_limits<int64_t>::max() - b) ||
+      (b < 0 && a < std::numeric_limits<int64_t>::min() - b)) {
+    throw std::overflow_error("integer overflow");
+  }
+  return a + b;
+#endif
+}
+
+/// @brief Checked multiplication of two integers
+/// @param[in] a First integer
+/// @param[in] b Second integer
+/// @return The product of a and b
+/// @throw std::overflow_error if the multiplication overflows
+[[nodiscard]] constexpr auto ckd_mul(const int64_t a, const int64_t b)
+    -> int64_t {
+#if PYINTERP_HAVE_BUILTIN_OVERFLOW
+  int64_t result;
+  if (__builtin_mul_overflow(a, b, &result)) {
+    throw std::overflow_error("integer overflow");
+  }
+  return result;
+#else
+  if (a == 0 || b == 0) {
+    return 0;
+  }
+  if (a > 0 && b > 0 && a > std::numeric_limits<int64_t>::max() / b) {
+    throw std::overflow_error("integer overflow");
+  }
+  if (a > 0 && b < 0 && b < std::numeric_limits<int64_t>::min() / a) {
+    throw std::overflow_error("integer overflow");
+  }
+  if (a < 0 && b > 0 && a < std::numeric_limits<int64_t>::min() / b) {
+    throw std::overflow_error("integer overflow");
+  }
+  if (a < 0 && b < 0 && a < std::numeric_limits<int64_t>::max() / b) {
+    throw std::overflow_error("integer overflow");
+  }
+  return a * b;
+#endif
+}
+
+}  // namespace detail
 
 /// @brief Epoch year
 constexpr int64_t kEpoch = 1970;
@@ -89,6 +158,11 @@ class DType {
     kFemtosecond = 11,  /// Femtosecond resolution
     kAttosecond = 12,   /// Attosecond resolution
   };
+
+  /// @brief Default constructor (datetime64[ns])
+  constexpr DType() noexcept
+      : datetype_{DateType::kDatetime64},
+        resolution_{Resolution::kNanosecond} {}
 
   /// @brief Constructor from numpy dtype string
   /// @param[in] dtype Numpy date type string (e.g., "datetime64[ms]")
@@ -300,10 +374,10 @@ class FractionalSeconds {
 
   /// @brief Cast a fractional part to a different scale
   [[nodiscard]] constexpr auto cast(const int64_t frac,
-                                    const int64_t scale) const noexcept
-      -> int64_t {
-    return order_of_magnitude_ <= scale ? (scale / order_of_magnitude_) * frac
-                                        : frac / (order_of_magnitude_ / scale);
+                                    const int64_t scale) const -> int64_t {
+    return order_of_magnitude_ <= scale
+               ? detail::ckd_mul(scale / order_of_magnitude_, frac)
+               : frac / (order_of_magnitude_ / scale);
   }
 
   /// @brief Get the order of magnitude of the resolution
@@ -792,10 +866,12 @@ inline auto convert(Eigen::Ref<Vector<int64_t>> coordinates,
         value = days;
         break;
       case DType::Resolution::kHour:
-        value = days * kHoursInDay + seconds / kSecondsInHour;
+        value = detail::ckd_add(detail::ckd_mul(days, kHoursInDay),
+                                seconds / kSecondsInHour);
         break;
       case DType::Resolution::kMinute:
-        value = days * kMinutesInDay + seconds / kSecondsInMinute;
+        value = detail::ckd_add(detail::ckd_mul(days, kMinutesInDay),
+                                seconds / kSecondsInMinute);
         break;
       default:
         // Handle Seconds through Attoseconds
@@ -806,12 +882,15 @@ inline auto convert(Eigen::Ref<Vector<int64_t>> coordinates,
         // overflow int64. This behavior is consistent with numpy's overflow
         // behavior.
 
-        value =
-            (days * kSecondsInDay * tgt_magnitude) + (seconds * tgt_magnitude);
+        value = detail::ckd_add(
+            detail::ckd_mul(detail::ckd_mul(days, kSecondsInDay),
+                            tgt_magnitude),
+            detail::ckd_mul(seconds, tgt_magnitude));
 
         // Convert the fractional part from source scale to target scale
         if (src_frac_handler) {
-          value += src_frac_handler->cast(fractional, tgt_magnitude);
+          value = detail::ckd_add(
+              value, src_frac_handler->cast(fractional, tgt_magnitude));
         }
         break;
     }

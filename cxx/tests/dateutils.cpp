@@ -6,12 +6,38 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <vector>
 
 namespace pyinterp::dateutils {
+
+// Checked arithmetic overflow detection
+TEST(DateutilsCheckedArithmeticTest, AddOverflowPositive) {
+  EXPECT_THROW(static_cast<void>(
+                   detail::ckd_add(std::numeric_limits<int64_t>::max(), 1)),
+               std::overflow_error);
+}
+
+TEST(DateutilsCheckedArithmeticTest, AddOverflowNegative) {
+  EXPECT_THROW(static_cast<void>(
+                   detail::ckd_add(std::numeric_limits<int64_t>::min(), -1)),
+               std::overflow_error);
+}
+
+TEST(DateutilsCheckedArithmeticTest, MulOverflowPositive) {
+  EXPECT_THROW(static_cast<void>(
+                   detail::ckd_mul(std::numeric_limits<int64_t>::max(), 2)),
+               std::overflow_error);
+}
+
+TEST(DateutilsCheckedArithmeticTest, MulOverflowCrossSign) {
+  EXPECT_THROW(static_cast<void>(
+                   detail::ckd_mul(std::numeric_limits<int64_t>::min(), 2)),
+               std::overflow_error);
+}
 
 // Test fixture for DType tests
 class DTypeTest : public ::testing::Test {
@@ -257,6 +283,12 @@ TEST_F(DTypeTest, Convert) {
   EXPECT_EQ(value, 55);
 }
 
+TEST_F(DTypeTest, ConvertOverflowToFinerResolution) {
+  EXPECT_THROW(convert(std::numeric_limits<int64_t>::max(),
+                       DType("datetime64[D]"), DType("datetime64[as]")),
+               std::overflow_error);
+}
+
 // ============================================================================
 // FractionalSeconds Tests
 // ============================================================================
@@ -405,6 +437,14 @@ TEST_F(FractionalSecondsTest, CastDownscale) {
 
   // Cast 1000000 nanoseconds to milliseconds (1ms)
   EXPECT_EQ(frac_ns.cast(1000000, kMillisecond), 1);
+}
+
+TEST_F(FractionalSecondsTest, CastOverflowUpscale) {
+  FractionalSeconds frac_s("datetime64[s]");
+
+  // Upscaling a modest value to attoseconds should overflow int64
+  EXPECT_THROW(static_cast<void>(frac_s.cast(10, kAttosecond)),
+               std::overflow_error);
 }
 
 // ============================================================================
