@@ -65,36 +65,6 @@ inline auto convert_timedelta64(const std::string &param_name,
   return dateutils::convert(data, cxx_dtype, target_dtype.as_timedelta64());
 }
 
-// Return the numpy dtype of the axis (datetime64 or timedelta64)
-inline auto to_dtype(const dateutils::DType &dtype) -> nb::object {
-  auto np = NumpyContext::get().module;
-  return np.attr("dtype")(std::string(dtype));
-}
-
-// Return a datetime64 scalar from int64
-inline auto make_datetime64_scalar(int64_t value, dateutils::DType dtype)
-    -> nb::object {
-  auto np = NumpyContext::get().module;
-  auto datetime64_attr = np.attr("datetime64");
-  return datetime64_attr(value, dtype.unit().data());
-}
-
-// Return a timedelta64 scalar from int64
-inline auto make_timedelta64_scalar(int64_t value, dateutils::DType dtype)
-    -> nb::object {
-  auto np = NumpyContext::get().module;
-  auto timedelta64_attr = np.attr("timedelta64");
-  return timedelta64_attr(value, dtype.unit().data());
-}
-
-// Return the datetime64/timedelta64 scalar from int64
-inline auto make_scalar(int64_t value, dateutils::DType dtype) -> nb::object {
-  if (dtype.datetype() == dateutils::DType::DateType::kDatetime64) {
-    return make_datetime64_scalar(value, dtype);
-  }
-  return make_timedelta64_scalar(value, dtype);
-}
-
 // Convert input temporal array to internal resolution (int64_t)
 // @param[in] name Name of the parameter (for error messages)
 // @param[in] coordinates Numpy array of datetime64/timedelta64 values

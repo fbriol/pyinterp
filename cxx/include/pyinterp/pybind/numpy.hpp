@@ -82,4 +82,45 @@ inline auto vector_to_numpy(Vector<int64_t> &&vector, dateutils::DType dtype)
   return arr.cast().attr("view")(std::string(dtype));
 }
 
+/// @brief Return the numpy dtype object from a dateutils::DType
+/// @param[in] dtype The dateutils::DType object
+/// @return The corresponding numpy dtype object
+inline auto to_dtype(const dateutils::DType &dtype) -> nanobind::object {
+  auto np = NumpyContext::get().module;
+  return np.attr("dtype")(std::string(dtype));
+}
+
+/// @brief Create a datetime64 scalar from a 64-bit integer value
+/// @param[in] value Integer value representing the datetime64
+/// @param[in] dtype Target numpy dtype
+/// @return Numpy datetime64 scalar
+inline auto make_datetime64_scalar(int64_t value, dateutils::DType dtype)
+    -> nanobind::object {
+  auto np = NumpyContext::get().module;
+  auto datetime64_attr = np.attr("datetime64");
+  return datetime64_attr(value, dtype.unit().data());
+}
+
+/// @brief Create a timedelta64 scalar from a 64-bit integer value
+/// @param[in] value Integer value representing the timedelta64
+/// @param[in] dtype Target numpy dtype
+/// @return Numpy timedelta64 scalar
+inline auto make_timedelta64_scalar(int64_t value, dateutils::DType dtype)
+    -> nanobind::object {
+  auto np = NumpyContext::get().module;
+  auto timedelta64_attr = np.attr("timedelta64");
+  return timedelta64_attr(value, dtype.unit().data());
+}
+
+/// @brief Create a datetime64/timedelta64 scalar from a 64-bit integer value
+/// @param[in] value Integer value representing the datetime64 or timedelta64
+/// @param[in] dtype Target numpy dtype
+/// @return Numpy datetime64 or timedelta64 scalar
+inline auto make_scalar(int64_t value, dateutils::DType dtype)
+    -> nanobind::object {
+  return (dtype.datetype() == dateutils::DType::DateType::kDatetime64)
+             ? make_datetime64_scalar(value, dtype)
+             : make_timedelta64_scalar(value, dtype);
+}
+
 }  // namespace pyinterp::pybind

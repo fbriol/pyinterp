@@ -10,6 +10,7 @@
 #include "pyinterp/pybind/geometric.hpp"
 #include "pyinterp/pybind/geometry.hpp"
 #include "pyinterp/pybind/grid.hpp"
+#include "pyinterp/pybind/period.hpp"
 #include "pyinterp/pybind/rtree.hpp"
 #include "pyinterp/pybind/tdigest.hpp"
 #include "pyinterp/pybind/windowed.hpp"
@@ -28,4 +29,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_tdigest(m);
   pyinterp::pybind::init_fill(m);
   pyinterp::pybind::init_dateutils(m);
+  pyinterp::pybind::init_period(m);
 }
