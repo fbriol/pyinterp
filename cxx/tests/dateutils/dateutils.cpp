@@ -382,16 +382,16 @@ TEST_F(FractionalSecondsTest, NDigits) {
 TEST_F(FractionalSecondsTest, DaysSinceEpochPositive) {
   FractionalSeconds frac_s("datetime64[s]");
 
-  // 1 day in seconds
+  // 1 day in seconds (86400 seconds)
   auto [days, seconds, fractional] = frac_s.days_since_epoch(86400);
   EXPECT_EQ(days, 1);
-  EXPECT_EQ(seconds, 86400);
+  EXPECT_EQ(seconds, 0);  // 0 seconds within the day
   EXPECT_EQ(fractional, 0);
 
-  // 1.5 days in seconds
+  // 1.5 days in seconds (129600 = 1 day + 43200 seconds)
   std::tie(days, seconds, fractional) = frac_s.days_since_epoch(129600);
   EXPECT_EQ(days, 1);
-  EXPECT_EQ(seconds, 129600);
+  EXPECT_EQ(seconds, 43200);  // 43200 seconds within the day (12 hours)
   EXPECT_EQ(fractional, 0);
 }
 
@@ -402,7 +402,7 @@ TEST_F(FractionalSecondsTest, DaysSinceEpochNegative) {
   // -1 day in seconds
   auto [days, seconds, fractional] = frac_s.days_since_epoch(-86400);
   EXPECT_EQ(days, -1);
-  EXPECT_EQ(seconds, -86400);
+  EXPECT_EQ(seconds, 0);  // 0 seconds within the day
   EXPECT_EQ(fractional, 0);
 }
 
@@ -413,7 +413,7 @@ TEST_F(FractionalSecondsTest, DaysSinceEpochWithFractional) {
   // 1 day + 1 second + 500 milliseconds
   auto [days, seconds, fractional] = frac_ms.days_since_epoch(86401500);
   EXPECT_EQ(days, 1);
-  EXPECT_EQ(seconds, 86401);
+  EXPECT_EQ(seconds, 1);  // 1 second within the day
   EXPECT_EQ(fractional, 500);
 }
 
