@@ -400,10 +400,12 @@ class FractionalSeconds {
   /// @return A tuple (days, seconds, fractional)
   [[nodiscard]] constexpr auto days_since_epoch(const int64_t datetime64)
       const noexcept -> std::tuple<int64_t, int64_t, int64_t> {
-    auto [seconds, fractional] = epoch(datetime64);
-    auto days = seconds / kSecondsInDay;
-    if (seconds % kSecondsInDay < 0) {
+    auto [total_seconds, fractional] = epoch(datetime64);
+    auto days = total_seconds / kSecondsInDay;
+    auto seconds = total_seconds % kSecondsInDay;
+    if (seconds < 0) {
       --days;
+      seconds += kSecondsInDay;
     }
     return {days, seconds, fractional};
   }
