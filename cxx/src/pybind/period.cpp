@@ -236,22 +236,13 @@ Args:
     within: If True, end is inclusive; if False, end is exclusive.
 )";
 
-constexpr const char* const kPeriodContainsPoint = R"(
+constexpr const char* const kPeriodContains = R"(
 Check if a point is within the period.
 
 Args:
-    point: A date point as a numpy.datetime64 scalar.
+    point_or_period: A numpy.datetime64 scalar or another Period.
 Returns:
-    True if the point is within the period, False otherwise.
-)";
-
-constexpr const char* const kPeriodContainsPeriod = R"(
-Check if another period is entirely within this period.
-
-Args:
-    other: The other Period to check.
-Returns:
-    True if the other period is within this period, False otherwise.
+    True if the point/period is within this period, False otherwise.
 )";
 
 constexpr const char* const kPeriodIsAfter = R"(
@@ -379,7 +370,7 @@ auto init_period(nanobind::module_& m) -> void {
           },
           "Greater-than-or-equal comparison with resolution promotion.")
 
-      .def("__getstate", &Period::getstate, "Get the state for pickling.")
+      .def("__getstate__", &Period::getstate, "Get the state for pickling.")
       .def(
           "__setstate__",
           [](Period& self,
@@ -392,17 +383,15 @@ auto init_period(nanobind::module_& m) -> void {
 
       .def(
           "contains",
-          [](const Period& self, const nb::object& point) {
-            return self.contains(point);
+          [](const Period& self, const nb::object& point_or_period) {
+            // Check if the argument is a Period object
+            if (nb::isinstance<Period>(point_or_period)) {
+              return self.contains(nb::cast<const Period&>(point_or_period));
+            }
+            // Otherwise, treat it as a datetime64 scalar
+            return self.contains(point_or_period);
           },
-          kPeriodContainsPoint, "point"_a)
-
-      .def(
-          "contains",
-          [](const Period& self, const Period& other) {
-            return self.contains(other);
-          },
-          kPeriodContainsPeriod, "other"_a)
+          kPeriodContains, "point_or_period"_a)
 
       .def(
           "is_after",
