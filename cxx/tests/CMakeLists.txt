@@ -19,7 +19,8 @@ macro(ADD_TESTCASE testname sources)
 endmacro()
 
 # dateutils
-add_testcase(dateutils "${CMAKE_CURRENT_SOURCE_DIR}/dateutils.cpp")
+file(GLOB_RECURSE dateutils_src "${CMAKE_CURRENT_SOURCE_DIR}/dateutils/*.cpp")
+add_testcase(dateutils "${dateutils_src}")
 
 # serialization_buffer
 add_testcase(serialization_buffer

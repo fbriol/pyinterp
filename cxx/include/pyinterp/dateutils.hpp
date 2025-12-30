@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cstdint>
 #include <format>
+#include <limits>
+#include <optional>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -18,9 +20,11 @@
 
 #include "pyinterp/eigen.hpp"
 
+// Detect compiler builtins for checked arithmetic
 #ifndef __has_builtin
 #define __has_builtin(x) 0
 #endif
+
 #if (__has_builtin(__builtin_add_overflow) && \
      __has_builtin(__builtin_sub_overflow) && \
      __has_builtin(__builtin_mul_overflow))
@@ -30,6 +34,11 @@
 #endif
 
 namespace pyinterp::dateutils {
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Checked arithmetic operations
+// ═══════════════════════════════════════════════════════════════════════════
+
 namespace detail {
 
 /// @brief Checked addition of two integers
@@ -42,15 +51,37 @@ namespace detail {
 #if PYINTERP_HAVE_BUILTIN_OVERFLOW
   int64_t result;
   if (__builtin_add_overflow(a, b, &result)) {
-    throw std::overflow_error("integer overflow");
+    throw std::overflow_error("integer overflow in addition");
   }
   return result;
 #else
   if ((b > 0 && a > std::numeric_limits<int64_t>::max() - b) ||
       (b < 0 && a < std::numeric_limits<int64_t>::min() - b)) {
-    throw std::overflow_error("integer overflow");
+    throw std::overflow_error("integer overflow in addition");
   }
   return a + b;
+#endif
+}
+
+/// @brief Checked subtraction of two integers
+/// @param[in] a First integer
+/// @param[in] b Second integer
+/// @return The difference a - b
+/// @throw std::overflow_error if the subtraction overflows
+[[nodiscard]] constexpr auto ckd_sub(const int64_t a, const int64_t b)
+    -> int64_t {
+#if PYINTERP_HAVE_BUILTIN_OVERFLOW
+  int64_t result;
+  if (__builtin_sub_overflow(a, b, &result)) {
+    throw std::overflow_error("integer overflow in subtraction");
+  }
+  return result;
+#else
+  if ((b < 0 && a > std::numeric_limits<int64_t>::max() + b) ||
+      (b > 0 && a < std::numeric_limits<int64_t>::min() + b)) {
+    throw std::overflow_error("integer overflow in subtraction");
+  }
+  return a - b;
 #endif
 }
 
@@ -64,7 +95,7 @@ namespace detail {
 #if PYINTERP_HAVE_BUILTIN_OVERFLOW
   int64_t result;
   if (__builtin_mul_overflow(a, b, &result)) {
-    throw std::overflow_error("integer overflow");
+    throw std::overflow_error("integer overflow in multiplication");
   }
   return result;
 #else
@@ -72,22 +103,26 @@ namespace detail {
     return 0;
   }
   if (a > 0 && b > 0 && a > std::numeric_limits<int64_t>::max() / b) {
-    throw std::overflow_error("integer overflow");
+    throw std::overflow_error("integer overflow in multiplication");
   }
   if (a > 0 && b < 0 && b < std::numeric_limits<int64_t>::min() / a) {
-    throw std::overflow_error("integer overflow");
+    throw std::overflow_error("integer overflow in multiplication");
   }
   if (a < 0 && b > 0 && a < std::numeric_limits<int64_t>::min() / b) {
-    throw std::overflow_error("integer overflow");
+    throw std::overflow_error("integer overflow in multiplication");
   }
   if (a < 0 && b < 0 && a < std::numeric_limits<int64_t>::max() / b) {
-    throw std::overflow_error("integer overflow");
+    throw std::overflow_error("integer overflow in multiplication");
   }
   return a * b;
 #endif
 }
 
 }  // namespace detail
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Constants
+// ═══════════════════════════════════════════════════════════════════════════
 
 /// @brief Epoch year
 constexpr int64_t kEpoch = 1970;
@@ -133,6 +168,10 @@ constexpr int kYDayMinimum = -366;
 constexpr std::array<int, 13> kDaysInMonth{-1, 31, 28, 31, 30, 31, 30,
                                            31, 31, 30, 31, 30, 31};
 
+// ═══════════════════════════════════════════════════════════════════════════
+// DType - NumPy datetime64/timedelta64 type descriptor
+// ═══════════════════════════════════════════════════════════════════════════
+
 /// @brief Handles numpy encoded dates.
 class DType {
  public:
@@ -144,19 +183,19 @@ class DType {
 
   /// @brief Clock resolution
   enum class Resolution : uint8_t {
-    kYear = 0,          /// Year resolution
-    kMonth = 1,         /// Month resolution
-    kWeek = 2,          /// Week resolution
-    kDay = 3,           /// Day resolution
-    kHour = 4,          /// Hour resolution
-    kMinute = 5,        /// Minute resolution
-    kSecond = 6,        /// Second resolution
-    kMillisecond = 7,   /// Millisecond resolution
-    kMicrosecond = 8,   /// Microsecond resolution
-    kNanosecond = 9,    /// Nanosecond resolution
-    kPicosecond = 10,   /// Picosecond resolution
-    kFemtosecond = 11,  /// Femtosecond resolution
-    kAttosecond = 12,   /// Attosecond resolution
+    kYear = 0,          ///< Year resolution
+    kMonth = 1,         ///< Month resolution
+    kWeek = 2,          ///< Week resolution
+    kDay = 3,           ///< Day resolution
+    kHour = 4,          ///< Hour resolution
+    kMinute = 5,        ///< Minute resolution
+    kSecond = 6,        ///< Second resolution
+    kMillisecond = 7,   ///< Millisecond resolution
+    kMicrosecond = 8,   ///< Microsecond resolution
+    kNanosecond = 9,    ///< Nanosecond resolution
+    kPicosecond = 10,   ///< Picosecond resolution
+    kFemtosecond = 11,  ///< Femtosecond resolution
+    kAttosecond = 12,   ///< Attosecond resolution
   };
 
   /// @brief Default constructor (datetime64[ns])
@@ -218,7 +257,7 @@ class DType {
       case Resolution::kAttosecond:
         return "attosecond";
     }
-    return "attosecond";  // Default case
+    return "attosecond";
   }
 
   /// @brief Get the clock unit
@@ -251,7 +290,7 @@ class DType {
       case Resolution::kAttosecond:
         return "as";
     }
-    return "as";  // Default case
+    return "as";
   }
 
   /// @brief Get the clock resolution handled by this instance
@@ -275,8 +314,8 @@ class DType {
     return std::format("{}[{}]", datetype_name(), unit());
   }
 
-  /// @brief Get the order of magnitude of the resolution between seconds and
-  /// the clock resolution
+  /// @brief Get the order of magnitude of the resolution (seconds to clock)
+  /// @throw std::invalid_argument if resolution is coarser than second
   [[nodiscard]] constexpr auto order_of_magnitude() const -> int64_t {
     switch (resolution_) {
       case Resolution::kSecond:
@@ -338,6 +377,10 @@ class DType {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// FractionalSeconds - Handle sub-second datetime64 values
+// ═══════════════════════════════════════════════════════════════════════════
+
 /// @brief Handle a date encoded in a 64-bit integer for a given clock
 /// resolution (Clock resolution must be in range Second to Attosecond)
 class FractionalSeconds {
@@ -352,8 +395,7 @@ class FractionalSeconds {
   explicit FractionalSeconds(std::string_view dtype)
       : order_of_magnitude_{DType(dtype).order_of_magnitude()} {}
 
-  /// @brief Get the number of days, seconds and fractional part elapsed since
-  /// 1970
+  /// @brief Get days, seconds, and fractional part elapsed since 1970
   /// @param[in] datetime64 Date encoded in a 64-bit integer
   /// @return A tuple (days, seconds, fractional)
   [[nodiscard]] constexpr auto days_since_epoch(const int64_t datetime64)
@@ -373,6 +415,7 @@ class FractionalSeconds {
   }
 
   /// @brief Cast a fractional part to a different scale
+  /// @throw std::overflow_error if the cast overflows
   [[nodiscard]] constexpr auto cast(const int64_t frac,
                                     const int64_t scale) const -> int64_t {
     return order_of_magnitude_ <= scale
@@ -442,6 +485,10 @@ class FractionalSeconds {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Date/Time structures
+// ═══════════════════════════════════════════════════════════════════════════
+
 /// @brief Represents a year, month, day in a calendar.
 struct Date {
   int year;        ///< Year value
@@ -463,6 +510,10 @@ struct ISOCalendar {
   unsigned week;     ///< Week value
   unsigned weekday;  ///< Weekday value
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Date/Time conversion utilities
+// ═══════════════════════════════════════════════════════════════════════════
 
 /// @brief Get the number of hours, minutes and seconds elapsed in the day
 /// @param[in] seconds Number of seconds since midnight
@@ -590,114 +641,6 @@ struct ISOCalendar {
   return {date_from_days(days), time_from_seconds(minute * kSecondsInMinute)};
 }
 
-/// @brief Convert a datetime64 to an ISO 8601 string
-/// @param[in] value The datetime64 value
-/// @param[in] dtype The data type describing the resolution of the datetime64
-/// @return ISO 8601 formatted string
-[[nodiscard]] inline auto datetime64_to_string(const int64_t value,
-                                               const DType& dtype)
-    -> std::string {
-  Date date{};
-  Time time{};
-
-  switch (dtype.resolution()) {
-    case DType::Resolution::kYear: {
-      date = date_from_years(value);
-      return std::format("{}", date.year);
-    }
-    case DType::Resolution::kMonth: {
-      date = date_from_months(value);
-      return std::format("{}-{:02}", date.year, date.month);
-    }
-    case DType::Resolution::kWeek:
-    case DType::Resolution::kDay: {
-      date = dtype.resolution() == DType::Resolution::kWeek
-                 ? date_from_weeks(value)
-                 : date_from_days(value);
-      return std::format("{}-{:02}-{:02}", date.year, date.month, date.day);
-    }
-    case DType::Resolution::kHour: {
-      std::tie(date, time) = datetime_from_hours(value);
-      return std::format("{}-{:02}-{:02}T{:02}", date.year, date.month,
-                         date.day, time.hour);
-    }
-    case DType::Resolution::kMinute: {
-      std::tie(date, time) = datetime_from_minutes(value);
-      return std::format("{}-{:02}-{:02}T{:02}:{:02}", date.year, date.month,
-                         date.day, time.hour, time.minute);
-    }
-    default: {
-      // Fractional seconds (second through attosecond)
-      const auto frac = FractionalSeconds(dtype);
-      const auto [days, seconds, fractional] = frac.days_since_epoch(value);
-
-      date = date_from_days(days);
-      time = time_from_seconds(seconds);
-
-      if (const int ndigits = frac.ndigits(); ndigits > 0) {
-        return std::format("{}-{:02}-{:02}T{:02}:{:02}:{:02}.{:0{}}", date.year,
-                           date.month, date.day, time.hour, time.minute,
-                           time.second, fractional, ndigits);
-      }
-      return std::format("{}-{:02}-{:02}T{:02}:{:02}:{:02}", date.year,
-                         date.month, date.day, time.hour, time.minute,
-                         time.second);
-    }
-  }
-}
-
-/// @brief Convert a timedelta64 to a string representation
-/// @param[in] value The timedelta64 value
-/// @param[in] dtype The data type describing the resolution of the timedelta64
-/// @return String representation of the timedelta64 value
-[[nodiscard]] inline auto timedelta64_to_string(const int64_t value,
-                                                const DType& dtype)
-    -> std::string {
-  switch (dtype.resolution()) {
-    case DType::Resolution::kYear: {
-      return std::format("{} years", value);
-    }
-    case DType::Resolution::kMonth: {
-      return std::format("{} months", value);
-    }
-    case DType::Resolution::kWeek: {
-      return std::format("{} weeks", value);
-    }
-    case DType::Resolution::kDay: {
-      return std::format("{} days", value);
-    }
-    case DType::Resolution::kHour: {
-      return std::format("{} hours", value);
-    }
-    case DType::Resolution::kMinute: {
-      return std::format("{} minutes", value);
-    }
-    case DType::Resolution::kSecond: {
-      return std::format("{} seconds", value);
-    }
-    case DType::Resolution::kMillisecond: {
-      return std::format("{} milliseconds", value);
-    }
-    case DType::Resolution::kMicrosecond: {
-      return std::format("{} microseconds", value);
-    }
-    case DType::Resolution::kNanosecond: {
-      return std::format("{} nanoseconds", value);
-    }
-    case DType::Resolution::kPicosecond: {
-      return std::format("{} picoseconds", value);
-    }
-    case DType::Resolution::kFemtosecond: {
-      return std::format("{} femtoseconds", value);
-    }
-    case DType::Resolution::kAttosecond: {
-      return std::format("{} attoseconds", value);
-    }
-    default:
-      std::unreachable();
-  }
-}
-
 /// @brief True if leap year, else false
 [[nodiscard]] constexpr auto is_leap_year(const int year) noexcept -> bool {
   return (year & 3) == 0 && ((year % 25) != 0 || (year & 15) == 0);
@@ -709,15 +652,12 @@ struct ISOCalendar {
 [[nodiscard]] constexpr auto days_since_january(const Date& date) noexcept
     -> unsigned {
   unsigned result = date.day - 1;
-
   if (date.month > 2) {
     result += is_leap_year(date.year);
   }
-
   for (unsigned ix = 1; ix < date.month; ++ix) {
     result += kDaysInMonth[ix];
   }
-
   return result;
 }
 
@@ -755,7 +695,6 @@ struct ISOCalendar {
   const auto wday = weekday(days_since_epoch);
   auto days = iso_week_days(static_cast<int>(yday), static_cast<int>(wday));
 
-  // This ISO week belongs to the previous year?
   if (days < 0) {
     --date.year;
     days =
@@ -765,7 +704,6 @@ struct ISOCalendar {
     const int week_days =
         iso_week_days(static_cast<int>(yday) - (365 + is_leap_year(date.year)),
                       static_cast<int>(wday));
-    // This ISO week belongs to the next year?
     if (week_days >= 0) {
       ++date.year;
       days = week_days;
@@ -777,10 +715,106 @@ struct ISOCalendar {
           .weekday = (wday - 1 + 7) % 7 + 1};
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// String conversion
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// @brief Convert a datetime64 to an ISO 8601 string
+/// @param[in] value The datetime64 value
+/// @param[in] dtype The data type describing the resolution of the datetime64
+/// @return ISO 8601 formatted string
+[[nodiscard]] inline auto datetime64_to_string(const int64_t value,
+                                               const DType& dtype)
+    -> std::string {
+  Date date{};
+  Time time{};
+
+  switch (dtype.resolution()) {
+    case DType::Resolution::kYear:
+      date = date_from_years(value);
+      return std::format("{}", date.year);
+    case DType::Resolution::kMonth:
+      date = date_from_months(value);
+      return std::format("{}-{:02}", date.year, date.month);
+    case DType::Resolution::kWeek:
+    case DType::Resolution::kDay:
+      date = dtype.resolution() == DType::Resolution::kWeek
+                 ? date_from_weeks(value)
+                 : date_from_days(value);
+      return std::format("{}-{:02}-{:02}", date.year, date.month, date.day);
+    case DType::Resolution::kHour:
+      std::tie(date, time) = datetime_from_hours(value);
+      return std::format("{}-{:02}-{:02}T{:02}", date.year, date.month,
+                         date.day, time.hour);
+    case DType::Resolution::kMinute:
+      std::tie(date, time) = datetime_from_minutes(value);
+      return std::format("{}-{:02}-{:02}T{:02}:{:02}", date.year, date.month,
+                         date.day, time.hour, time.minute);
+    default: {
+      const auto frac = FractionalSeconds(dtype);
+      const auto [days, seconds, fractional] = frac.days_since_epoch(value);
+      date = date_from_days(days);
+      time = time_from_seconds(seconds);
+      if (const int ndigits = frac.ndigits(); ndigits > 0) {
+        return std::format("{}-{:02}-{:02}T{:02}:{:02}:{:02}.{:0{}}", date.year,
+                           date.month, date.day, time.hour, time.minute,
+                           time.second, fractional, ndigits);
+      }
+      return std::format("{}-{:02}-{:02}T{:02}:{:02}:{:02}", date.year,
+                         date.month, date.day, time.hour, time.minute,
+                         time.second);
+    }
+  }
+}
+
+/// @brief Convert a timedelta64 to a string representation
+/// @param[in] value The timedelta64 value
+/// @param[in] dtype The data type describing the resolution of the timedelta64
+/// @return String representation of the timedelta64 value
+[[nodiscard]] inline auto timedelta64_to_string(const int64_t value,
+                                                const DType& dtype)
+    -> std::string {
+  switch (dtype.resolution()) {
+    case DType::Resolution::kYear:
+      return std::format("{} years", value);
+    case DType::Resolution::kMonth:
+      return std::format("{} months", value);
+    case DType::Resolution::kWeek:
+      return std::format("{} weeks", value);
+    case DType::Resolution::kDay:
+      return std::format("{} days", value);
+    case DType::Resolution::kHour:
+      return std::format("{} hours", value);
+    case DType::Resolution::kMinute:
+      return std::format("{} minutes", value);
+    case DType::Resolution::kSecond:
+      return std::format("{} seconds", value);
+    case DType::Resolution::kMillisecond:
+      return std::format("{} milliseconds", value);
+    case DType::Resolution::kMicrosecond:
+      return std::format("{} microseconds", value);
+    case DType::Resolution::kNanosecond:
+      return std::format("{} nanoseconds", value);
+    case DType::Resolution::kPicosecond:
+      return std::format("{} picoseconds", value);
+    case DType::Resolution::kFemtosecond:
+      return std::format("{} femtoseconds", value);
+    case DType::Resolution::kAttosecond:
+      return std::format("{} attoseconds", value);
+    default:
+      std::unreachable();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Resolution conversion
+// ═══════════════════════════════════════════════════════════════════════════
+
 /// @brief Convert date types in place
 /// @param[in, out] coordinates Array of date values to convert
 /// @param[in] source Source date type
 /// @param[in] target Target date type
+/// @throw std::overflow_error if any conversion overflows
 inline auto convert(Eigen::Ref<Vector<int64_t>> coordinates,
                     const DType& source, const DType& target) -> void {
   // If resolutions are identical, no conversion is needed.
