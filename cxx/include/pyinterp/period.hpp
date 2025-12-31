@@ -14,8 +14,7 @@ namespace pyinterp {
 /// @brief Represents a half-open time period [begin, end).
 struct Period {
   int64_t begin{0};  ///< Start of the period (inclusive).
-  int64_t last{
-      -1};  ///< Last value in the period (inclusive), where end = last + 1.
+  int64_t last{-1};  ///< Last value in the period (inclusive).
 
   /// @brief Create a null/default period.
   constexpr Period() = default;
