@@ -14,6 +14,11 @@ class Period : public pyinterp::Period {
   /// @brief Create a null period with default resolution (datetime64[ns]).
   constexpr Period() = default;
 
+  /// Create a Period from a base Period and a resolution.
+  constexpr Period(const pyinterp::Period& period,
+                   const dateutils::DType& resolution)
+      : pyinterp::Period(period), resolution_(resolution) {}
+
   /// @brief Create a period with specified begin, end and resolution.
   /// @param[in] begin Start of the period (inclusive).
   /// @param[in] end End of the period.
@@ -30,6 +35,25 @@ class Period : public pyinterp::Period {
   Period(const nanobind::object& begin, const nanobind::object& end,
          bool within);
 
+  /// @brief Get the resolution of the period list.
+  /// @return The resolution dtype.
+  [[nodiscard]] constexpr auto resolution() const -> dateutils::DType {
+    return resolution_;
+  }
+
+  /// @brief Convert this period to a different resolution.
+  /// @param[in] target The target dtype resolution.
+  /// @return A new Period converted to the target resolution.
+  /// @throws std::overflow_error if conversion would overflow int64_t.
+  [[nodiscard]] auto convert_to(const dateutils::DType& target) const
+      -> Period {
+    if (resolution_ == target) {
+      return *this;
+    }
+    return Period{dateutils::convert(begin, resolution_, target),
+                  dateutils::convert(last, resolution_, target), target};
+  }
+
   /// @brief Equality comparison with resolution promotion.
   [[nodiscard]] auto operator==(const Period& rhs) const -> bool;
 
@@ -42,7 +66,7 @@ class Period : public pyinterp::Period {
   /// @return true if the point is within the period, false otherwise.
   [[nodiscard]] auto contains(const nanobind::object& point) const -> bool;
 
-  /// @brief Check if this period fully conatins (or equals) the other period.
+  /// @brief Check if this period fully contains (or equals) the other period.
   /// @param[in] other The other period to check containment.
   /// @return true if this period contains the other, false otherwise.
   [[nodiscard]] auto contains(const Period& other) const -> bool;
@@ -79,13 +103,14 @@ class Period : public pyinterp::Period {
 
   /// @brief Get the intersection of this period with another period.
   /// @param[in] other The other period to intersect with.
-  /// @return The intersection period.
-  [[nodiscard]] auto intersection(const Period& other) const -> Period;
+  /// @return The intersection period, or std::nullopt if disjoint.
+  [[nodiscard]] auto intersection(const Period& other) const
+      -> std::optional<Period>;
 
   /// @brief Merge this period with another period.
   /// @param[in] other The other period to merge with.
-  /// @return The merged period.
-  [[nodiscard]] auto merge(const Period& other) const -> Period;
+  /// @return The merged period, or std::nullopt if disjoint.
+  [[nodiscard]] auto merge(const Period& other) const -> std::optional<Period>;
 
   /// @brief Extend the period to include the given point.
   /// @param[in] point A numpy.datetime64 scalar.
@@ -114,34 +139,108 @@ class Period : public pyinterp::Period {
  private:
   /// The resolution of the period.
   dateutils::DType resolution_{};
+};
 
-  /// Create a Period from a base Period and a resolution.
-  constexpr Period(const pyinterp::Period& period,
-                   const dateutils::DType& resolution)
-      : pyinterp::Period(period), resolution_(resolution) {}
+class PeriodList : public pyinterp::PeriodList {
+ public:
+  /// @brief Create a null/default PeriodList.
+  constexpr PeriodList() = default;
 
-  /// @brief Get the finer (more precise) resolution between two DTypes.
-  /// @param[in] a First dtype.
-  /// @param[in] b Second dtype.
-  /// @return The finer resolution dtype.
-  [[nodiscard]] static constexpr auto finer_resolution(
-      const dateutils::DType& a, const dateutils::DType& b) noexcept
-      -> dateutils::DType {
-    return a.resolution() >= b.resolution() ? a : b;
+  /// @brief Create a PeriodList.
+  /// @param[in] periods The Python list of periods.
+  explicit PeriodList(const nanobind::list& periods);
+
+  /// @brief Append a period to the list.
+  /// @param[in] period The period to append.
+  auto append(const Period& period) -> void;
+
+  /// @brief Set the period at the given index.
+  /// @param[in] index The index to set.
+  /// @param[in] period The period to set.
+  auto setitem(size_t index, const Period& period) -> void;
+
+  /// @brief Check if a date is within tolerance of any period in the list.
+  /// @param[in] date A numpy.datetime64 scalar.
+  /// @param[in] tolerance The tolerance margin as a numpy.timedelta64 scalar.
+  /// @return true if the date is close to any period, false otherwise.
+  [[nodiscard]] auto is_close(const nanobind::object& date,
+                              const nanobind::object& tolerance) const -> bool;
+
+  /// @brief Find the index of the period containing a date.
+  /// @param[in] date A numpy.datetime64 scalar.
+  /// @return Index of the containing period, or -1 if not found.
+  [[nodiscard]] auto find_containing_index(const nanobind::object& date) const
+      -> int64_t;
+
+  /// @brief Find the period containing a date.
+  /// @param[in] date A numpy.datetime64 scalar.
+  /// @return The containing Period, or None if not found.
+  [[nodiscard]] auto find_containing(const nanobind::object& date) const
+      -> std::optional<Period>;
+
+  /// @brief Get the state of the object for pickling.
+  /// @return A tuple representing the state of the object.
+  [[nodiscard]] auto getstate() const -> nanobind::tuple;
+
+  /// @brief Set the state of the object from pickling.
+  /// @param[in] state A tuple representing the state of the object.
+  [[nodiscard]] static auto setstate(const nanobind::tuple& state)
+      -> PeriodList;
+
+  /// @brief Get the resolution of the period list.
+  /// @return The resolution dtype.
+  [[nodiscard]] constexpr auto resolution() const -> const dateutils::DType {
+    return resolution_;
   }
 
-  /// @brief Convert this period to a different resolution.
-  /// @param[in] target The target dtype resolution.
-  /// @return A new Period converted to the target resolution.
-  /// @throws std::overflow_error if conversion would overflow int64_t.
-  [[nodiscard]] auto convert_to(const dateutils::DType& target) const
-      -> Period {
-    if (resolution_ == target) {
-      return *this;
-    }
-    return Period{dateutils::convert(begin, resolution_, target),
-                  dateutils::convert(last, resolution_, target), target};
+  /// @brief Convert the period list to a string representation.
+  /// @return String representation of the period list.
+  [[nodiscard]] explicit operator std::string() const;
+
+  /// @brief Get iterator to the beginning of the list.
+  [[nodiscard]] auto begin() noexcept -> Period* {
+    return reinterpret_cast<Period*>(pyinterp::PeriodList::data());
   }
+
+  /// @brief Get const iterator to the beginning of the list.
+  [[nodiscard]] auto begin() const noexcept -> const Period* {
+    return reinterpret_cast<const Period*>(pyinterp::PeriodList::data());
+  }
+
+  /// @brief Get iterator to the end of the list.
+  [[nodiscard]] auto end() noexcept -> Period* {
+    return reinterpret_cast<Period*>(pyinterp::PeriodList::data() + size());
+  }
+
+  /// @brief Get const iterator to the end of the list.
+  [[nodiscard]] auto end() const noexcept -> const Period* {
+    return reinterpret_cast<const Period*>(pyinterp::PeriodList::data() +
+                                           size());
+  }
+
+  /// @brief Access element by index (non-const).
+  [[nodiscard]] auto operator[](size_t index) noexcept -> Period& {
+    return reinterpret_cast<Period&>(pyinterp::PeriodList::operator[](index));
+  }
+
+  /// @brief Access element by index (const).
+  [[nodiscard]] auto operator[](size_t index) const noexcept -> const Period& {
+    return reinterpret_cast<const Period&>(
+        pyinterp::PeriodList::operator[](index));
+  }
+
+ private:
+  /// The resolution of the periods in the list.
+  dateutils::DType resolution_{};
+  /// Magic number for serialization versioning.
+  static constexpr uint32_t kMagicNumber = 0x504C4953;  // 'PLIS'
+
+  /// @brief Construct a PeriodList from a base PeriodList and a resolution.
+  /// @param[in,out] period_list The base PeriodList.
+  /// @param[in] resolution The numpy dtype resolution for the periods.
+  constexpr PeriodList(pyinterp::PeriodList&& period_list,
+                       const dateutils::DType& resolution)
+      : pyinterp::PeriodList(std::move(period_list)), resolution_(resolution) {}
 };
 
 /// @brief Initialize the Period classes in the given module.
