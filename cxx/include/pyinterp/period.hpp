@@ -32,7 +32,7 @@ struct Period {
     return last + 1;
   }
 
-  /// @brief Return the duration (alias for length).
+  /// @brief Return the duration.
   [[nodiscard]] constexpr auto duration() const noexcept -> int64_t {
     return end() - begin;
   }
@@ -129,6 +129,11 @@ class PeriodList : public std::vector<Period> {
  public:
   using std::vector<Period>::vector;
 
+  /// @brief Create a PeriodList from a vector of periods.
+  /// @param[in,out] periods The vector of periods.
+  explicit constexpr PeriodList(std::vector<Period>&& periods) noexcept
+      : std::vector<Period>(std::move(periods)) {}
+
   /// @brief Check that periods are sorted and non-overlapping.
   [[nodiscard]] auto is_sorted_and_disjoint() const noexcept -> bool {
     if (size() <= 1) {
@@ -155,9 +160,30 @@ class PeriodList : public std::vector<Period> {
 
   /// @brief Total duration covered by all periods.
   [[nodiscard]] auto total_duration() const noexcept -> int64_t {
-    return std::ranges::fold_left(
-        *this, int64_t{0},
-        [](int64_t acc, const auto& p) { return acc + p.duration(); });
+    if (empty()) {
+      return 0;
+    }
+
+    PeriodList copy(*this);
+    copy.sort();
+
+    int64_t total = copy.front().duration();
+    auto last_end = copy.front().end();
+
+    for (size_t i = 1; i < copy.size(); ++i) {
+      const auto& p = copy[i];
+
+      if (p.begin <= last_end) {
+        // Overlapping or adjacent: extend coverage
+        last_end = std::max(last_end, p.end());
+      } else {
+        // Gap: add current coverage and start new
+        total += p.duration();
+        last_end = p.end();
+      }
+    }
+
+    return total;
   }
 
   /// @brief Find the period containing a date using binary search.
