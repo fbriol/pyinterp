@@ -945,4 +945,14 @@ inline auto convert(const int64_t value, const DType& source,
   return array(0);
 }
 
+/// @brief Get the finer (more precise) resolution between two DTypes.
+/// @param[in] a First dtype.
+/// @param[in] b Second dtype.
+/// @return The finer resolution dtype.
+[[nodiscard]] constexpr auto finer_resolution(
+    const dateutils::DType& a, const dateutils::DType& b) noexcept
+    -> dateutils::DType {
+  return a.resolution() >= b.resolution() ? a : b;
+}
+
 }  // namespace pyinterp::dateutils
