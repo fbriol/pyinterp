@@ -5,7 +5,6 @@
 #include <nanobind/stl/string.h>
 
 #include <Eigen/Core>
-#include <mutex>
 
 #include "pyinterp/dateutils.hpp"
 #include "pyinterp/eigen.hpp"
@@ -18,13 +17,13 @@ struct NumpyContext {
 
   /// @brief Get the singleton instance
   /// @return The singleton instance
+  ///
+  /// @note Uses intentional memory leak to avoid destructor issues during
+  /// Python interpreter shutdown. The module reference is never destroyed,
+  /// which is safe since it's a process-lifetime singleton.
   static auto get() -> const NumpyContext & {
-    static NumpyContext ctx;
-    static std::once_flag init_flag;
-
-    std::call_once(init_flag,
-                   []() { ctx.module = nanobind::module_::import_("numpy"); });
-    return ctx;
+    static auto *ctx = new NumpyContext{nanobind::module_::import_("numpy")};
+    return *ctx;
   }
 };
 
