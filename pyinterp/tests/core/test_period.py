@@ -29,6 +29,12 @@ class TestPeriodConstruction:
             np.datetime64("2020-01-01", "D"),
             np.datetime64("2020-01-10", "D"),
         )
+        assert p.begin == np.datetime64("2020-01-01", "D")
+        assert p.last == np.datetime64("2020-01-10", "D")
+        assert p.resolution == np.dtype("datetime64[D]")
+        assert p.end() == np.datetime64("2020-01-11", "D")
+        assert p.duration() == np.timedelta64(10, "D")
+
         # Period should be inclusive on both ends
         assert p.contains(np.datetime64("2020-01-01", "D"))
         assert p.contains(np.datetime64("2020-01-10", "D"))
@@ -42,6 +48,11 @@ class TestPeriodConstruction:
             np.datetime64("2020-01-10", "D"),
             within=False,
         )
+        # Verify accessors
+        assert p.begin == np.datetime64("2020-01-01", "D")
+        assert p.last == np.datetime64("2020-01-09", "D")
+        assert p.resolution == np.dtype("datetime64[D]")
+        assert p.end() == np.datetime64("2020-01-10", "D")
         # Period should be inclusive at begin, exclusive at end
         assert p.contains(np.datetime64("2020-01-01", "D"))
         assert p.contains(np.datetime64("2020-01-09", "D"))
@@ -55,6 +66,7 @@ class TestPeriodConstruction:
             np.datetime64("2020-01-02T12", "h"),
         )
         # Period should automatically promote to finer resolution (hours)
+        assert p.resolution == np.dtype("datetime64[h]")
         assert p.contains(np.datetime64("2020-01-02T06", "h"))
         assert p.contains(np.datetime64("2020-01-02T12", "h"))
 
@@ -65,6 +77,8 @@ class TestPeriodConstruction:
             np.datetime64("1960-01-01", "D"),
             np.datetime64("1965-12-31", "D"),
         )
+        assert p.begin == np.datetime64("1960-01-01", "D")
+        assert p.last == np.datetime64("1965-12-31", "D")
         assert p.contains(np.datetime64("1963-06-15", "D"))
         assert not p.contains(np.datetime64("1970-01-01", "D"))
 
@@ -279,6 +293,11 @@ class TestPeriodOperations:
 
         # Intersection should be [2020-01-15, 2020-01-20]
         i = p1.intersection(p2)
+        assert i is not None
+        assert i.begin == np.datetime64("2020-01-15", "D")
+        assert i.last == np.datetime64("2020-01-20", "D")
+        assert i.resolution == np.dtype("datetime64[D]")
+        assert i.duration() == np.timedelta64(6, "D")
         assert i.contains(np.datetime64("2020-01-15", "D"))
         assert i.contains(np.datetime64("2020-01-20", "D"))
         assert not i.contains(np.datetime64("2020-01-14", "D"))
@@ -296,9 +315,7 @@ class TestPeriodOperations:
         )
 
         i = p1.intersection(p2)
-        # Null period shouldn't contain any valid points
-        assert not i.contains(np.datetime64("2020-01-15", "D"))
-        assert not i.contains(np.datetime64("2020-01-25", "D"))
+        assert i is None
 
     def test_merge(self) -> None:
         """Test merge method."""
@@ -313,6 +330,11 @@ class TestPeriodOperations:
 
         # Merge overlapping periods
         m = p1.merge(p2)
+        assert m is not None
+        assert m.begin == np.datetime64("2020-01-10", "D")
+        assert m.last == np.datetime64("2020-01-25", "D")
+        assert m.resolution == np.dtype("datetime64[D]")
+        assert m.duration() == np.timedelta64(16, "D")
         assert m.contains(np.datetime64("2020-01-10", "D"))
         assert m.contains(np.datetime64("2020-01-15", "D"))
         assert m.contains(np.datetime64("2020-01-25", "D"))
@@ -332,6 +354,10 @@ class TestPeriodOperations:
 
         # Merge adjacent periods
         m = p1.merge(p2)
+        assert m is not None
+        assert m.begin == np.datetime64("2020-01-10", "D")
+        assert m.last == np.datetime64("2020-01-30", "D")
+        assert m.duration() == np.timedelta64(21, "D")
         assert m.contains(np.datetime64("2020-01-10", "D"))
         assert m.contains(np.datetime64("2020-01-20", "D"))
         assert m.contains(np.datetime64("2020-01-21", "D"))
@@ -349,9 +375,7 @@ class TestPeriodOperations:
         )
 
         m = p1.merge(p2)
-        # Null period shouldn't contain any valid points
-        assert not m.contains(np.datetime64("2020-01-15", "D"))
-        assert not m.contains(np.datetime64("2020-02-05", "D"))
+        assert m is None
 
     def test_extend(self) -> None:
         """Test extend method."""
@@ -362,16 +386,24 @@ class TestPeriodOperations:
 
         # Extend with point inside - no change
         e1 = p.extend(np.datetime64("2020-01-15", "D"))
+        assert e1.begin == np.datetime64("2020-01-10", "D")
+        assert e1.last == np.datetime64("2020-01-20", "D")
         assert e1.contains(np.datetime64("2020-01-10", "D"))
         assert e1.contains(np.datetime64("2020-01-20", "D"))
 
         # Extend with point before - expands begin
         e2 = p.extend(np.datetime64("2020-01-05", "D"))
+        assert e2.begin == np.datetime64("2020-01-05", "D")
+        assert e2.last == np.datetime64("2020-01-20", "D")
+        assert e2.duration() == np.timedelta64(16, "D")
         assert e2.contains(np.datetime64("2020-01-05", "D"))
         assert e2.contains(np.datetime64("2020-01-20", "D"))
 
         # Extend with point after - expands last
         e3 = p.extend(np.datetime64("2020-01-25", "D"))
+        assert e3.begin == np.datetime64("2020-01-10", "D")
+        assert e3.last == np.datetime64("2020-01-25", "D")
+        assert e3.duration() == np.timedelta64(16, "D")
         assert e3.contains(np.datetime64("2020-01-10", "D"))
         assert e3.contains(np.datetime64("2020-01-25", "D"))
 
@@ -384,18 +416,26 @@ class TestPeriodOperations:
 
         # Shift forward by 10 days
         s1 = p.shift(np.timedelta64(10, "D"))
+        assert s1.begin == np.datetime64("2020-01-20", "D")
+        assert s1.last == np.datetime64("2020-01-30", "D")
+        assert s1.duration() == np.timedelta64(11, "D")
         assert s1.contains(np.datetime64("2020-01-20", "D"))
         assert s1.contains(np.datetime64("2020-01-30", "D"))
         assert not s1.contains(np.datetime64("2020-01-15", "D"))
 
         # Shift backward by 5 days
         s2 = p.shift(np.timedelta64(-5, "D"))
+        assert s2.begin == np.datetime64("2020-01-05", "D")
+        assert s2.last == np.datetime64("2020-01-15", "D")
+        assert s2.duration() == np.timedelta64(11, "D")
         assert s2.contains(np.datetime64("2020-01-05", "D"))
         assert s2.contains(np.datetime64("2020-01-15", "D"))
         assert not s2.contains(np.datetime64("2020-01-20", "D"))
 
         # Shift by zero
         s3 = p.shift(np.timedelta64(0, "D"))
+        assert s3.begin == np.datetime64("2020-01-10", "D")
+        assert s3.last == np.datetime64("2020-01-20", "D")
         assert s3.contains(np.datetime64("2020-01-10", "D"))
         assert s3.contains(np.datetime64("2020-01-20", "D"))
 
@@ -692,6 +732,7 @@ class TestPeriodResolutionConversion:
         )
         # Get intersection
         i = p1.intersection(p2)
+        assert i is not None
         # Should contain overlapping region
         assert i.contains(np.datetime64("2020-01-17", "D"))
         assert not i.contains(np.datetime64("2020-01-12", "D"))
@@ -721,6 +762,7 @@ class TestPeriodResolutionConversion:
         )
         # Merge periods
         m = p1.merge(p2)
+        assert m is not None
         # Should span entire range
         assert m.contains(np.datetime64("2020-01-10", "D"))
         assert m.contains(np.datetime64("2020-01-20", "D"))
@@ -892,6 +934,7 @@ class TestPeriodEdgeCases:
         # Should handle resolution promotion automatically
         assert p1.intersects(p2)
         i = p1.intersection(p2)
+        assert i is not None
         assert i.contains(np.datetime64("2020-01-17", "D"))
 
     def test_year_2000_problem(self) -> None:
