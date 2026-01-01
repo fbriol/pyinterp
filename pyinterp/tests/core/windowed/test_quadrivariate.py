@@ -230,9 +230,9 @@ class TestQuadrivariateWindowed:
         assert np.isnan(result[0])
 
         # With bounds_error=True, should raise an error
-        config = self.make_config(windowed.Quadrivariate.bilinear).bounds_error(
-            True
-        )
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear
+        ).with_bounds_error(True)
         with pytest.raises((ValueError, IndexError), match="out of bounds"):
             core.quadrivariate(grid, x, y, z, u, config)
 
@@ -411,13 +411,13 @@ class TestQuadrivariateWindowed:
         # Test with 1 thread
         config_single = self.make_config(
             windowed.Quadrivariate.bilinear
-        ).num_threads(1)
+        ).with_num_threads(1)
         result_single = core.quadrivariate(grid, x, y, z, u, config_single)
 
         # Test with multiple threads
         config_multi = self.make_config(
             windowed.Quadrivariate.bilinear
-        ).num_threads(4)
+        ).with_num_threads(4)
         result_multi = core.quadrivariate(grid, x, y, z, u, config_multi)
 
         # Results should be identical or very close

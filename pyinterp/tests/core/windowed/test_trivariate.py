@@ -178,7 +178,7 @@ class TestTrivariateWindowed:
             )
 
     def test_bounds_error(self) -> None:
-        """Test bounds_error parameter with windowed."""
+        """Test with_bounds_error parameter with windowed."""
         grid = self.create_analytical_grid3d(np.float64)
 
         # Point outside grid bounds
@@ -186,17 +186,17 @@ class TestTrivariateWindowed:
         y = np.array([0.0])
         z = np.array([0.0])
 
-        # With bounds_error=False, should return NaN
+        # With with_bounds_error=False, should return NaN
         config = self.make_config(windowed.Trivariate.bilinear)
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (1,)
         assert np.isnan(result[0])
 
-        # With bounds_error=True, should raise an error
-        config = self.make_config(windowed.Trivariate.bilinear).bounds_error(
-            True
-        )
+        # With with_bounds_error=True, should raise an error
+        config = self.make_config(
+            windowed.Trivariate.bilinear
+        ).with_bounds_error(True)
         with pytest.raises((ValueError, IndexError), match="out of bounds"):
             core.trivariate(grid, x, y, z, config)
 
@@ -388,13 +388,13 @@ class TestTrivariateWindowed:
         # Test with 1 thread
         config_single = self.make_config(
             windowed.Trivariate.bilinear
-        ).num_threads(1)
+        ).with_num_threads(1)
         result_single = core.trivariate(grid, x, y, z, config_single)
 
         # Test with multiple threads
         config_multi = self.make_config(
             windowed.Trivariate.bilinear
-        ).num_threads(4)
+        ).with_num_threads(4)
         result_multi = core.trivariate(grid, x, y, z, config_multi)
 
         # Results should be identical or very close

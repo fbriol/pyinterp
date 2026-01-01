@@ -28,15 +28,15 @@ class TestGeometric:
         config = geometric.Bivariate.bilinear()
 
         # Test bounds_error
-        config_bounds = config.bounds_error(True)
+        config_bounds = config.with_bounds_error(True)
         assert isinstance(config_bounds, geometric.Bivariate)
         assert config_bounds is not config
 
-        config_bounds_false = config.bounds_error(False)
+        config_bounds_false = config.with_bounds_error(False)
         assert isinstance(config_bounds_false, geometric.Bivariate)
 
         # Test num_threads
-        config_threads = config.num_threads(4)
+        config_threads = config.with_num_threads(4)
         assert isinstance(config_threads, geometric.Bivariate)
         assert config_threads is not config
 
@@ -55,11 +55,11 @@ class TestGeometric:
         """Test Trivariate instance methods."""
         config = geometric.Trivariate.bilinear()
 
-        config_bounds = config.bounds_error(True)
+        config_bounds = config.with_bounds_error(True)
         assert isinstance(config_bounds, geometric.Trivariate)
         assert config_bounds is not config
 
-        config_threads = config.num_threads(8)
+        config_threads = config.with_num_threads(8)
         assert isinstance(config_threads, geometric.Trivariate)
         assert config_threads is not config
 
@@ -78,11 +78,11 @@ class TestGeometric:
         """Test Quadrivariate instance methods."""
         config = geometric.Quadrivariate.bilinear()
 
-        config_bounds = config.bounds_error(True)
+        config_bounds = config.with_bounds_error(True)
         assert isinstance(config_bounds, geometric.Quadrivariate)
         assert config_bounds is not config
 
-        config_threads = config.num_threads(2)
+        config_threads = config.with_num_threads(2)
         assert isinstance(config_threads, geometric.Quadrivariate)
         assert config_threads is not config
 
@@ -138,12 +138,12 @@ class TestWindowed:
         config = windowed.Bivariate.bilinear()
 
         # Test bounds_error
-        config_bounds = config.bounds_error(True)
+        config_bounds = config.with_bounds_error(True)
         assert isinstance(config_bounds, windowed.Bivariate)
         assert config_bounds is not config
 
         # Test num_threads
-        config_threads = config.num_threads(4)
+        config_threads = config.with_num_threads(4)
         assert isinstance(config_threads, windowed.Bivariate)
         assert config_threads is not config
 
@@ -195,11 +195,11 @@ class TestWindowed:
         """Test Trivariate instance methods."""
         config = windowed.Trivariate.bilinear()
 
-        config_bounds = config.bounds_error(True)
+        config_bounds = config.with_bounds_error(True)
         assert isinstance(config_bounds, windowed.Trivariate)
         assert config_bounds is not config
 
-        config_threads = config.num_threads(4)
+        config_threads = config.with_num_threads(4)
         assert isinstance(config_threads, windowed.Trivariate)
         assert config_threads is not config
 
@@ -252,11 +252,11 @@ class TestWindowed:
         """Test Quadrivariate instance methods."""
         config = windowed.Quadrivariate.bilinear()
 
-        config_bounds = config.bounds_error(True)
+        config_bounds = config.with_bounds_error(True)
         assert isinstance(config_bounds, windowed.Quadrivariate)
         assert config_bounds is not config
 
-        config_threads = config.num_threads(4)
+        config_threads = config.with_num_threads(4)
         assert isinstance(config_threads, windowed.Quadrivariate)
         assert config_threads is not config
 
@@ -304,9 +304,9 @@ class TestWindowed:
 
     def test_equality(self) -> None:
         """Test configuration equality (basic checks)."""
-        config1 = geometric.Bivariate.bilinear().num_threads(4)
-        config2 = geometric.Bivariate.bilinear().num_threads(4)
-        config3 = geometric.Bivariate.bilinear().num_threads(8)
+        config1 = geometric.Bivariate.bilinear().with_num_threads(4)
+        config2 = geometric.Bivariate.bilinear().with_num_threads(4)
+        config3 = geometric.Bivariate.bilinear().with_num_threads(8)
 
         assert isinstance(config1, geometric.Bivariate)
         assert isinstance(config2, geometric.Bivariate)

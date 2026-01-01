@@ -139,7 +139,7 @@ class TestQuadrivariateGeometric:
         assert np.isnan(result[0])
 
         # With bounds_error=True, should raise an error
-        config = geometric.Quadrivariate.bilinear().bounds_error(True)
+        config = geometric.Quadrivariate.bilinear().with_bounds_error(True)
         with pytest.raises(ValueError, match="out of bounds"):
             core.quadrivariate(grid, x, y, z, u, config)
 
@@ -250,11 +250,11 @@ class TestQuadrivariateGeometric:
         u = np.array([np.pi / 6, np.pi / 3, np.pi / 2])
 
         # Test with 1 thread
-        config_single = geometric.Quadrivariate.bilinear().num_threads(1)
+        config_single = geometric.Quadrivariate.bilinear().with_num_threads(1)
         result_single = core.quadrivariate(grid, x, y, z, u, config_single)
 
         # Test with multiple threads
-        config_multi = geometric.Quadrivariate.bilinear().num_threads(4)
+        config_multi = geometric.Quadrivariate.bilinear().with_num_threads(4)
         result_multi = core.quadrivariate(grid, x, y, z, u, config_multi)
 
         # Results should be identical

@@ -132,7 +132,7 @@ class TestBivariateGeometric:
         assert np.isnan(result[0])
 
         # With bounds_error=True, should raise an error
-        config = geometric.Bivariate.bilinear().bounds_error(True)
+        config = geometric.Bivariate.bilinear().with_bounds_error(True)
         with pytest.raises(ValueError, match="out of bounds"):
             core.bivariate(grid, x, y, config)
 
@@ -194,11 +194,11 @@ class TestBivariateGeometric:
         y = np.array([np.pi / 4, np.pi / 2, 3 * np.pi / 4])
 
         # Test with 1 thread
-        config_single = geometric.Bivariate.bilinear().num_threads(1)
+        config_single = geometric.Bivariate.bilinear().with_num_threads(1)
         result_single = core.bivariate(grid, x, y, config_single)
 
         # Test with multiple threads
-        config_multi = geometric.Bivariate.bilinear().num_threads(4)
+        config_multi = geometric.Bivariate.bilinear().with_num_threads(4)
         result_multi = core.bivariate(grid, x, y, config_multi)
 
         # Results should be identical or very close
@@ -284,7 +284,9 @@ class TestBivariateGeometric:
     def test_method_chaining(self) -> None:
         """Test that geometric methods can be chained."""
         config = (
-            geometric.Bivariate.bilinear().num_threads(4).bounds_error(True)
+            geometric.Bivariate.bilinear()
+            .with_num_threads(4)
+            .with_bounds_error(True)
         )
 
         assert isinstance(config, geometric.Bivariate)

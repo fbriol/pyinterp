@@ -125,7 +125,7 @@ class TestTrivariateGeometric:
         result = core.trivariate(grid, x, y, z, config)
 
         # With bounds_error=True, should raise an error
-        config = geometric.Trivariate.bilinear().bounds_error(True)
+        config = geometric.Trivariate.bilinear().with_bounds_error(True)
         with pytest.raises(ValueError, match="out of bounds"):
             core.trivariate(grid, x, y, z, config)
 
@@ -183,11 +183,11 @@ class TestTrivariateGeometric:
         z = np.array([1.0, 5.0, 9.0])
 
         # Test with 1 thread
-        config_single = geometric.Trivariate.bilinear().num_threads(1)
+        config_single = geometric.Trivariate.bilinear().with_num_threads(1)
         result_single = core.trivariate(grid, x, y, z, config_single)
 
         # Test with multiple threads
-        config_multi = geometric.Trivariate.bilinear().num_threads(4)
+        config_multi = geometric.Trivariate.bilinear().with_num_threads(4)
         result_multi = core.trivariate(grid, x, y, z, config_multi)
 
         # Results should be identical

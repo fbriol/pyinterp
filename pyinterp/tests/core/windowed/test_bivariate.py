@@ -161,7 +161,7 @@ class TestBivariateWindowed:
         # With bounds_error=True, should raise an error
         config = self.make_config(
             windowed.Bivariate.bilinear,
-        ).bounds_error(True)
+        ).with_bounds_error(True)
         with pytest.raises((ValueError, IndexError), match="out of bounds"):
             core.bivariate(grid, x, y, config)
 
@@ -316,13 +316,13 @@ class TestBivariateWindowed:
         # Test with 1 thread
         config_single = self.make_config(
             windowed.Bivariate.bilinear
-        ).num_threads(1)
+        ).with_num_threads(1)
         result_single = core.bivariate(grid, x, y, config_single)
 
         # Test with multiple threads
         config_multi = self.make_config(
             windowed.Bivariate.bilinear
-        ).num_threads(4)
+        ).with_num_threads(4)
         result_multi = core.bivariate(grid, x, y, config_multi)
 
         # Results should be identical or very close
