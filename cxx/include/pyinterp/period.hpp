@@ -167,21 +167,26 @@ class PeriodList : public std::vector<Period> {
     PeriodList copy(*this);
     copy.sort();
 
-    int64_t total = copy.front().duration();
-    auto last_end = copy.front().end();
+    int64_t total = 0;
+    auto current_begin = copy.front().begin;
+    auto current_end = copy.front().end();
 
     for (size_t i = 1; i < copy.size(); ++i) {
       const auto& p = copy[i];
 
-      if (p.begin <= last_end) {
+      if (p.begin <= current_end) {
         // Overlapping or adjacent: extend coverage
-        last_end = std::max(last_end, p.end());
+        current_end = std::max(current_end, p.end());
       } else {
-        // Gap: add current coverage and start new
-        total += p.duration();
-        last_end = p.end();
+        // Gap: accumulate current segment and start new
+        total += (current_end - current_begin);
+        current_begin = p.begin;
+        current_end = p.end();
       }
     }
+
+    // Don't forget to add the last segment
+    total += (current_end - current_begin);
 
     return total;
   }

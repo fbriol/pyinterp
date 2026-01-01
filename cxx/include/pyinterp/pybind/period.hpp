@@ -197,36 +197,19 @@ class PeriodList : public pyinterp::PeriodList {
   /// @return String representation of the period list.
   [[nodiscard]] explicit operator std::string() const;
 
-  /// @brief Get iterator to the beginning of the list.
-  [[nodiscard]] auto begin() noexcept -> Period* {
-    return reinterpret_cast<Period*>(pyinterp::PeriodList::data());
+  /// @brief Access element by index (returns a Period with resolution).
+  /// @note This returns a temporary Period object, not a reference to avoid
+  /// undefined behavior from reinterpret_cast.
+  [[nodiscard]] auto operator[](size_t index) const -> Period {
+    return {pyinterp::PeriodList::operator[](index), resolution_};
   }
 
-  /// @brief Get const iterator to the beginning of the list.
-  [[nodiscard]] auto begin() const noexcept -> const Period* {
-    return reinterpret_cast<const Period*>(pyinterp::PeriodList::data());
-  }
-
-  /// @brief Get iterator to the end of the list.
-  [[nodiscard]] auto end() noexcept -> Period* {
-    return reinterpret_cast<Period*>(pyinterp::PeriodList::data() + size());
-  }
-
-  /// @brief Get const iterator to the end of the list.
-  [[nodiscard]] auto end() const noexcept -> const Period* {
-    return reinterpret_cast<const Period*>(pyinterp::PeriodList::data() +
-                                           size());
-  }
-
-  /// @brief Access element by index (non-const).
-  [[nodiscard]] auto operator[](size_t index) noexcept -> Period& {
-    return reinterpret_cast<Period&>(pyinterp::PeriodList::operator[](index));
-  }
-
-  /// @brief Access element by index (const).
-  [[nodiscard]] auto operator[](size_t index) const noexcept -> const Period& {
-    return reinterpret_cast<const Period&>(
-        pyinterp::PeriodList::operator[](index));
+  /// @brief Get element at index (const, returns Period with resolution).
+  [[nodiscard]] auto at(size_t index) const -> Period {
+    if (index >= size()) {
+      throw std::out_of_range("PeriodList index out of range");
+    }
+    return {pyinterp::PeriodList::operator[](index), resolution_};
   }
 
  private:

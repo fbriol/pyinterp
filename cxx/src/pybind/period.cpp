@@ -117,19 +117,17 @@ auto Period::operator<=>(const Period& rhs) const -> std::strong_ordering {
 auto Period::contains(const nanobind::object& point) const -> bool {
   auto [resolution, value] = convert_datetime64("point", point);
   const auto target = dateutils::finer_resolution(resolution_, resolution);
-  const auto self_conv = convert_to(target);
+  const pyinterp::Period self_conv = convert_to(target);
   const auto converted_value = dateutils::convert(value, resolution, target);
-  return static_cast<const pyinterp::Period&>(self_conv).contains(
-      converted_value);
+  return self_conv.contains(converted_value);
 }
 
 auto Period::contains(const Period& other) const -> bool {
   const auto target =
       dateutils::finer_resolution(resolution_, other.resolution_);
-  const auto self_conv = convert_to(target);
-  const auto other_conv = other.convert_to(target);
-  return static_cast<const pyinterp::Period&>(self_conv).contains(
-      static_cast<const pyinterp::Period&>(other_conv));
+  const pyinterp::Period self_conv = convert_to(target);
+  const pyinterp::Period other_conv = other.convert_to(target);
+  return self_conv.contains(other_conv);
 }
 
 auto Period::is_after(const nanobind::object& point) const -> bool {
@@ -137,8 +135,7 @@ auto Period::is_after(const nanobind::object& point) const -> bool {
   const auto target = dateutils::finer_resolution(resolution_, resolution);
   const auto self_conv = convert_to(target);
   const auto converted_value = dateutils::convert(value, resolution, target);
-  return static_cast<const pyinterp::Period&>(self_conv).is_after(
-      converted_value);
+  return self_conv.pyinterp::Period::is_after(converted_value);
 }
 
 auto Period::is_before(const nanobind::object& point) const -> bool {
@@ -146,8 +143,7 @@ auto Period::is_before(const nanobind::object& point) const -> bool {
   const auto target = dateutils::finer_resolution(resolution_, resolution);
   const auto self_conv = convert_to(target);
   const auto converted_value = dateutils::convert(value, resolution, target);
-  return static_cast<const pyinterp::Period&>(self_conv).is_before(
-      converted_value);
+  return self_conv.pyinterp::Period::is_before(converted_value);
 }
 
 auto Period::is_close(const nanobind::object& date,
@@ -163,34 +159,32 @@ auto Period::is_close(const nanobind::object& date,
       dateutils::convert(date_value, date_resolution, target);
   const auto converted_tolerance =
       dateutils::convert(tolerance_value, tolerance_resolution, target);
-  return static_cast<const pyinterp::Period&>(self_conv).is_close(
-      converted_date, converted_tolerance);
+  return self_conv.pyinterp::Period::is_close(converted_date,
+                                              converted_tolerance);
 }
 
 auto Period::intersects(const Period& other) const -> bool {
   const auto target =
       dateutils::finer_resolution(resolution_, other.resolution_);
-  return static_cast<const pyinterp::Period&>(convert_to(target))
-      .intersects(
-          static_cast<const pyinterp::Period&>(other.convert_to(target)));
+  const pyinterp::Period self_conv = convert_to(target);
+  const pyinterp::Period other_conv = other.convert_to(target);
+  return self_conv.intersects(other_conv);
 }
 
 auto Period::is_adjacent(const Period& other) const -> bool {
   const auto target =
       dateutils::finer_resolution(resolution_, other.resolution_);
-  return static_cast<const pyinterp::Period&>(convert_to(target))
-      .is_adjacent(
-          static_cast<const pyinterp::Period&>(other.convert_to(target)));
+  const pyinterp::Period self_conv = convert_to(target);
+  const pyinterp::Period other_conv = other.convert_to(target);
+  return self_conv.is_adjacent(other_conv);
 }
 
 auto Period::intersection(const Period& other) const -> std::optional<Period> {
   const auto target =
       dateutils::finer_resolution(resolution_, other.resolution_);
-  const auto self_conv = convert_to(target);
-  const auto other_conv = other.convert_to(target);
-  const auto intersection =
-      static_cast<const pyinterp::Period&>(self_conv).intersection(
-          static_cast<const pyinterp::Period&>(other_conv));
+  const pyinterp::Period self_conv = convert_to(target);
+  const pyinterp::Period other_conv = other.convert_to(target);
+  const auto intersection = self_conv.intersection(other_conv);
   if (intersection.is_null()) {
     return std::nullopt;
   }
@@ -200,10 +194,9 @@ auto Period::intersection(const Period& other) const -> std::optional<Period> {
 auto Period::merge(const Period& other) const -> std::optional<Period> {
   const auto target =
       dateutils::finer_resolution(resolution_, other.resolution_);
-  const auto self_conv = convert_to(target);
-  const auto other_conv = other.convert_to(target);
-  const auto merged = static_cast<const pyinterp::Period&>(self_conv).merge(
-      static_cast<const pyinterp::Period&>(other_conv));
+  const pyinterp::Period self_conv = convert_to(target);
+  const pyinterp::Period other_conv = other.convert_to(target);
+  const auto merged = self_conv.merge(other_conv);
   if (merged.is_null()) {
     return std::nullopt;
   }
@@ -213,21 +206,17 @@ auto Period::merge(const Period& other) const -> std::optional<Period> {
 auto Period::extend(const nanobind::object& point) const -> Period {
   auto [resolution, value] = convert_datetime64("point", point);
   const auto target = dateutils::finer_resolution(resolution_, resolution);
-  const auto self_conv = convert_to(target);
+  const pyinterp::Period self_conv = convert_to(target);
   const auto converted_value = dateutils::convert(value, resolution, target);
-  return Period{
-      static_cast<const pyinterp::Period&>(self_conv).extend(converted_value),
-      target};
+  return Period{self_conv.extend(converted_value), target};
 }
 
 auto Period::shift(const nanobind::object& offset) const -> Period {
   auto [resolution, value] = convert_timedelta64("offset", offset);
   const auto target = dateutils::finer_resolution(resolution_, resolution);
-  const auto self_conv = convert_to(target);
+  const pyinterp::Period self_conv = convert_to(target);
   const auto converted_value = dateutils::convert(value, resolution, target);
-  return Period{
-      static_cast<const pyinterp::Period&>(self_conv).shift(converted_value),
-      target};
+  return Period{self_conv.shift(converted_value), target};
 }
 
 Period::operator std::string() const {
@@ -288,21 +277,22 @@ auto PeriodList::is_close(const nanobind::object& date,
   auto [date_resolution, date_value] = convert_datetime64("date", date);
   auto [tolerance_resolution, tolerance_value] =
       convert_timedelta64("tolerance", tolerance);
-  const auto target = dateutils::finer_resolution(
-      dateutils::finer_resolution(resolution_, date_resolution),
-      tolerance_resolution);
+  // Convert both date and tolerance to the PeriodList's resolution
   const auto converted_date =
-      dateutils::convert(date_value, date_resolution, target);
-  const auto converted_tolerance =
-      dateutils::convert(tolerance_value, tolerance_resolution, target);
+      dateutils::convert(date_value, date_resolution, resolution_);
+  const auto converted_tolerance = dateutils::convert(
+      tolerance_value, tolerance_resolution, resolution_.as_timedelta64());
+  nb::gil_scoped_release release;
   return pyinterp::PeriodList::is_close(converted_date, converted_tolerance);
 }
 
 auto PeriodList::find_containing_index(const nanobind::object& date) const
     -> int64_t {
   auto [resolution, value] = convert_datetime64("date", date);
-  const auto target = dateutils::finer_resolution(resolution_, resolution);
-  const auto converted_value = dateutils::convert(value, resolution, target);
+  // Convert the date to the PeriodList's resolution for searching
+  const auto converted_value =
+      dateutils::convert(value, resolution, resolution_);
+  nb::gil_scoped_release release;
   return pyinterp::PeriodList::find_containing_index(converted_value);
 }
 
@@ -328,6 +318,7 @@ auto PeriodList::setstate(const nanobind::tuple& state) -> PeriodList {
     throw std::invalid_argument("Invalid state: expected a tuple of size 1");
   }
   auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+  nb::gil_scoped_release release;
   auto reader = reader_from_ndarray(array);
   auto magic_number = reader.read<uint32_t>();
   if (magic_number != kMagicNumber) {
@@ -344,6 +335,47 @@ auto PeriodList::setstate(const nanobind::tuple& state) -> PeriodList {
 PeriodList::operator std::string() const {
   return std::format("PeriodList(resolution='{}', size={})",
                      std::string(resolution_), size());
+}
+
+// Create an iterator that wraps pyinterp::Period and converts to
+// pybind::Period on dereference
+struct PeriodIterator {
+  // Current position in the PeriodList.
+  const pyinterp::Period* current;
+  // Resolution of the periods.
+  dateutils::DType resolution;
+
+  // Dereference operator to get the current Period.
+  auto operator*() const -> Period { return Period{*current, resolution}; }
+
+  // Pre-increment operator to move to the next Period.
+  auto operator++() -> PeriodIterator& {
+    ++current;
+    return *this;
+  }
+
+  // Equality comparison operator.
+  auto operator==(const PeriodIterator& other) const -> bool {
+    return current == other.current;
+  }
+
+  // Inequality comparison operator.
+  auto operator!=(const PeriodIterator& other) const -> bool {
+    return current != other.current;
+  }
+};
+
+// Helper function to wrap negative indices
+constexpr auto wrap(int64_t ix, size_t n) -> size_t {
+  if (ix < 0) {
+    ix += static_cast<int64_t>(n);
+  }
+
+  if (ix < 0 || static_cast<size_t>(ix) >= n) {
+    throw nb::index_error();
+  }
+
+  return static_cast<size_t>(ix);
 }
 
 constexpr const char* const kPeriodInit = R"(
@@ -674,28 +706,16 @@ auto init_period(nanobind::module_& m) -> void {
       .def(
           "insert",
           [](PeriodList& self, int64_t index, const Period& period) {
-            if (index < 0) {
-              index += static_cast<int64_t>(self.size());
-            }
-            if (index < 0 || static_cast<size_t>(index) > self.size()) {
-              throw nb::index_error();
-            }
             self.insert(static_cast<const pyinterp::PeriodList&>(self).begin() +
-                            static_cast<ptrdiff_t>(index),
+                            static_cast<ptrdiff_t>(wrap(index, self.size())),
                         static_cast<const pyinterp::Period&>(period));
           },
           "index"_a, "period"_a)
       .def(
           "pop",
           [](PeriodList& self, int64_t index) -> Period {
-            if (index < 0) {
-              index += static_cast<int64_t>(self.size());
-            }
-            if (index < 0 || static_cast<size_t>(index) >= self.size()) {
-              throw nb::index_error();
-            }
             auto it = static_cast<const pyinterp::PeriodList&>(self).begin() +
-                      static_cast<ptrdiff_t>(index);
+                      static_cast<ptrdiff_t>(wrap(index, self.size()));
             Period period{*it, self.resolution()};
             self.erase(it);
             return period;
@@ -711,38 +731,43 @@ auto init_period(nanobind::module_& m) -> void {
           "periods"_a)
       .def(
           "__iter__",
-          [](const PeriodList& v) {
+          [](const PeriodList& self) {
+            PeriodIterator it_begin{
+                .current =
+                    static_cast<const pyinterp::PeriodList&>(self).data(),
+                .resolution = self.resolution()};
+            PeriodIterator it_end{
+                .current =
+                    static_cast<const pyinterp::PeriodList&>(self).data() +
+                    self.size(),
+                .resolution = self.resolution()};
+
             return nb::make_iterator(nb::type<PeriodList>(), "iterator",
-                                     v.begin(), v.end());
+                                     it_begin, it_end);
           },
           nb::keep_alive<0, 1>())
       .def("__len__", [](const PeriodList& self) { return self.size(); })
       .def("__getitem__",
-           [](const PeriodList& self, size_t index) -> Period {
-             if (index >= self.size()) {
-               throw nb::index_error();
-             }
-             return self[index];
+           [](const PeriodList& self, int64_t index) -> Period {
+             return self[wrap(index, self.size())];
            })
       .def(
           "__getitem__",
-          [](const PeriodList& self, const nb::slice& slice) -> PeriodList* {
+          [](const PeriodList& self, const nb::slice& slice) -> PeriodList {
             auto [start, stop, step, slicelength] = slice.compute(self.size());
-            auto* result = new PeriodList();
-            result->reserve(slicelength);
+            nb::gil_scoped_release release;
+            auto result = PeriodList();
+            result.reserve(slicelength);
             for (size_t i = 0; i < slicelength; ++i) {
-              result->push_back(self[start + i * step]);
+              result.append(self[start + i * step]);
             }
             return result;
           },
           "index_slice"_a)
       .def(
           "__setitem__",
-          [](PeriodList& self, size_t index, const Period& value) {
-            if (index >= self.size()) {
-              throw nb::index_error();
-            }
-            self.setitem(index, value);
+          [](PeriodList& self, int64_t index, const Period& value) {
+            self.setitem(wrap(index, self.size()), value);
           },
           "index"_a, "value"_a)
       .def(
