@@ -20,11 +20,11 @@ namespace config {
 template <typename Class>
 auto add_common_attributes(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
   pyclass
-      .def("bounds_error", &Class::with_bounds_error, nb::arg("value"),
+      .def("with_bounds_error", &Class::with_bounds_error, nb::arg("value"),
            "Whether to raise an error when interpolated values are "
            "requested outside the domain defined by the input "
            "data.")
-      .def("num_threads", &Class::with_num_threads, nb::arg("value"),
+      .def("with_num_threads", &Class::with_num_threads, nb::arg("value"),
            "Number of threads to use for interpolation. A value of 0 means "
            "that all available cores will be used.");
   return pyclass;
