@@ -5,6 +5,7 @@
 #include <ranges>
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/geohash/base32.hpp"
@@ -124,8 +125,8 @@ auto where_impl(const HashContainer& hash, size_t rows, size_t cols)
       std::string,
       std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>();
 
-  for (int64_t ix = 0; ix < static_cast<int64_t>(rows); ++ix) {
-    for (int64_t jx = 0; jx < static_cast<int64_t>(cols); ++jx) {
+  for (int64_t ix = 0; std::cmp_less(ix, rows); ++ix) {
+    for (int64_t jx = 0; std::cmp_less(jx, cols); ++jx) {
       auto current_span = hash.get(ix * cols + jx);
       auto current_code = std::string(current_span.begin(), current_span.end());
 
@@ -140,8 +141,8 @@ auto where_impl(const HashContainer& hash, size_t rows, size_t cols)
         const auto i = ix + shift_row[kx];
         const auto j = jx + shift_col[kx];
 
-        if (i >= 0 && i < static_cast<int64_t>(rows) && j >= 0 &&
-            j < static_cast<int64_t>(cols)) {
+        if (i >= 0 && std::cmp_less(i, rows) && j >= 0 &&
+            std::cmp_less(j, cols)) {
           auto neighboring_span = hash.get(i * cols + j);
           auto neighboring_code =
               std::string(neighboring_span.begin(), neighboring_span.end());

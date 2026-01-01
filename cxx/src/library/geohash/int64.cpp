@@ -291,7 +291,7 @@ auto mask_cell(const geometry::geographic::Box &envelope,
 
   parallel_for(
       static_cast<int64_t>(lat_step),
-      [&](int64_t start, int64_t end) {
+      [&](int64_t start, int64_t end) -> void {
         for (auto lat = start; lat < end; ++lat) {
           auto point = geometry::geographic::Point(
               0, point_sw.lat() + static_cast<double>(lat) * lat_err);

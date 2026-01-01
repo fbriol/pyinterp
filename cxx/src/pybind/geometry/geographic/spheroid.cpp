@@ -128,7 +128,7 @@ auto init_spheroid(nanobind::module_ &m) -> void {
 
       .def_prop_ro(
           "semi_major_axis",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.semi_major_axis();
           },
           "Semi-major axis of ellipsoid, in meters (:math:`a`).",
@@ -136,7 +136,7 @@ auto init_spheroid(nanobind::module_ &m) -> void {
 
       .def_prop_ro(
           "flattening",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.flattening();
           },
           "Flattening of ellipsoid (:math:`f=\\frac{a-b}{a}`).",
@@ -144,14 +144,14 @@ auto init_spheroid(nanobind::module_ &m) -> void {
 
       .def(
           "semi_minor_axis",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.semi_minor_axis();
           },
           kSemiMinorAxisDoc, nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "first_eccentricity_squared",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.first_eccentricity_squared();
           },
           kFirstEccentricitySquaredDoc,
@@ -159,7 +159,7 @@ auto init_spheroid(nanobind::module_ &m) -> void {
 
       .def(
           "second_eccentricity_squared",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.second_eccentricity_squared();
           },
           kSecondEccentricitySquaredDoc,
@@ -168,7 +168,7 @@ auto init_spheroid(nanobind::module_ &m) -> void {
       .def(
           "equatorial_circumference",
           [](const geometry::geographic::Spheroid &self,
-             const bool semi_major_axis) {
+             const bool semi_major_axis) -> double {
             return self.equatorial_circumference(semi_major_axis);
           },
           nb::arg("semi_major_axis") = true, kEquatorialCircumferenceDoc,
@@ -176,14 +176,14 @@ auto init_spheroid(nanobind::module_ &m) -> void {
 
       .def(
           "polar_radius_of_curvature",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.polar_radius_of_curvature();
           },
           kPolarRadiusOfCurvatureDoc, nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "equatorial_radius_of_curvature",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.equatorial_radius_of_curvature();
           },
           kEquatorialRadiusOfCurvatureDoc,
@@ -191,43 +191,42 @@ auto init_spheroid(nanobind::module_ &m) -> void {
 
       .def(
           "axis_ratio",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.axis_ratio();
           },
           kAxisRatioDoc, nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "linear_eccentricity",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.linear_eccentricity();
           },
           kLinearEccentricityDoc, nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "mean_radius",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.mean_radius();
           },
           kMeanRadiusDoc, nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "geocentric_radius",
-          [](const geometry::geographic::Spheroid &self, const double lat) {
-            return self.geocentric_radius(lat);
-          },
+          [](const geometry::geographic::Spheroid &self, const double lat)
+              -> double { return self.geocentric_radius(lat); },
           nb::arg("lat"), kGeocentricRadiusDoc,
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "authalic_radius",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.authalic_radius();
           },
           kAuthalicRadiusDoc, nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "volumetric_radius",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> double {
             return self.volumetric_radius();
           },
           kVolumetricRadiusDoc, nb::call_guard<nb::gil_scoped_release>())
@@ -235,7 +234,7 @@ auto init_spheroid(nanobind::module_ &m) -> void {
       .def(
           "__eq__",
           [](const geometry::geographic::Spheroid &self,
-             const geometry::geographic::Spheroid &other) {
+             const geometry::geographic::Spheroid &other) -> bool {
             return self == other;
           },
           nb::arg("other"),
@@ -245,7 +244,7 @@ auto init_spheroid(nanobind::module_ &m) -> void {
       .def(
           "__ne__",
           [](const geometry::geographic::Spheroid &self,
-             const geometry::geographic::Spheroid &other) {
+             const geometry::geographic::Spheroid &other) -> bool {
             return self != other;
           },
           nb::arg("other"),
@@ -254,19 +253,19 @@ auto init_spheroid(nanobind::module_ &m) -> void {
 
       .def(
           "__getstate__",
-          [](const geometry::geographic::Spheroid &self) {
+          [](const geometry::geographic::Spheroid &self) -> nb::tuple {
             return nb::make_tuple(self.semi_major_axis(), self.flattening());
           },
           "Get the state for pickling.")
       .def(
           "__setstate__",
-          [](geometry::geographic::Spheroid &self, nb::tuple &state) {
+          [](geometry::geographic::Spheroid &self, nb::tuple &state) -> void {
             if (state.size() != 2) {
               throw std::invalid_argument("Invalid state");
             }
             auto semi_major_axis = nb::cast<double>(state[0]);
             auto flattening = nb::cast<double>(state[1]);
-            return new (&self)
+            new (&self)
                 geometry::geographic::Spheroid(semi_major_axis, flattening);
           },
           nb::arg("state"), "Set the state for unpickling.");

@@ -15,6 +15,7 @@
 #include <format>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
@@ -62,7 +63,7 @@ auto init_linestring(nb::module_& m) -> void {
       .def(
           "__init__",
           [](LineString* self, const Eigen::Ref<const Eigen::VectorXd>& xs,
-             const Eigen::Ref<const Eigen::VectorXd>& ys) {
+             const Eigen::Ref<const Eigen::VectorXd>& ys) -> void {
             nb::gil_scoped_release release;
             new (self) LineString(xs, ys);
           },
@@ -75,7 +76,7 @@ auto init_linestring(nb::module_& m) -> void {
       .def(
           "__getitem__",
           [](const LineString& self, Eigen::Index idx) -> Point {
-            if (idx < 0 || idx >= static_cast<Eigen::Index>(self.size())) {
+            if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("LineString index out of range");
             }
             return self[static_cast<size_t>(idx)];
@@ -84,8 +85,8 @@ auto init_linestring(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](LineString& self, Eigen::Index idx, const Point& point) {
-            if (idx < 0 || idx >= static_cast<Eigen::Index>(self.size())) {
+          [](LineString& self, Eigen::Index idx, const Point& point) -> void {
+            if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("LineString index out of range");
             }
             self[static_cast<size_t>(idx)] = point;
@@ -94,45 +95,48 @@ auto init_linestring(nb::module_& m) -> void {
 
       .def(
           "append",
-          [](LineString& self, const Point& point) { self.push_back(point); },
+          [](LineString& self, const Point& point) -> void {
+            self.push_back(point);
+          },
           "point"_a, "Append a point to the linestring.")
 
       .def("clear", &LineString::clear,
            "Remove all points from the linestring.")
 
       .def(
-          "__bool__", [](const LineString& self) { return !self.empty(); },
+          "__bool__",
+          [](const LineString& self) -> bool { return !self.empty(); },
           "Return True if the linestring is not empty.")
 
       // Iteration support
       .def("__iter__",
-           [](const LineString& self) {
+           [](const LineString& self) -> nb::object {
              nb::list result;
-             for (size_t i = 0; i < self.size(); ++i) {
-               result.append(self[i]);
+             for (const auto& point : self) {
+               result.append(point);
              }
              return result.attr("__iter__")();
            })
 
       // Comparison operators
       .def("__eq__",
-           [](const LineString& self, const LineString& other) {
+           [](const LineString& self, const LineString& other) -> bool {
              return boost::geometry::equals(self, other);
            })
 
       .def("__ne__",
-           [](const LineString& self, const LineString& other) {
+           [](const LineString& self, const LineString& other) -> bool {
              return !boost::geometry::equals(self, other);
            })
 
       // String representation
       .def("__repr__",
-           [](const LineString& self) {
+           [](const LineString& self) -> std::string {
              return std::format("LineString({} points)", self.size());
            })
 
       .def("__str__",
-           [](const LineString& self) {
+           [](const LineString& self) -> std::string {
              std::ostringstream oss;
              oss << "LineString[";
              for (size_t i = 0; i < self.size(); ++i) {
@@ -149,7 +153,7 @@ auto init_linestring(nb::module_& m) -> void {
 
       // Pickle support
       .def("__getstate__",
-           [](const LineString& self) {
+           [](const LineString& self) -> nb::tuple {
              serialization::Writer state;
              {
                nb::gil_scoped_release release;
@@ -158,17 +162,18 @@ auto init_linestring(nb::module_& m) -> void {
              return nb::make_tuple(writer_to_ndarray(std::move(state)));
            })
 
-      .def("__setstate__", [](LineString* self, const nb::tuple& state) {
-        if (state.size() != 1) {
-          throw std::invalid_argument("Invalid state");
-        }
-        auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-        auto reader = reader_from_ndarray(array);
-        {
-          nb::gil_scoped_release release;
-          new (self) LineString(LineString::unpack(reader));
-        }
-      });
+      .def("__setstate__",
+           [](LineString* self, const nb::tuple& state) -> void {
+             if (state.size() != 1) {
+               throw std::invalid_argument("Invalid state");
+             }
+             auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+             auto reader = reader_from_ndarray(array);
+             {
+               nb::gil_scoped_release release;
+               new (self) LineString(LineString::unpack(reader));
+             }
+           });
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

@@ -6,6 +6,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -371,7 +372,7 @@ constexpr auto wrap(int64_t ix, size_t n) -> size_t {
     ix += static_cast<int64_t>(n);
   }
 
-  if (ix < 0 || static_cast<size_t>(ix) >= n) {
+  if (ix < 0 || std::cmp_greater_equal(ix, n)) {
     throw nb::index_error();
   }
 
@@ -533,31 +534,33 @@ auto init_period(nanobind::module_& m) -> void {
 
       .def_prop_ro(
           "begin",
-          [](const Period& self) {
+          [](const Period& self) -> nanobind::object {
             return make_scalar(self.begin, self.resolution());
           },
           "The start date of the period.")
       .def_prop_ro(
           "last",
-          [](const Period& self) {
+          [](const Period& self) -> nanobind::object {
             return make_scalar(self.last, self.resolution());
           },
           "The last date of the period (inclusive).")
       .def_prop_ro(
           "resolution",
-          [](const Period& self) { return to_dtype(self.resolution()); },
+          [](const Period& self) -> nanobind::object {
+            return to_dtype(self.resolution());
+          },
           "The resolution dtype of the period.")
 
       .def(
           "end",
-          [](const Period& self) {
+          [](const Period& self) -> nanobind::object {
             return make_scalar(self.end(), self.resolution());
           },
           "Get the exclusive end date of the period (one past the last "
           "included date).")
       .def(
           "duration",
-          [](const Period& self) {
+          [](const Period& self) -> nanobind::object {
             return make_scalar(self.duration(),
                                self.resolution().as_timedelta64());
           },
@@ -568,19 +571,19 @@ auto init_period(nanobind::module_& m) -> void {
            "promotion.")
       .def(
           "__ne__",
-          [](const Period& self, const Period& other) {
+          [](const Period& self, const Period& other) -> bool {
             return !(self == other);
           },
           "Inequality comparison with resolution promotion.")
       .def(
           "__lt__",
-          [](const Period& self, const Period& other) {
+          [](const Period& self, const Period& other) -> bool {
             return (self <=> other) == std::strong_ordering::less;
           },
           "Less-than comparison with resolution promotion.")
       .def(
           "__le__",
-          [](const Period& self, const Period& other) {
+          [](const Period& self, const Period& other) -> bool {
             auto cmp = self <=> other;
             return cmp == std::strong_ordering::less ||
                    cmp == std::strong_ordering::equal;
@@ -588,13 +591,13 @@ auto init_period(nanobind::module_& m) -> void {
           "Less-than-or-equal comparison with resolution promotion.")
       .def(
           "__gt__",
-          [](const Period& self, const Period& other) {
+          [](const Period& self, const Period& other) -> bool {
             return (self <=> other) == std::strong_ordering::greater;
           },
           "Greater-than comparison with resolution promotion.")
       .def(
           "__ge__",
-          [](const Period& self, const Period& other) {
+          [](const Period& self, const Period& other) -> bool {
             auto cmp = self <=> other;
             return cmp == std::strong_ordering::greater ||
                    cmp == std::strong_ordering::equal;
@@ -605,7 +608,7 @@ auto init_period(nanobind::module_& m) -> void {
       .def(
           "__setstate__",
           [](Period& self,
-             const std::tuple<int64_t, int64_t, std::string>& state) {
+             const std::tuple<int64_t, int64_t, std::string>& state) -> void {
             new (&self) Period(Period::setstate(state));
           },
           nanobind::arg("state"),
@@ -613,7 +616,7 @@ auto init_period(nanobind::module_& m) -> void {
 
       .def(
           "contains",
-          [](const Period& self, const nb::object& point_or_period) {
+          [](const Period& self, const nb::object& point_or_period) -> bool {
             // Check if the argument is a Period object
             if (nb::isinstance<Period>(point_or_period)) {
               return self.contains(nb::cast<const Period&>(point_or_period));
@@ -625,14 +628,14 @@ auto init_period(nanobind::module_& m) -> void {
 
       .def(
           "is_after",
-          [](const Period& self, const nb::object& point) {
+          [](const Period& self, const nb::object& point) -> bool {
             return self.is_after(point);
           },
           kPeriodIsAfter, "point"_a)
 
       .def(
           "is_before",
-          [](const Period& self, const nb::object& point) {
+          [](const Period& self, const nb::object& point) -> bool {
             return self.is_before(point);
           },
           kPeriodIsBefore, "point"_a)
@@ -640,7 +643,7 @@ auto init_period(nanobind::module_& m) -> void {
       .def(
           "is_close",
           [](const Period& self, const nb::object& date,
-             const nb::object& tolerance) {
+             const nb::object& tolerance) -> bool {
             return self.is_close(date, tolerance);
           },
           kPeriodIsClose, "date"_a, "tolerance"_a)
@@ -660,33 +663,36 @@ auto init_period(nanobind::module_& m) -> void {
 
       .def(
           "__str__",
-          [](const Period& self) { return static_cast<std::string>(self); },
+          [](const Period& self) -> std::string {
+            return static_cast<std::string>(self);
+          },
           "String representation of the Period.");
 
   nb::class_<PeriodList>(m, "PeriodList", "A list of Period objects.")
       .def(nb::init<nb::list>(), kPeriodListInit, "periods"_a = nb::none())
       .def(
           "append",
-          [](PeriodList& self, const Period& period) { self.append(period); },
+          [](PeriodList& self, const Period& period) -> void {
+            self.append(period);
+          },
           kPeriodListAppend, "period"_a)
       .def(
           "is_close",
           [](const PeriodList& self, const nb::object& date,
-             const nb::object& tolerance) {
+             const nb::object& tolerance) -> bool {
             return self.is_close(date, tolerance);
           },
           kPeriodListIsClose, "date"_a, "tolerance"_a)
       .def(
           "find_containing",
-          [](const PeriodList& self, const nb::object& date) {
-            return self.find_containing(date);
-          },
+          [](const PeriodList& self, const nb::object& date)
+              -> std::optional<Period> { return self.find_containing(date); },
           kPeriodListFindContaining, "date"_a)
       .def("is_sorted_and_disjoint", &PeriodList::is_sorted_and_disjoint,
            kPeriodListIsSortedAndDisjoint)
       .def(
           "total_duration",
-          [](const PeriodList& self) {
+          [](const PeriodList& self) -> nanobind::object {
             auto duration = self.total_duration();
             return make_scalar(duration, self.resolution().as_timedelta64());
           },
@@ -694,18 +700,20 @@ auto init_period(nanobind::module_& m) -> void {
       .def("__getstate__", &PeriodList::getstate, "Get the state for pickling.")
       .def(
           "__setstate__",
-          [](PeriodList& self, const nb::tuple& state) {
+          [](PeriodList& self, const nb::tuple& state) -> void {
             new (&self) PeriodList(PeriodList::setstate(state));
           },
           nanobind::arg("state"),
           "Set the state of the instance from pickling.")
       .def(
           "__str__",
-          [](const PeriodList& self) { return static_cast<std::string>(self); },
+          [](const PeriodList& self) -> std::string {
+            return static_cast<std::string>(self);
+          },
           "String representation of the PeriodList.")
       .def(
           "insert",
-          [](PeriodList& self, int64_t index, const Period& period) {
+          [](PeriodList& self, int64_t index, const Period& period) -> void {
             self.insert(static_cast<const pyinterp::PeriodList&>(self).begin() +
                             static_cast<ptrdiff_t>(wrap(index, self.size())),
                         static_cast<const pyinterp::Period&>(period));
@@ -723,7 +731,7 @@ auto init_period(nanobind::module_& m) -> void {
           "index"_a = -1)
       .def(
           "extend",
-          [](PeriodList& self, const PeriodList& periods) {
+          [](PeriodList& self, const PeriodList& periods) -> void {
             for (const auto& period : periods) {
               self.append(Period{period, self.resolution()});
             }
@@ -731,7 +739,7 @@ auto init_period(nanobind::module_& m) -> void {
           "periods"_a)
       .def(
           "__iter__",
-          [](const PeriodList& self) {
+          [](const PeriodList& self) -> auto {
             PeriodIterator it_begin{
                 .current =
                     static_cast<const pyinterp::PeriodList&>(self).data(),
@@ -746,7 +754,8 @@ auto init_period(nanobind::module_& m) -> void {
                                      it_begin, it_end);
           },
           nb::keep_alive<0, 1>())
-      .def("__len__", [](const PeriodList& self) { return self.size(); })
+      .def("__len__",
+           [](const PeriodList& self) -> int64_t { return self.size(); })
       .def("__getitem__",
            [](const PeriodList& self, int64_t index) -> Period {
              return self[wrap(index, self.size())];
@@ -766,14 +775,14 @@ auto init_period(nanobind::module_& m) -> void {
           "index_slice"_a)
       .def(
           "__setitem__",
-          [](PeriodList& self, int64_t index, const Period& value) {
+          [](PeriodList& self, int64_t index, const Period& value) -> void {
             self.setitem(wrap(index, self.size()), value);
           },
           "index"_a, "value"_a)
       .def(
           "__setitem__",
           [](PeriodList& self, const nb::slice& slice,
-             const PeriodList& values) {
+             const PeriodList& values) -> void {
             auto [start, stop, step, slicelength] = slice.compute(self.size());
             if (slicelength != values.size()) {
               throw nb::index_error(
@@ -786,7 +795,7 @@ auto init_period(nanobind::module_& m) -> void {
           "index_slice"_a, "values"_a)
       .def(
           "__delitem__",
-          [](PeriodList& self, size_t index) {
+          [](PeriodList& self, size_t index) -> void {
             if (index >= self.size()) {
               throw nb::index_error();
             }
@@ -796,7 +805,7 @@ auto init_period(nanobind::module_& m) -> void {
           "index"_a)
       .def(
           "__delitem__",
-          [](PeriodList& self, const nb::slice& slice) {
+          [](PeriodList& self, const nb::slice& slice) -> void {
             auto [start, stop, step, slicelength] = slice.compute(self.size());
             if (slicelength == 0) {
               return;
@@ -824,7 +833,9 @@ auto init_period(nanobind::module_& m) -> void {
           "index_slice"_a)
       .def_prop_ro(
           "resolution",
-          [](const PeriodList& self) { return to_dtype(self.resolution()); },
+          [](const PeriodList& self) -> nanobind::object {
+            return to_dtype(self.resolution());
+          },
           "The resolution dtype of the periods in the list.");
 }
 

@@ -126,7 +126,9 @@ auto init_grids(nanobind::module_& m) -> void {
       .def_prop_ro("ndim", &GridHolder::ndim, "Number of dimensions")
       .def_prop_ro(
           "dtype",
-          [](const GridHolder& self) { return std::string(self.dtype_str()); },
+          [](const GridHolder& self) -> std::string {
+            return std::string(self.dtype_str());
+          },
           "Data type of the grid values")
       .def_prop_ro("has_temporal_axis", &GridHolder::has_temporal_axis,
                    "Whether this grid has a temporal axis")
@@ -134,7 +136,9 @@ auto init_grids(nanobind::module_& m) -> void {
                    "Index of the temporal axis, or -1 if none")
       .def_prop_ro(
           "shape",
-          [](const GridHolder& self) { return nb::cast(self.shape()); },
+          [](const GridHolder& self) -> nb::object {
+            return nb::cast(self.shape());
+          },
           "Shape of the grid")
       .def_prop_ro(
           "x",
@@ -182,9 +186,8 @@ auto init_grids(nanobind::module_& m) -> void {
   // 1D grid factory
   m.def(
       "Grid",
-      [axis_to_variant](const nb::object& x, const nb::object& array) {
-        return create_grid_1d(axis_to_variant(x), array);
-      },
+      [axis_to_variant](const nb::object& x, const nb::object& array)
+          -> GridHolder { return create_grid_1d(axis_to_variant(x), array); },
       nb::arg("x"), nb::arg("array"),
       "Create a 1D grid with automatic dtype detection.");
 
@@ -192,7 +195,7 @@ auto init_grids(nanobind::module_& m) -> void {
   m.def(
       "Grid",
       [axis_to_variant](const nb::object& x, const nb::object& y,
-                        const nb::object& array) {
+                        const nb::object& array) -> GridHolder {
         return create_grid_2d(axis_to_variant(x), axis_to_variant(y), array);
       },
       nb::arg("x"), nb::arg("y"), nb::arg("array"),
@@ -202,7 +205,8 @@ auto init_grids(nanobind::module_& m) -> void {
   m.def(
       "Grid",
       [axis_to_variant](const nb::object& x, const nb::object& y,
-                        const nb::object& z, const nb::object& array) {
+                        const nb::object& z,
+                        const nb::object& array) -> GridHolder {
         return create_grid_3d(axis_to_variant(x), axis_to_variant(y),
                               axis_to_variant(z), array);
       },
@@ -215,7 +219,7 @@ auto init_grids(nanobind::module_& m) -> void {
       "Grid",
       [axis_to_variant](const nb::object& x, const nb::object& y,
                         const nb::object& z, const nb::object& u,
-                        const nb::object& array) {
+                        const nb::object& array) -> GridHolder {
         return create_grid_4d(axis_to_variant(x), axis_to_variant(y),
                               axis_to_variant(z), axis_to_variant(u), array);
       },

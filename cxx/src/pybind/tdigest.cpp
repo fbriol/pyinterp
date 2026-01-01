@@ -241,14 +241,14 @@ auto bind_tdigest(nb::module_& m, std::string_view suffix) -> void {
            "Get the state for pickling.")
       .def(
           "__setstate__",
-          [](PyTDigest<T>& self, nb::tuple& state) {
-            return new (&self) PyTDigest<T>(PyTDigest<T>::setstate(state));
+          [](PyTDigest<T>& self, nb::tuple& state) -> void {
+            new (&self) PyTDigest<T>(PyTDigest<T>::setstate(state));
           },
           nb::arg("state"), "Set the state for unpickling.")
 
       .def(
           "__copy__",
-          [](const PyTDigest<T>& self) { return PyTDigest<T>(self); },
+          [](const PyTDigest<T>& self) -> auto { return PyTDigest<T>(self); },
           "Create a copy of this object.");
 }
 
@@ -416,8 +416,8 @@ auto PyTDigest<T>::to_numpy_array(const Vector<U>& vec) const
   if (shape.size() == 1 && shape[0] == 1) {
     auto* data = new U[1];
     data[0] = vec[0];
-    nb::capsule owner(data,
-                      [](void* p) noexcept { delete[] static_cast<U*>(p); });
+    nb::capsule owner(
+        data, [](void* p) noexcept -> void { delete[] static_cast<U*>(p); });
     return nb::ndarray<nb::numpy, U>(data, {}, owner);
   }
 
@@ -425,8 +425,8 @@ auto PyTDigest<T>::to_numpy_array(const Vector<U>& vec) const
   auto* data = new U[vec.size()];
   std::copy_n(vec.data(), vec.size(), data);
 
-  nb::capsule owner(data,
-                    [](void* p) noexcept { delete[] static_cast<U*>(p); });
+  nb::capsule owner(
+      data, [](void* p) noexcept -> void { delete[] static_cast<U*>(p); });
   return nb::ndarray<nb::numpy, U>(data, shape.size(), shape.data(), owner);
 }
 
@@ -446,18 +446,19 @@ auto PyTDigest<T>::to_numpy_matrix(const Eigen::MatrixX<T>& mat) const
     }
   }
 
-  nb::capsule owner(data,
-                    [](void* p) noexcept { delete[] static_cast<T*>(p); });
+  nb::capsule owner(
+      data, [](void* p) noexcept -> void { delete[] static_cast<T*>(p); });
 
   // If single digest (rows=1), return 1D array
   if (rows == 1) {
-    size_t shape_1d[1] = {static_cast<size_t>(cols)};
-    return nb::ndarray<nb::numpy, T>(data, 1, shape_1d, owner);
+    std::array<size_t, 1> shape_1d = {static_cast<size_t>(cols)};
+    return nb::ndarray<nb::numpy, T>(data, 1, shape_1d.data(), owner);
   }
 
   // Otherwise return 2D array
-  size_t shape_2d[2] = {static_cast<size_t>(rows), static_cast<size_t>(cols)};
-  return nb::ndarray<nb::numpy, T>(data, 2, shape_2d, owner);
+  std::array<size_t, 2> shape_2d = {static_cast<size_t>(rows),
+                                    static_cast<size_t>(cols)};
+  return nb::ndarray<nb::numpy, T>(data, 2, shape_2d.data(), owner);
 }
 
 // ============================================================================

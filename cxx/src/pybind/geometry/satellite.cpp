@@ -69,15 +69,21 @@ inline auto init_crossover(nb::module_& m) -> void {
                                           "Result of a crossover detection")
       .def_prop_ro(
           "point",
-          [](const algorithms::CrossoverResult& self) { return self.point; },
+          [](const algorithms::CrossoverResult& self) -> geographic::Point {
+            return self.point;
+          },
           "The crossover point")
       .def_prop_ro(
           "index1",
-          [](const algorithms::CrossoverResult& self) { return self.index1; },
+          [](const algorithms::CrossoverResult& self) -> size_t {
+            return self.index1;
+          },
           "Index of nearest vertex in first linestring")
       .def_prop_ro(
           "index2",
-          [](const algorithms::CrossoverResult& self) { return self.index2; },
+          [](const algorithms::CrossoverResult& self) -> size_t {
+            return self.index2;
+          },
           "Index of nearest vertex in second linestring");
 
   m.def("find_crossovers", &algorithms::find_crossovers, "lon1"_a, "lat1"_a,

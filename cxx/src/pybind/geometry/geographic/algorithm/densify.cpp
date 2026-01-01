@@ -31,7 +31,7 @@ template <typename... Geometries>
 inline auto define_densify(nb::module_& m, const char* doc) -> void {
   auto densify_impl = [](const auto& g, double max_distance,
                          const std::optional<Spheroid>& wgs,
-                         StrategyMethod strategy) {
+                         StrategyMethod strategy) -> auto {
     using GeometryType = std::decay_t<decltype(g)>;
     nb::gil_scoped_release release;
     return densify<GeometryType>(g, max_distance, wgs, strategy);
@@ -41,7 +41,7 @@ inline auto define_densify(nb::module_& m, const char* doc) -> void {
             "densify",
             [densify_impl](const Geometries& g, double max_distance,
                            const std::optional<Spheroid>& spheroid,
-                           StrategyMethod strategy) {
+                           StrategyMethod strategy) -> auto {
               return densify_impl(g, max_distance, spheroid, strategy);
             },
             "geometry"_a, "max_distance"_a, "spheroid"_a = std::nullopt,

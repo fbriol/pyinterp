@@ -120,17 +120,17 @@ auto init_rtree(nb::module_& m) -> void {
            nb::call_guard<nb::gil_scoped_release>())
 
       .def(
-          "size", [](const RTree& self) { return self.size(); },
+          "size", [](const RTree& self) -> size_t { return self.size(); },
           "Return the number of points in the tree.",
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
-          "empty", [](const RTree& self) { return self.empty(); },
+          "empty", [](const RTree& self) -> bool { return self.empty(); },
           "Check if the tree is empty.",
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
-          "clear", [](RTree& self) { self.clear(); },
+          "clear", [](RTree& self) -> void { self.clear(); },
           "Remove all points from the tree.",
           nb::call_guard<nb::gil_scoped_release>())
 
@@ -157,7 +157,7 @@ auto init_rtree(nb::module_& m) -> void {
           "packing",
           [](RTree& self,
              const Eigen::Ref<const RTree::CoordinateMatrix>& coordinates,
-             const Eigen::Ref<const RTree::ValueVector>& values) {
+             const Eigen::Ref<const RTree::ValueVector>& values) -> void {
             self.packing(coordinates, values);
           },
           nb::arg("coordinates"), nb::arg("values"), kPackingDoc,
@@ -167,7 +167,7 @@ auto init_rtree(nb::module_& m) -> void {
           "insert",
           [](RTree& self,
              const Eigen::Ref<const RTree::CoordinateMatrix>& coordinates,
-             const Eigen::Ref<const RTree::ValueVector>& values) {
+             const Eigen::Ref<const RTree::ValueVector>& values) -> void {
             self.insert(coordinates, values);
           },
           nb::arg("coordinates"), nb::arg("values"), kInsertDoc,
@@ -177,7 +177,9 @@ auto init_rtree(nb::module_& m) -> void {
           "query",
           [](const RTree& self,
              const Eigen::Ref<const RTree::CoordinateMatrix>& coordinates,
-             const std::optional<config::rtree::Query>& config) {
+             const std::optional<config::rtree::Query>& config)
+              -> std::tuple<Matrix<RTree::distance_t>,
+                            Matrix<RTree::promotion_t>> {
             return self.query(coordinates,
                               config.value_or(config::rtree::Query{}));
           },
@@ -189,7 +191,7 @@ auto init_rtree(nb::module_& m) -> void {
           [](const RTree& self,
              const Eigen::Ref<const RTree::CoordinateMatrix>& coordinates,
              const std::optional<config::rtree::InverseDistanceWeighting>&
-                 config) {
+                 config) -> std::tuple<RTree::ValueVector, Vector<uint32_t>> {
             return self.inverse_distance_weighting(
                 coordinates,
                 config.value_or(config::rtree::InverseDistanceWeighting{}));
@@ -201,7 +203,8 @@ auto init_rtree(nb::module_& m) -> void {
           "kriging",
           [](const RTree& self,
              const Eigen::Ref<const RTree::CoordinateMatrix>& coordinates,
-             const std::optional<config::rtree::Kriging>& config) {
+             const std::optional<config::rtree::Kriging>& config)
+              -> std::tuple<RTree::ValueVector, Vector<uint32_t>> {
             return self.kriging(coordinates,
                                 config.value_or(config::rtree::Kriging{}));
           },
@@ -212,7 +215,8 @@ auto init_rtree(nb::module_& m) -> void {
           "radial_basis_function",
           [](const RTree& self,
              const Eigen::Ref<const RTree::CoordinateMatrix>& coordinates,
-             const std::optional<config::rtree::RadialBasisFunction>& config) {
+             const std::optional<config::rtree::RadialBasisFunction>& config)
+              -> std::tuple<RTree::ValueVector, Vector<uint32_t>> {
             return self.radial_basis_function(
                 coordinates,
                 config.value_or(config::rtree::RadialBasisFunction{}));
@@ -224,7 +228,8 @@ auto init_rtree(nb::module_& m) -> void {
           "window_function",
           [](const RTree& self,
              const Eigen::Ref<const RTree::CoordinateMatrix>& coordinates,
-             const std::optional<config::rtree::InterpolationWindow>& config) {
+             const std::optional<config::rtree::InterpolationWindow>& config)
+              -> std::tuple<RTree::ValueVector, Vector<uint32_t>> {
             return self.window_function(
                 coordinates,
                 config.value_or(config::rtree::InterpolationWindow{}));
@@ -236,8 +241,8 @@ auto init_rtree(nb::module_& m) -> void {
 
       .def(
           "__setstate__",
-          [](RTree& self, nb::tuple& state) {
-            return new (&self) RTree(RTree::setstate(state));
+          [](RTree& self, nb::tuple& state) -> void {
+            new (&self) RTree(RTree::setstate(state));
           },
           nb::arg("state"), "Set the state for unpickling.");
 }

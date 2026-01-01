@@ -33,7 +33,7 @@ Returns:
 auto init_perimeter(nb::module_& m) -> void {
   auto perimeter_impl = [](const auto& g,
                            const std::optional<Spheroid>& spheroid,
-                           const StrategyMethod& strategy) {
+                           const StrategyMethod& strategy) -> auto {
     using GeometryType = std::decay_t<decltype(g)>;
     nb::gil_scoped_release release;
     return perimeter<GeometryType>(g, spheroid, strategy);

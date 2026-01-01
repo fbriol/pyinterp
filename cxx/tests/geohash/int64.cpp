@@ -273,10 +273,10 @@ TEST_F(GeoHashInt64Test, BoundingBoxExtremes) {
   };
 
   const std::array<TestCase, 4> test_cases = {
-      TestCase{180.0, 90.0},    // NE corner
-      TestCase{-180.0, -90.0},  // SW corner
-      TestCase{180.0, -90.0},   // SE corner
-      TestCase{-180.0, 90.0},   // NW corner
+      TestCase{.lon = 180.0, .lat = 90.0},    // NE corner
+      TestCase{.lon = -180.0, .lat = -90.0},  // SW corner
+      TestCase{.lon = 180.0, .lat = -90.0},   // SE corner
+      TestCase{.lon = -180.0, .lat = 90.0},   // NW corner
   };
 
   for (const auto& test : test_cases) {
@@ -359,9 +359,12 @@ TEST_F(GeoHashInt64Test, EncodeDecodeRoundTrip) {
   };
 
   const std::array<TestCase, 6> test_cases = {
-      TestCase{0.0, 0.0, 32},      TestCase{10.0, 20.0, 32},
-      TestCase{-10.0, -20.0, 32},  TestCase{179.9, 89.9, 40},
-      TestCase{-179.9, -89.9, 40}, TestCase{50.123, 30.456, 48},
+      TestCase{.lon = 0.0, .lat = 0.0, .precision = 32},
+      TestCase{.lon = 10.0, .lat = 20.0, .precision = 32},
+      TestCase{.lon = -10.0, .lat = -20.0, .precision = 32},
+      TestCase{.lon = 179.9, .lat = 89.9, .precision = 40},
+      TestCase{.lon = -179.9, .lat = -89.9, .precision = 40},
+      TestCase{.lon = 50.123, .lat = 30.456, .precision = 48},
   };
 
   for (const auto& test : test_cases) {

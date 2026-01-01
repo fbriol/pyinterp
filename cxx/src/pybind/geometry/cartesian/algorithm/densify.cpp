@@ -37,7 +37,7 @@ Returns:
 template <typename... Geometries>
 inline auto define_densify_for_geometries(nanobind::module_& m, const char* doc)
     -> void {
-  auto densify_impl = [](const auto& g, double max_distance) {
+  auto densify_impl = [](const auto& g, double max_distance) -> auto {
     using GeometryType = std::decay_t<decltype(g)>;
     nanobind::gil_scoped_release release;
     GeometryType result;
@@ -46,7 +46,7 @@ inline auto define_densify_for_geometries(nanobind::module_& m, const char* doc)
   };
   (..., m.def(
             "densify",
-            [densify_impl](const Geometries& g, double max_distance) {
+            [densify_impl](const Geometries& g, double max_distance) -> auto {
               return densify_impl(g, max_distance);
             },
             "geometry"_a, "max_distance"_a, doc));

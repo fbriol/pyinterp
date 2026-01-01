@@ -49,7 +49,7 @@ static auto to_numpy(EncodedHashes&& hashes) -> nb::object {
   auto* data = ptr->data();
 
   // Create capsule with ownership
-  nb::capsule owner(ptr.get(), [](void* p) noexcept {
+  nb::capsule owner(ptr.get(), [](void* p) noexcept -> void {
     delete static_cast<std::vector<char>*>(p);
   });
   ptr.release();
@@ -278,7 +278,8 @@ auto init_string(nb::module_& m) -> void {
   m.def(
       "encode",
       [](const Eigen::Ref<const Eigen::VectorXd>& lon,
-         const Eigen::Ref<const Eigen::VectorXd>& lat, uint32_t precision) {
+         const Eigen::Ref<const Eigen::VectorXd>& lat,
+         uint32_t precision) -> nb::object {
         check_range(precision);
         EncodedHashes result;
         {
@@ -291,7 +292,8 @@ auto init_string(nb::module_& m) -> void {
 
   m.def(
       "decode",
-      [](const nb::object& hash, bool round) {
+      [](const nb::object& hash,
+         bool round) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
         auto hashes = from_numpy<1>(hash);
         {
           nb::gil_scoped_release release;
@@ -303,7 +305,8 @@ auto init_string(nb::module_& m) -> void {
   m.def(
       "area",
       [](const nb::object& hash,
-         const std::optional<geometry::geographic::Spheroid>& spheroid) {
+         const std::optional<geometry::geographic::Spheroid>& spheroid)
+          -> Eigen::VectorXd {
         auto hashes = from_numpy<1>(hash);
         {
           nb::gil_scoped_release release;
@@ -315,7 +318,7 @@ auto init_string(nb::module_& m) -> void {
   m.def(
       "bounding_boxes",
       [](const std::optional<geometry::geographic::Box>& box,
-         uint32_t precision) {
+         uint32_t precision) -> nb::object {
         check_range(precision);
         EncodedHashes result;
         {
@@ -330,7 +333,7 @@ auto init_string(nb::module_& m) -> void {
   m.def(
       "bounding_boxes",
       [](const geometry::geographic::Polygon& polygon, uint32_t precision,
-         size_t num_threads) {
+         size_t num_threads) -> nb::object {
         check_range(precision);
         EncodedHashes result;
         {
@@ -345,7 +348,7 @@ auto init_string(nb::module_& m) -> void {
   m.def(
       "bounding_boxes",
       [](const geometry::geographic::MultiPolygon& polygons, uint32_t precision,
-         size_t num_threads) {
+         size_t num_threads) -> nb::object {
         check_range(precision);
         EncodedHashes result;
         {
@@ -359,7 +362,7 @@ auto init_string(nb::module_& m) -> void {
 
   m.def(
       "where",
-      [](const nb::object& hash) {
+      [](const nb::object& hash) -> nb::dict {
         auto hashes = from_numpy<2>(hash);
         HashRegionBounds result_map;
         {
@@ -378,7 +381,7 @@ auto init_string(nb::module_& m) -> void {
 
   m.def(
       "transform",
-      [](const nb::object& hash, uint32_t precision) {
+      [](const nb::object& hash, uint32_t precision) -> nb::object {
         check_range(precision);
         auto hashes = from_numpy<1>(hash);
         EncodedHashes result;

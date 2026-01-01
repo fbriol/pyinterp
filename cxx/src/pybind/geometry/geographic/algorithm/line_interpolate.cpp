@@ -36,7 +36,7 @@ template <typename... Geometries>
 inline auto define_line_interpolate(nb::module_& m, const char* doc) -> void {
   auto line_interpolate_impl = [](const auto& g, double distance,
                                   const std::optional<Spheroid>& wgs,
-                                  StrategyMethod strategy) {
+                                  StrategyMethod strategy) -> auto {
     using GeometryType = std::decay_t<decltype(g)>;
     nb::gil_scoped_release release;
     return line_interpolate<GeometryType>(g, distance, wgs, strategy);
@@ -46,7 +46,7 @@ inline auto define_line_interpolate(nb::module_& m, const char* doc) -> void {
             "line_interpolate",
             [line_interpolate_impl](const Geometries& g, double distance,
                                     const std::optional<Spheroid>& spheroid,
-                                    StrategyMethod strategy) {
+                                    StrategyMethod strategy) -> auto {
               return line_interpolate_impl(g, distance, spheroid, strategy);
             },
             "geometry"_a, "distance"_a, "spheroid"_a = std::nullopt,

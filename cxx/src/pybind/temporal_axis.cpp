@@ -5,6 +5,7 @@
 #include <nanobind/stl/string.h>
 
 #include <ranges>
+#include <utility>
 
 #include "pyinterp/math/temporal_axis.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
@@ -156,7 +157,7 @@ auto TemporalAxis::coordinate_values(const nanobind::slice &slice) const
   {
     nb::gil_scoped_release release;
 
-    for (int64_t ix = 0; ix < static_cast<int64_t>(slicelength); ++ix) {
+    for (int64_t ix = 0; std::cmp_less(ix, slicelength); ++ix) {
       values[ix] = math::TemporalAxis::coordinate_value(
           static_cast<int64_t>(start + ix * step));
     }

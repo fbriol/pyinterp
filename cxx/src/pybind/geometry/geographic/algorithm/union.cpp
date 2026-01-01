@@ -45,15 +45,15 @@ Returns:
       std::pair<NS::MultiLineString, NS::MultiLineString>
 
 auto init_union(nb::module_& m) -> void {
-  auto polygon_union_impl = [](const auto geometry1, const auto& geometry2,
+  auto polygon_union_impl = [](const auto& geometry1, const auto& geometry2,
                                const std::optional<Spheroid>& spheroid,
-                               StrategyMethod strategy) {
+                               StrategyMethod strategy) -> auto {
     nb::gil_scoped_release release;
     return union_polygon(geometry1, geometry2, spheroid, strategy);
   };
-  auto linestring_union_impl = [](const auto geometry1, const auto& geometry2,
+  auto linestring_union_impl = [](const auto& geometry1, const auto& geometry2,
                                   const std::optional<Spheroid>& spheroid,
-                                  StrategyMethod strategy) {
+                                  StrategyMethod strategy) -> auto {
     nb::gil_scoped_release release;
     return union_linestring(geometry1, geometry2, spheroid, strategy);
   };

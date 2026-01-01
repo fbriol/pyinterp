@@ -44,7 +44,7 @@ Examples:
 template <typename... Geometries>
 inline auto define_simplify_for_geometries(nanobind::module_& m,
                                            const char* doc) -> void {
-  auto simplify_impl = [](const auto& g, double distance) {
+  auto simplify_impl = [](const auto& g, double distance) -> auto {
     using GeometryType = std::decay_t<decltype(g)>;
 
     nanobind::gil_scoped_release release;
@@ -54,7 +54,7 @@ inline auto define_simplify_for_geometries(nanobind::module_& m,
   };
   (..., m.def(
             "simplify",
-            [simplify_impl](const Geometries& g, double distance) {
+            [simplify_impl](const Geometries& g, double distance) -> auto {
               return simplify_impl(g, distance);
             },
             "geometry"_a, "distance"_a, doc));

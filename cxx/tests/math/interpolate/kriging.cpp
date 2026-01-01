@@ -99,7 +99,7 @@ TEST(Kriging, SimpleKrigingReproduction) {
 }
 
 TEST(Kriging, UniversalKrigingLinear) {
-  auto f = [](double x, double y, double z) {
+  auto f = [](double x, double y, double z) -> double {
     return 2.0 + 3.0 * x - 4.0 * y + 5.0 * z;
   };
   Eigen::Matrix<double, 3, -1> coords(3, 4);
@@ -118,7 +118,7 @@ TEST(Kriging, UniversalKrigingLinear) {
 }
 
 TEST(Kriging, UniversalKrigingQuadratic) {
-  auto g = [](double x, double y, double z) {
+  auto g = [](double x, double y, double z) -> double {
     return 1.0 + x + y + z + x * x + y * y + z * z + x * y + x * z + y * z;
   };
   Eigen::Matrix<double, 3, -1> coords(3, 10);

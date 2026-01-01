@@ -68,7 +68,7 @@ auto init_box(nb::module_& m) -> void {
       .def(
           "__init__",
           [](Box* self, const std::tuple<double, double>& min_corner,
-             const std::tuple<double, double>& max_corner) {
+             const std::tuple<double, double>& max_corner) -> void {
             new (self)
                 Box(Point(std::get<0>(min_corner), std::get<1>(min_corner)),
                     Point(std::get<0>(max_corner), std::get<1>(max_corner)));
@@ -77,31 +77,37 @@ auto init_box(nb::module_& m) -> void {
 
       // Corner accessors (read-only to avoid returning references)
       .def_prop_rw(
-          "min_corner", [](const Box& self) { return self.min_corner(); },
-          [](Box& self, const Point& pt) { self.min_corner() = pt; },
+          "min_corner",
+          [](const Box& self) -> pyinterp::geometry::geographic::Point {
+            return self.min_corner();
+          },
+          [](Box& self, const Point& pt) -> void { self.min_corner() = pt; },
           kMinCornerDoc)
 
       .def_prop_rw(
-          "max_corner", [](const Box& self) { return self.max_corner(); },
-          [](Box& self, const Point& pt) { self.max_corner() = pt; },
+          "max_corner",
+          [](const Box& self) -> pyinterp::geometry::geographic::Point {
+            return self.max_corner();
+          },
+          [](Box& self, const Point& pt) -> void { self.max_corner() = pt; },
           kMaxCornerDoc)
 
       .def("centroid", &Box::centroid, kCentroidDoc)
 
       // Comparison operators
       .def("__eq__",
-           [](const Box& self, const Box& other) {
+           [](const Box& self, const Box& other) -> bool {
              return boost::geometry::equals(self, other);
            })
 
       .def("__ne__",
-           [](const Box& self, const Box& other) {
+           [](const Box& self, const Box& other) -> bool {
              return !boost::geometry::equals(self, other);
            })
 
       // String representation
       .def("__repr__",
-           [](const Box& self) {
+           [](const Box& self) -> std::string {
              const auto& min = self.min_corner();
              const auto& max = self.max_corner();
              return std::format("Box(min=({}, {}), max=({}, {}))", min.lon(),
@@ -109,7 +115,7 @@ auto init_box(nb::module_& m) -> void {
            })
 
       .def("__str__",
-           [](const Box& self) {
+           [](const Box& self) -> std::string {
              const auto& min = self.min_corner();
              const auto& max = self.max_corner();
              return std::format("[({}, {}) to ({}, {})]", min.lon(), min.lat(),
@@ -118,7 +124,7 @@ auto init_box(nb::module_& m) -> void {
 
       // Hash support
       .def("__hash__",
-           [](const Box& self) {
+           [](const Box& self) -> size_t {
              const auto& min = self.min_corner();
              const auto& max = self.max_corner();
              auto h1 = std::hash<double>{}(min.lon());
@@ -130,7 +136,7 @@ auto init_box(nb::module_& m) -> void {
 
       // Pickle support
       .def("__getstate__",
-           [](const Box& self) {
+           [](const Box& self) -> std::tuple<double, double, double, double> {
              const auto& min = self.min_corner();
              const auto& max = self.max_corner();
              return std::make_tuple(min.lon(), min.lat(), max.lon(), max.lat());
@@ -138,7 +144,7 @@ auto init_box(nb::module_& m) -> void {
 
       .def("__setstate__",
            [](Box* self,
-              const std::tuple<double, double, double, double>& state) {
+              const std::tuple<double, double, double, double>& state) -> void {
              new (self) Box(Point(std::get<0>(state), std::get<1>(state)),
                             Point(std::get<2>(state), std::get<3>(state)));
            });

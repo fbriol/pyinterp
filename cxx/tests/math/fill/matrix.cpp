@@ -38,8 +38,8 @@ TEST(FillLineTest, SingleValidFillsConstant) {
   detail::fill_line<double>(x, mask);
 
   EXPECT_FALSE(mask.any());
-  for (int i = 0; i < x.size(); ++i) {
-    EXPECT_DOUBLE_EQ(x[i], 10.0);
+  for (double i : x) {
+    EXPECT_DOUBLE_EQ(i, 10.0);
   }
 }
 
@@ -129,8 +129,8 @@ TEST(FillVectorTest, AllMissingStaysUnchanged) {
 
   vector<double>(v, -1.0);
 
-  for (int i = 0; i < v.size(); ++i) {
-    EXPECT_DOUBLE_EQ(v[i], -1.0);
+  for (double i : v) {
+    EXPECT_DOUBLE_EQ(i, -1.0);
   }
 }
 
@@ -141,8 +141,8 @@ TEST(FillVectorTest, SingleValidReplicates) {
 
   vector<double>(v, -1.0);
 
-  for (int i = 0; i < v.size(); ++i) {
-    EXPECT_DOUBLE_EQ(v[i], 10.0);
+  for (double i : v) {
+    EXPECT_DOUBLE_EQ(i, 10.0);
   }
 }
 

@@ -54,50 +54,52 @@ auto init_point(nb::module_& m) -> void {
 
       // Properties
       .def_prop_rw(
-          "lon", [](const Point& self) { return self.lon(); },
-          [](Point& self, double value) { self.lon() = value; }, kLonDoc)
+          "lon", [](const Point& self) -> double { return self.lon(); },
+          [](Point& self, double value) -> void { self.lon() = value; },
+          kLonDoc)
       .def_prop_rw(
-          "lat", [](const Point& self) { return self.lat(); },
-          [](Point& self, double value) { self.lat() = value; }, kLatDoc)
+          "lat", [](const Point& self) -> double { return self.lat(); },
+          [](Point& self, double value) -> void { self.lat() = value; },
+          kLatDoc)
 
       // Comparison operators
       .def("__eq__",
-           [](const Point& self, const Point& other) {
+           [](const Point& self, const Point& other) -> bool {
              return boost::geometry::equals(self, other);
            })
 
       .def("__ne__",
-           [](const Point& self, const Point& other) {
+           [](const Point& self, const Point& other) -> bool {
              return !boost::geometry::equals(self, other);
            })
 
       // String representation
       .def("__repr__",
-           [](const Point& self) {
+           [](const Point& self) -> std::string {
              return std::format("Point(lon={}, lat={})", self.lon(),
                                 self.lat());
            })
 
       .def("__str__",
-           [](const Point& self) {
+           [](const Point& self) -> std::string {
              return std::format("({}, {})", self.lon(), self.lat());
            })
 
       // Hash support for use in sets/dicts
       .def("__hash__",
-           [](const Point& self) {
+           [](const Point& self) -> size_t {
              std::hash<Point> hasher;
              return hasher(self);
            })
 
       // Pickle support
       .def("__getstate__",
-           [](const Point& self) {
+           [](const Point& self) -> std::tuple<double, double> {
              return std::make_tuple(self.lon(), self.lat());
            })
 
       .def("__setstate__",
-           [](Point* self, const std::tuple<double, double>& state) {
+           [](Point* self, const std::tuple<double, double>& state) -> void {
              new (self) Point(std::get<0>(state), std::get<1>(state));
            });
 }

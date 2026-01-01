@@ -13,7 +13,7 @@ TEST(ParallelFor, SingleThread) {
 
   parallel_for(
       size,
-      [&data](int64_t s, int64_t e) {
+      [&data](int64_t s, int64_t e) -> void {
         for (int64_t i = s; i < e; ++i) {
           data[static_cast<size_t>(i)] = 1;
         }
@@ -29,7 +29,7 @@ TEST(ParallelFor, MultipleThreads) {
 
   parallel_for(
       size,
-      [&data](int64_t s, int64_t e) {
+      [&data](int64_t s, int64_t e) -> void {
         for (int64_t i = s; i < e; ++i) {
           data[static_cast<size_t>(i)] = 1;
         }
@@ -45,7 +45,7 @@ TEST(ParallelFor, NumThreadsZeroUsesHardwareConcurrency) {
 
   parallel_for(
       size,
-      [&data](int64_t s, int64_t e) {
+      [&data](int64_t s, int64_t e) -> void {
         for (int64_t i = s; i < e; ++i) {
           data[static_cast<size_t>(i)] = 1;
         }
@@ -61,7 +61,7 @@ TEST(ParallelFor, NumThreadsGreaterThanSize) {
 
   parallel_for(
       size,
-      [&data](int64_t s, int64_t e) {
+      [&data](int64_t s, int64_t e) -> void {
         for (int64_t i = s; i < e; ++i) {
           data[static_cast<size_t>(i)] = 1;
         }
@@ -79,7 +79,7 @@ TEST(ParallelFor, ExceptionRethrown) {
   // occurs inside a thread and is propagated back to the caller.
   EXPECT_THROW(parallel_for(
                    size,
-                   [](int64_t s, int64_t e) {
+                   [](int64_t s, int64_t e) -> void {
                      if (s == 16) {
                        throw std::runtime_error("boom");
                      }

@@ -82,7 +82,8 @@ auto init_coordinates(nanobind::module_ &m) -> void {
            nb::call_guard<nb::gil_scoped_release>())
 
       .def_prop_ro(
-          "spheroid", [](const Coordinates &self) { return self.spheroid(); },
+          "spheroid",
+          [](const Coordinates &self) -> Spheroid { return self.spheroid(); },
           "WGS used to transform the coordinates.",
           nb::call_guard<nb::gil_scoped_release>())
 
@@ -90,7 +91,8 @@ auto init_coordinates(nanobind::module_ &m) -> void {
           "ecef_to_lla",
           [](const Coordinates &self, const Eigen::Ref<const Vector<double>> &x,
              const Eigen::Ref<const Vector<double>> &y,
-             const Eigen::Ref<const Vector<double>> &z, const int num_threads) {
+             const Eigen::Ref<const Vector<double>> &z, const int num_threads)
+              -> std::tuple<Vector<double>, Vector<double>, Vector<double>> {
             return self.ecef_to_lla<double>(x, y, z, num_threads);
           },
           nb::arg("x"), nb::arg("y"), nb::arg("z"), nb::arg("num_threads") = 0,
@@ -101,8 +103,8 @@ auto init_coordinates(nanobind::module_ &m) -> void {
           [](const Coordinates &self,
              const Eigen::Ref<const Vector<double>> &lon,
              const Eigen::Ref<const Vector<double>> &lat,
-             const Eigen::Ref<const Vector<double>> &alt,
-             const int num_threads) {
+             const Eigen::Ref<const Vector<double>> &alt, const int num_threads)
+              -> std::tuple<Vector<double>, Vector<double>, Vector<double>> {
             return self.lla_to_ecef<double>(lon, lat, alt, num_threads);
           },
           nb::arg("lon"), nb::arg("lat"), nb::arg("alt"),
@@ -114,8 +116,8 @@ auto init_coordinates(nanobind::module_ &m) -> void {
           [](const Coordinates &self, const Coordinates &target,
              const Eigen::Ref<const Vector<double>> &lon,
              const Eigen::Ref<const Vector<double>> &lat,
-             const Eigen::Ref<const Vector<double>> &alt,
-             const int num_threads) {
+             const Eigen::Ref<const Vector<double>> &alt, const int num_threads)
+              -> std::tuple<Vector<double>, Vector<double>, Vector<double>> {
             return self.transform<double>(target, lon, lat, alt, num_threads);
           },
           nb::arg("target"), nb::arg("lon"), nb::arg("lat"), nb::arg("alt"),
@@ -127,8 +129,8 @@ auto init_coordinates(nanobind::module_ &m) -> void {
            nb::call_guard<nb::gil_scoped_release>())
       .def(
           "__setstate__",
-          [](Coordinates &self, nb::tuple &state) {
-            return new (&self) Coordinates(Coordinates::setstate(state));
+          [](Coordinates &self, nb::tuple &state) -> void {
+            new (&self) Coordinates(Coordinates::setstate(state));
           },
           nb::arg("state"), "Set the state for unpickling.",
           nb::call_guard<nb::gil_scoped_release>());

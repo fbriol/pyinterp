@@ -49,7 +49,8 @@ Returns:
       std::pair<NS::MultiLineString, NS::MultiLineString>
 
 auto init_union(nb::module_& m) -> void {
-  auto _union_for_polygon_pairs_impl = [](const auto& g1, const auto& g2) {
+  auto _union_for_polygon_pairs_impl = [](const auto& g1,
+                                          const auto& g2) -> auto {
     nb::gil_scoped_release release;
     std::vector<cartesian::Polygon> result;
     boost::geometry::union_(g1, g2, result);
@@ -59,7 +60,8 @@ auto init_union(nb::module_& m) -> void {
       decltype(_union_for_polygon_pairs_impl), UNION_POLYGON_PAIRS(cartesian)>(
       m, "union", kUnionDoc, std::move(_union_for_polygon_pairs_impl));
 
-  auto _union_for_linestring_pairs_impl = [](const auto& g1, const auto& g2) {
+  auto _union_for_linestring_pairs_impl = [](const auto& g1,
+                                             const auto& g2) -> auto {
     nb::gil_scoped_release release;
     std::vector<cartesian::LineString> result;
     boost::geometry::union_(g1, g2, result);

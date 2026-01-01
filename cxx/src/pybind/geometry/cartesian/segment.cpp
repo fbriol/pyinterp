@@ -53,7 +53,7 @@ auto init_segment(nb::module_& m) -> void {
       .def(
           "__init__",
           [](Segment* self, const std::tuple<double, double>& a,
-             const std::tuple<double, double>& b) {
+             const std::tuple<double, double>& b) -> void {
             new (self) Segment(Point(std::get<0>(a), std::get<1>(a)),
                                Point(std::get<0>(b), std::get<1>(b)));
           },
@@ -64,7 +64,8 @@ auto init_segment(nb::module_& m) -> void {
 
       // Length is fixed to 2 endpoints
       .def(
-          "__len__", []([[maybe_unused]] const Segment& self) { return 2; },
+          "__len__",
+          []([[maybe_unused]] const Segment& self) -> int { return 2; },
           "Return the number of endpoints (always 2).")
 
       // Indexing support: 0 -> a, 1 -> b
@@ -79,7 +80,7 @@ auto init_segment(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](Segment& self, int idx, const Point& p) {
+          [](Segment& self, int idx, const Point& p) -> void {
             if (idx == 0) {
               self.a() = p;
             } else if (idx == 1) {
@@ -93,18 +94,18 @@ auto init_segment(nb::module_& m) -> void {
       // Accessors
       .def_prop_rw(
           "a", [](Segment& self) -> Point { return self.a(); },
-          [](Segment& self, const Point& p) { self.a() = p; },
+          [](Segment& self, const Point& p) -> void { self.a() = p; },
           "First endpoint.")
 
       .def_prop_rw(
           "b", [](Segment& self) -> Point { return self.b(); },
-          [](Segment& self, const Point& p) { self.b() = p; },
+          [](Segment& self, const Point& p) -> void { self.b() = p; },
           "Second endpoint.")
 
       // Truthiness: segment is non-empty if endpoints are not both default
       .def(
           "__bool__",
-          [](const Segment& self) {
+          [](const Segment& self) -> bool {
             // Consider default-constructed points as empty; otherwise true
             const auto a = self.a();
             const auto b = self.b();
@@ -115,24 +116,24 @@ auto init_segment(nb::module_& m) -> void {
 
       // Equality via boost geometry
       .def("__eq__",
-           [](const Segment& s1, const Segment& s2) {
+           [](const Segment& s1, const Segment& s2) -> bool {
              return boost::geometry::equals(s1, s2);
            })
       .def("__ne__",
-           [](const Segment& s1, const Segment& s2) {
+           [](const Segment& s1, const Segment& s2) -> bool {
              return !boost::geometry::equals(s1, s2);
            })
 
       // String representation
       .def("__repr__",
-           [](const Segment& self) {
+           [](const Segment& self) -> std::string {
              const auto& a = self.a();
              const auto& b = self.b();
              return std::format("Segment(a=({}, {}), b=({}, {}))", a.x(), a.y(),
                                 b.x(), b.y());
            })
       .def("__str__",
-           [](const Segment& self) {
+           [](const Segment& self) -> std::string {
              std::ostringstream oss;
              const auto& a = self.a();
              const auto& b = self.b();
@@ -143,7 +144,7 @@ auto init_segment(nb::module_& m) -> void {
 
       // Pickle support
       .def("__getstate__",
-           [](const Segment& self) {
+           [](const Segment& self) -> nb::tuple {
              serialization::Writer state;
              {
                nb::gil_scoped_release release;
@@ -152,7 +153,7 @@ auto init_segment(nb::module_& m) -> void {
              return nb::make_tuple(writer_to_ndarray(std::move(state)));
            })
 
-      .def("__setstate__", [](Segment* self, const nb::tuple& state) {
+      .def("__setstate__", [](Segment* self, const nb::tuple& state) -> void {
         if (state.size() != 1) {
           throw std::invalid_argument("Invalid state");
         }

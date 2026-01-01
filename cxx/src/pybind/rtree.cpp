@@ -190,17 +190,17 @@ template <typename T>
 void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
   rtree3d
       .def(
-          "size", [](const RTree3D<T>& self) { return self.size(); },
+          "size", [](const RTree3D<T>& self) -> auto { return self.size(); },
           "Return the number of points in the tree.",
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
-          "empty", [](const RTree3D<T>& self) { return self.empty(); },
+          "empty", [](const RTree3D<T>& self) -> auto { return self.empty(); },
           "Check if the tree is empty.",
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
-          "clear", [](RTree3D<T>& self) { self.clear(); },
+          "clear", [](RTree3D<T>& self) -> auto { self.clear(); },
           "Remove all points from the tree.",
           nb::call_guard<nb::gil_scoped_release>())
 
@@ -231,9 +231,8 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
           [](RTree3D<T>& self,
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
-             const Eigen::Ref<const typename RTree3D<T>::ValueVector>& values) {
-            self.packing(coordinates, values);
-          },
+             const Eigen::Ref<const typename RTree3D<T>::ValueVector>& values)
+              -> auto { self.packing(coordinates, values); },
           nb::arg("coordinates"), nb::arg("values"), kPackingDoc,
           nb::call_guard<nb::gil_scoped_release>())
 
@@ -242,9 +241,8 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
           [](RTree3D<T>& self,
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
-             const Eigen::Ref<const typename RTree3D<T>::ValueVector>& values) {
-            self.insert(coordinates, values);
-          },
+             const Eigen::Ref<const typename RTree3D<T>::ValueVector>& values)
+              -> auto { self.insert(coordinates, values); },
           nb::arg("coordinates"), nb::arg("values"), kInsertDoc,
           nb::call_guard<nb::gil_scoped_release>())
 
@@ -253,7 +251,7 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
           [](const RTree3D<T>& self,
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
-             const std::optional<config::rtree::Query>& config) {
+             const std::optional<config::rtree::Query>& config) -> auto {
             return self.query(coordinates,
                               config.value_or(config::rtree::Query{}));
           },
@@ -266,7 +264,7 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
              const std::optional<config::rtree::InverseDistanceWeighting>&
-                 config) {
+                 config) -> auto {
             return self.inverse_distance_weighting(
                 coordinates,
                 config.value_or(config::rtree::InverseDistanceWeighting{}));
@@ -280,7 +278,7 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
           [](const RTree3D<T>& self,
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
-             const std::optional<config::rtree::Kriging>& config) {
+             const std::optional<config::rtree::Kriging>& config) -> auto {
             return self.kriging(coordinates,
                                 config.value_or(config::rtree::Kriging{}));
           },
@@ -292,7 +290,8 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
           [](const RTree3D<T>& self,
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
-             const std::optional<config::rtree::RadialBasisFunction>& config) {
+             const std::optional<config::rtree::RadialBasisFunction>& config)
+              -> auto {
             return self.radial_basis_function(
                 coordinates,
                 config.value_or(config::rtree::RadialBasisFunction{}));
@@ -305,7 +304,8 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
           [](const RTree3D<T>& self,
              const Eigen::Ref<const typename RTree3D<T>::CoordinateMatrix>&
                  coordinates,
-             const std::optional<config::rtree::InterpolationWindow>& config) {
+             const std::optional<config::rtree::InterpolationWindow>& config)
+              -> auto {
             return self.window_function(
                 coordinates,
                 config.value_or(config::rtree::InterpolationWindow{}));
@@ -316,9 +316,8 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
       .def("__getstate__", &RTree3D<T>::getstate, "Get the state for pickling.")
       .def(
           "__setstate__",
-          [](RTree3D<T>& self, nb::tuple& state) {
-            return new (&self)
-                RTree3D<T>(std::move(RTree3D<T>::setstate(state)));
+          [](RTree3D<T>& self, nb::tuple& state) -> void {
+            new (&self) RTree3D<T>(std::move(RTree3D<T>::setstate(state)));
           },
           nb::arg("state"), "Set the state for unpickling.");
 }
@@ -335,7 +334,8 @@ void init_rtree_3d(nb::module_& m, std::string_view suffix) {
       nb::call_guard<nb::gil_scoped_release>());
 
   rtree3d.def_prop_ro(
-      "spheroid", [](const RTree3D<T>& self) { return self.spheroid(); },
+      "spheroid",
+      [](const RTree3D<T>& self) -> auto { return self.spheroid(); },
       "Get the spheroid used for geodetic conversions, or None for ECEF.",
       nb::call_guard<nb::gil_scoped_release>());
 

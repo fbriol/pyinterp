@@ -55,25 +55,27 @@ Returns:
   std::pair<NS::LineString, NS::LineString>
 
 auto init_intersection(nb::module_& m) -> void {
-  auto intersection_polygon_impl =
-      [](const auto& geometry1, const auto& geometry2,
-         const std::optional<Spheroid>& spheroid, StrategyMethod strategy) {
-        nb::gil_scoped_release release;
-        return intersection_polygon(geometry1, geometry2, spheroid, strategy);
-      };
+  auto intersection_polygon_impl = [](const auto& geometry1,
+                                      const auto& geometry2,
+                                      const std::optional<Spheroid>& spheroid,
+                                      StrategyMethod strategy) -> auto {
+    nb::gil_scoped_release release;
+    return intersection_polygon(geometry1, geometry2, spheroid, strategy);
+  };
   auto intersection_linestring_impl =
       [](const auto& geometry1, const auto& geometry2,
-         const std::optional<Spheroid>& spheroid, StrategyMethod strategy) {
-        nb::gil_scoped_release release;
-        return intersection_linestring(geometry1, geometry2, spheroid,
-                                       strategy);
-      };
-  auto intersection_point_impl =
-      [](const auto& geometry1, const auto& geometry2,
-         const std::optional<Spheroid>& spheroid, StrategyMethod strategy) {
-        nb::gil_scoped_release release;
-        return intersection_point(geometry1, geometry2, spheroid, strategy);
-      };
+         const std::optional<Spheroid>& spheroid,
+         StrategyMethod strategy) -> auto {
+    nb::gil_scoped_release release;
+    return intersection_linestring(geometry1, geometry2, spheroid, strategy);
+  };
+  auto intersection_point_impl = [](const auto& geometry1,
+                                    const auto& geometry2,
+                                    const std::optional<Spheroid>& spheroid,
+                                    StrategyMethod strategy) -> auto {
+    nb::gil_scoped_release release;
+    return intersection_point(geometry1, geometry2, spheroid, strategy);
+  };
 
   geometry::pybind::define_binary_predicate_with_strategy<
       decltype(intersection_polygon_impl), Spheroid, StrategyMethod,

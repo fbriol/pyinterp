@@ -92,7 +92,8 @@ auto init_polygon(nb::module_& m) -> void {
 
       .def(
           "__init__",
-          [](Polygon* self, Ring exterior, std::vector<Ring> interiors) {
+          [](Polygon* self, Ring exterior,
+             std::vector<Ring> interiors) -> void {
             new (self) Polygon(std::move(exterior), std::move(interiors));
           },
           "exterior"_a, "interiors"_a = std::vector<Ring>{}, kPolygonInitDoc)
@@ -100,21 +101,21 @@ auto init_polygon(nb::module_& m) -> void {
       // Accessors
       .def_prop_rw(
           "outer", [](Polygon& self) -> Ring& { return self.outer(); },
-          [](Polygon& self, const Ring& ring) { self.outer() = ring; },
+          [](Polygon& self, const Ring& ring) -> void { self.outer() = ring; },
           nb::rv_policy::reference_internal, "Exterior ring of the polygon.")
 
       .def_prop_rw(
           "inners",
           // Getter returns a proxy view; keep the view alive via keep_alive
-          [](Polygon& self) {
+          [](Polygon& self) -> nb::object {
             return nb::cast(InnerRingsView(&self), nb::rv_policy::reference);
           },
           // Setter accepts a sequence of rings to replace interiors
-          [](Polygon& self, const nb::list& rings) {
+          [](Polygon& self, const nb::list& rings) -> void {
             std::vector<Ring> new_inners;
             new_inners.reserve(rings.size());
-            for (size_t i = 0; i < rings.size(); ++i) {
-              new_inners.push_back(nb::cast<Ring>(rings[i]));
+            for (const auto& ring : rings) {
+              new_inners.push_back(nb::cast<Ring>(ring));
             }
             self.inners() = std::move(new_inners);
           },
@@ -123,14 +124,14 @@ auto init_polygon(nb::module_& m) -> void {
 
       .def(
           "append",
-          [](Polygon& self, const Ring& ring) {
+          [](Polygon& self, const Ring& ring) -> void {
             self.inners().push_back(ring);
           },
           "ring"_a, "Append an interior ring (hole).")
 
       .def(
           "clear",
-          [](Polygon& self) {
+          [](Polygon& self) -> void {
             self.outer() = Ring{};
             self.inners().clear();
           },
@@ -138,25 +139,25 @@ auto init_polygon(nb::module_& m) -> void {
 
       // Comparison operators
       .def("__eq__",
-           [](const Polygon& self, const Polygon& other) {
+           [](const Polygon& self, const Polygon& other) -> bool {
              return boost::geometry::equals(self, other);
            })
 
       .def("__ne__",
-           [](const Polygon& self, const Polygon& other) {
+           [](const Polygon& self, const Polygon& other) -> bool {
              return !boost::geometry::equals(self, other);
            })
 
       // String representation
       .def("__repr__",
-           [](const Polygon& self) {
+           [](const Polygon& self) -> std::string {
              const auto count =
                  self.outer().empty() ? 0 : 1 + self.inners().size();
              return std::format("Polygon({} rings)", count);
            })
 
       .def("__str__",
-           [](const Polygon& self) {
+           [](const Polygon& self) -> std::string {
              std::ostringstream oss;
              oss << "Polygon[outer=" << self.outer().size()
                  << " points, inners=" << self.inners().size() << "]";
@@ -165,7 +166,7 @@ auto init_polygon(nb::module_& m) -> void {
 
       // Pickle support
       .def("__getstate__",
-           [](const Polygon& self) {
+           [](const Polygon& self) -> nb::tuple {
              serialization::Writer state;
              {
                nb::gil_scoped_release release;
@@ -174,7 +175,7 @@ auto init_polygon(nb::module_& m) -> void {
              return nb::make_tuple(writer_to_ndarray(std::move(state)));
            })
 
-      .def("__setstate__", [](Polygon* self, const nb::tuple& state) {
+      .def("__setstate__", [](Polygon* self, const nb::tuple& state) -> void {
         if (state.size() != 1) {
           throw std::invalid_argument("Invalid state");
         }

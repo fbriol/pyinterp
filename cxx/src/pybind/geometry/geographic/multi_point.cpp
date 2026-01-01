@@ -15,6 +15,7 @@
 #include <format>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include "pyinterp/geometry/geographic/point.hpp"
 #include "pyinterp/pybind/geometry/container_view.hpp"
@@ -84,14 +85,14 @@ auto init_multipoint(nb::module_& m) -> void {
       .def(nb::init<>(), "Construct an empty multipoint.")
       .def(
           "__init__",
-          [](MultiPoint* self, std::vector<Point> points) {
+          [](MultiPoint* self, std::vector<Point> points) -> void {
             new (self) MultiPoint(std::move(points));
           },
           "points"_a = std::vector<Point>{}, kMultiPointInitDoc)
       .def(
           "__init__",
           [](MultiPoint* self, const Eigen::Ref<const Vector<double>>& lons,
-             const Eigen::Ref<const Vector<double>>& lats) {
+             const Eigen::Ref<const Vector<double>>& lats) -> void {
             if (lons.size() != lats.size()) {
               throw std::invalid_argument(
                   "lons and lats arrays must have the same size");
@@ -107,7 +108,7 @@ auto init_multipoint(nb::module_& m) -> void {
       .def(
           "__getitem__",
           [](MultiPoint& self, Eigen::Index idx) -> Point& {
-            if (idx < 0 || idx >= static_cast<Eigen::Index>(self.size())) {
+            if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiPoint index out of range");
             }
             return self[static_cast<size_t>(idx)];
@@ -116,8 +117,8 @@ auto init_multipoint(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](MultiPoint& self, Eigen::Index idx, const Point& pt) {
-            if (idx < 0 || idx >= static_cast<Eigen::Index>(self.size())) {
+          [](MultiPoint& self, Eigen::Index idx, const Point& pt) -> void {
+            if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiPoint index out of range");
             }
             self[static_cast<size_t>(idx)] = pt;
@@ -131,12 +132,13 @@ auto init_multipoint(nb::module_& m) -> void {
            "Remove all points from the collection.")
 
       .def(
-          "__bool__", [](const MultiPoint& self) { return !self.empty(); },
+          "__bool__",
+          [](const MultiPoint& self) -> bool { return !self.empty(); },
           "Return True if not empty.")
 
       .def(
           "__iter__",
-          [](MultiPoint& self) {
+          [](MultiPoint& self) -> nb::object {
             nb::list items;
             for (size_t i = 0; i < self.size(); ++i) {
               items.append(self[static_cast<size_t>(i)]);
@@ -148,14 +150,14 @@ auto init_multipoint(nb::module_& m) -> void {
       // View property over the underlying container
       .def_prop_rw(
           "points",
-          [](MultiPoint& self) {
+          [](MultiPoint& self) -> nb::object {
             return nb::cast(PointsView(&self), nb::rv_policy::reference);
           },
-          [](MultiPoint& self, const nb::list& items) {
+          [](MultiPoint& self, const nb::list& items) -> void {
             std::vector<Point> pts;
             pts.reserve(items.size());
-            for (size_t i = 0; i < items.size(); ++i) {
-              pts.push_back(nb::cast<Point>(items[i]));
+            for (const auto& item : items) {
+              pts.push_back(nb::cast<Point>(item));
             }
             self.clear();
             for (const auto& p : pts) self.push_back(p);
@@ -165,21 +167,21 @@ auto init_multipoint(nb::module_& m) -> void {
 
       // Equality via boost geometry
       .def("__eq__",
-           [](const MultiPoint& a, const MultiPoint& b) {
+           [](const MultiPoint& a, const MultiPoint& b) -> bool {
              return boost::geometry::equals(a, b);
            })
       .def("__ne__",
-           [](const MultiPoint& a, const MultiPoint& b) {
+           [](const MultiPoint& a, const MultiPoint& b) -> bool {
              return !boost::geometry::equals(a, b);
            })
 
       // Repr/str
       .def("__repr__",
-           [](const MultiPoint& self) {
+           [](const MultiPoint& self) -> std::string {
              return std::format("MultiPoint({} points)", self.size());
            })
       .def("__str__",
-           [](const MultiPoint& self) {
+           [](const MultiPoint& self) -> std::string {
              std::ostringstream oss;
              oss << "MultiPoint[n=" << self.size() << "]";
              return oss.str();
@@ -187,7 +189,7 @@ auto init_multipoint(nb::module_& m) -> void {
 
       // Pickle support
       .def("__getstate__",
-           [](const MultiPoint& self) {
+           [](const MultiPoint& self) -> nb::tuple {
              serialization::Writer state;
              {
                nb::gil_scoped_release release;
@@ -195,17 +197,18 @@ auto init_multipoint(nb::module_& m) -> void {
              }
              return nb::make_tuple(writer_to_ndarray(std::move(state)));
            })
-      .def("__setstate__", [](MultiPoint* self, const nb::tuple& state) {
-        if (state.size() != 1) {
-          throw std::invalid_argument("Invalid state");
-        }
-        auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-        auto reader = reader_from_ndarray(array);
-        {
-          nb::gil_scoped_release release;
-          new (self) MultiPoint(MultiPoint::unpack(reader));
-        }
-      });
+      .def("__setstate__",
+           [](MultiPoint* self, const nb::tuple& state) -> void {
+             if (state.size() != 1) {
+               throw std::invalid_argument("Invalid state");
+             }
+             auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+             auto reader = reader_from_ndarray(array);
+             {
+               nb::gil_scoped_release release;
+               new (self) MultiPoint(MultiPoint::unpack(reader));
+             }
+           });
 
   // Bind view class
   bind_container_view<PointsView, Point>(m, "_PointsView", "point");

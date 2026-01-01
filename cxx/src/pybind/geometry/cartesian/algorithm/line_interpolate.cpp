@@ -44,12 +44,13 @@ inline auto define_line_interpolate_for_geometries(nanobind::module_& m,
     boost::geometry::line_interpolate(g, distance, result);
     return result;
   };
-  (..., m.def(
-            "line_interpolate",
-            [line_interpolate_impl](const Geometries& g, double distance) {
-              return line_interpolate_impl(g, distance);
-            },
-            "geometry"_a, "distance"_a, doc));
+  (...,
+   m.def(
+       "line_interpolate",
+       [line_interpolate_impl](const Geometries& g, double distance) -> auto {
+         return line_interpolate_impl(g, distance);
+       },
+       "geometry"_a, "distance"_a, doc));
 }
 
 auto init_line_interpolate(nanobind::module_& m) -> void {

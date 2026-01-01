@@ -55,7 +55,7 @@ TEST_F(SatelliteRotationTest, SatelliteDirectionDiagonal) {
   auto direction = satellite::rotation::satellite_direction<double>(location);
 
   // Expected direction is (1, 1, 1) normalized = (1/√3, 1/√3, 1/√3)
-  double expected_component = 1.0 / std::sqrt(3.0);
+  double expected_component = std::numbers::inv_sqrt3;
 
   for (int i = 0; i < 4; ++i) {
     EXPECT_NEAR(direction(i, 0), expected_component, kEpsilon)

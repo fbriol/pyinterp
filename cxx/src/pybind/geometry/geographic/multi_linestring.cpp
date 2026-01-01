@@ -14,6 +14,7 @@
 #include <format>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include "pyinterp/geometry/geographic/linestring.hpp"
 #include "pyinterp/pybind/geometry/container_view.hpp"
@@ -79,7 +80,7 @@ auto init_multilinestring(nb::module_& m) -> void {
       .def(nb::init<>(), "Construct an empty multilinestring.")
       .def(
           "__init__",
-          [](MultiLineString* self, std::vector<LineString> lines) {
+          [](MultiLineString* self, std::vector<LineString> lines) -> void {
             new (self) MultiLineString(std::move(lines));
           },
           "lines"_a = std::vector<LineString>{}, kMultiLineStringInitDoc)
@@ -90,7 +91,7 @@ auto init_multilinestring(nb::module_& m) -> void {
       .def(
           "__getitem__",
           [](MultiLineString& self, Eigen::Index idx) -> LineString& {
-            if (idx < 0 || idx >= static_cast<Eigen::Index>(self.size())) {
+            if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiLineString index out of range");
             }
             return self[static_cast<size_t>(idx)];
@@ -99,8 +100,9 @@ auto init_multilinestring(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](MultiLineString& self, Eigen::Index idx, const LineString& ls) {
-            if (idx < 0 || idx >= static_cast<Eigen::Index>(self.size())) {
+          [](MultiLineString& self, Eigen::Index idx,
+             const LineString& ls) -> void {
+            if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiLineString index out of range");
             }
             self[static_cast<size_t>(idx)] = ls;
@@ -114,12 +116,13 @@ auto init_multilinestring(nb::module_& m) -> void {
            "Remove all linestrings from the collection.")
 
       .def(
-          "__bool__", [](const MultiLineString& self) { return !self.empty(); },
+          "__bool__",
+          [](const MultiLineString& self) -> bool { return !self.empty(); },
           "Return True if not empty.")
 
       .def(
           "__iter__",
-          [](MultiLineString& self) {
+          [](MultiLineString& self) -> nb::object {
             nb::list items;
             for (size_t i = 0; i < self.size(); ++i) {
               items.append(self[static_cast<size_t>(i)]);
@@ -131,14 +134,14 @@ auto init_multilinestring(nb::module_& m) -> void {
       // View property over the underlying container
       .def_prop_rw(
           "lines",
-          [](MultiLineString& self) {
+          [](MultiLineString& self) -> nb::object {
             return nb::cast(LinesView(&self), nb::rv_policy::reference);
           },
-          [](MultiLineString& self, const nb::list& items) {
+          [](MultiLineString& self, const nb::list& items) -> void {
             std::vector<LineString> ls;
             ls.reserve(items.size());
-            for (size_t i = 0; i < items.size(); ++i) {
-              ls.push_back(nb::cast<LineString>(items[i]));
+            for (const auto& item : items) {
+              ls.push_back(nb::cast<LineString>(item));
             }
             self.clear();
             for (const auto& x : ls) self.push_back(x);
@@ -148,21 +151,21 @@ auto init_multilinestring(nb::module_& m) -> void {
 
       // Equality via boost geometry
       .def("__eq__",
-           [](const MultiLineString& a, const MultiLineString& b) {
+           [](const MultiLineString& a, const MultiLineString& b) -> bool {
              return boost::geometry::equals(a, b);
            })
       .def("__ne__",
-           [](const MultiLineString& a, const MultiLineString& b) {
+           [](const MultiLineString& a, const MultiLineString& b) -> bool {
              return !boost::geometry::equals(a, b);
            })
 
       // Repr/str
       .def("__repr__",
-           [](const MultiLineString& self) {
+           [](const MultiLineString& self) -> std::string {
              return std::format("MultiLineString({} lines)", self.size());
            })
       .def("__str__",
-           [](const MultiLineString& self) {
+           [](const MultiLineString& self) -> std::string {
              std::ostringstream oss;
              oss << "MultiLineString[n=" << self.size() << "]";
              return oss.str();
@@ -170,7 +173,7 @@ auto init_multilinestring(nb::module_& m) -> void {
 
       // Pickle support
       .def("__getstate__",
-           [](const MultiLineString& self) {
+           [](const MultiLineString& self) -> nb::tuple {
              serialization::Writer state;
              {
                nb::gil_scoped_release release;
@@ -178,17 +181,18 @@ auto init_multilinestring(nb::module_& m) -> void {
              }
              return nb::make_tuple(writer_to_ndarray(std::move(state)));
            })
-      .def("__setstate__", [](MultiLineString* self, const nb::tuple& state) {
-        if (state.size() != 1) {
-          throw std::invalid_argument("Invalid state");
-        }
-        auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-        auto reader = reader_from_ndarray(array);
-        {
-          nb::gil_scoped_release release;
-          new (self) MultiLineString(MultiLineString::unpack(reader));
-        }
-      });
+      .def("__setstate__",
+           [](MultiLineString* self, const nb::tuple& state) -> void {
+             if (state.size() != 1) {
+               throw std::invalid_argument("Invalid state");
+             }
+             auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+             auto reader = reader_from_ndarray(array);
+             {
+               nb::gil_scoped_release release;
+               new (self) MultiLineString(MultiLineString::unpack(reader));
+             }
+           });
 
   // Bind view class
   bind_container_view<LinesView, LineString>(m, "_LinesView", "linestring");

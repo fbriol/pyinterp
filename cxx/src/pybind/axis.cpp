@@ -179,26 +179,26 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
           nanobind::call_guard<nb::gil_scoped_release>())
 
       .def(
-          "__copy__", [](const Axis &self) { return Axis(self); },
+          "__copy__", [](const Axis &self) -> Axis { return Axis(self); },
           "Implement the shallow copy operation.",
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "__getitem__",
-          [](const Axis &self, size_t index) {
+          [](const Axis &self, size_t index) -> auto {
             return self.coordinate_value(index);
           },
           nb::arg("index"))
 
       .def(
           "__getitem__",
-          [](const Axis &self, const nb::slice &axis_slice) {
+          [](const Axis &self, const nb::slice &axis_slice) -> auto {
             return self.coordinate_values(axis_slice);
           },
           nb::arg("axis_slice"))
 
       .def(
-          "__len__", [](const Axis &self) { return self.size(); },
+          "__len__", [](const Axis &self) -> int64_t { return self.size(); },
           "Return the length of the axis.",
           nanobind::call_guard<nb::gil_scoped_release>())
 
@@ -247,8 +247,8 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
       .def("__getstate__", &Axis::getstate, "Get the state for pickling.")
       .def(
           "__setstate__",
-          [](Axis &self, nanobind::tuple &state) {
-            return new (&self) Axis(std::move(Axis::setstate(state)));
+          [](Axis &self, nanobind::tuple &state) -> void {
+            new (&self) Axis(std::move(Axis::setstate(state)));
           },
           nb::arg("state"), "Set the state for unpickling.");
 }
@@ -284,11 +284,13 @@ void init_axis(nb::module_ &m) {
           "Last value of this axis.", nb::call_guard<nb::gil_scoped_release>())
 
       .def(
-          "min_value", [](const Axis<T> &self) { return self.min_value(); },
+          "min_value",
+          [](const Axis<T> &self) -> auto { return self.min_value(); },
           "Minimum value of this axis.",
           nb::call_guard<nb::gil_scoped_release>())
       .def(
-          "max_value", [](const Axis<T> &self) { return self.max_value(); },
+          "max_value",
+          [](const Axis<T> &self) -> auto { return self.max_value(); },
           "Maximum value of this axis.",
           nb::call_guard<nb::gil_scoped_release>())
 
@@ -346,14 +348,15 @@ inline void init_temporal_axis(nb::module_ &m) {
       .def(
           "find_index",
           [](const TemporalAxis &self, const nb::object &coordinates,
-             const bool bounded) {
+             const bool bounded) -> Vector<int64_t> {
             return self.find_index(coordinates, bounded);
           },
           nb::arg("coordinates"), nb::arg("bounded"), kFindIndexDoc)
 
       .def(
           "find_indexes",
-          [](const TemporalAxis &self, const nb::object &coordinates) {
+          [](const TemporalAxis &self, const nb::object &coordinates)
+              -> Eigen::Matrix<int64_t, Eigen::Dynamic, 2, Eigen::RowMajor> {
             return self.find_indexes(coordinates);
           },
           nb::arg("coordinates"), kFindIndexesDoc)

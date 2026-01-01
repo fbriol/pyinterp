@@ -41,7 +41,7 @@ Returns:
 auto init_difference(nb::module_& m) -> void {
   auto difference_impl = [](const auto& geometry1, const auto& geometry2,
                             const std::optional<Spheroid>& spheroid,
-                            StrategyMethod strategy) {
+                            StrategyMethod strategy) -> auto {
     nb::gil_scoped_release release;
     return difference(geometry1, geometry2, spheroid, strategy);
   };

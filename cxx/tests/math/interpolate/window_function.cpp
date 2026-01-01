@@ -62,14 +62,16 @@ TEST_F(WindowFunctionTest, HammingBasicValues) {
 }
 
 TEST_F(WindowFunctionTest, HammingSymmetry) {
-  TestSymmetry(
-      [](double x, double hw, double c) { return window::hamming(x, hw, c); },
-      5.0);
+  TestSymmetry([](double x, double hw,
+                  double c) -> double { return window::hamming(x, hw, c); },
+               5.0);
 }
 
 TEST_F(WindowFunctionTest, HammingMonotonic) {
   TestMonotonicDecrease(
-      [](double x, double hw, double c) { return window::hamming(x, hw, c); },
+      [](double x, double hw, double c) -> double {
+        return window::hamming(x, hw, c);
+      },
       5.0);
 }
 
@@ -107,14 +109,16 @@ TEST_F(WindowFunctionTest, BlackmanBasicValues) {
 }
 
 TEST_F(WindowFunctionTest, BlackmanSymmetry) {
-  TestSymmetry(
-      [](double x, double hw, double c) { return window::blackman(x, hw, c); },
-      5.0);
+  TestSymmetry([](double x, double hw,
+                  double c) -> double { return window::blackman(x, hw, c); },
+               5.0);
 }
 
 TEST_F(WindowFunctionTest, BlackmanMonotonic) {
   TestMonotonicDecrease(
-      [](double x, double hw, double c) { return window::blackman(x, hw, c); },
+      [](double x, double hw, double c) -> double {
+        return window::blackman(x, hw, c);
+      },
       5.0);
 }
 
@@ -135,9 +139,9 @@ TEST_F(WindowFunctionTest, FlatTopBasicValues) {
 }
 
 TEST_F(WindowFunctionTest, FlatTopSymmetry) {
-  TestSymmetry(
-      [](double x, double hw, double c) { return window::flat_top(x, hw, c); },
-      5.0);
+  TestSymmetry([](double x, double hw,
+                  double c) -> double { return window::flat_top(x, hw, c); },
+               5.0);
 }
 
 TEST_F(WindowFunctionTest, FlatTopNegativeValues) {
@@ -163,9 +167,9 @@ TEST_F(WindowFunctionTest, NuttallBasicValues) {
 }
 
 TEST_F(WindowFunctionTest, NuttallSymmetry) {
-  TestSymmetry(
-      [](double x, double hw, double c) { return window::nuttall(x, hw, c); },
-      5.0);
+  TestSymmetry([](double x, double hw,
+                  double c) -> double { return window::nuttall(x, hw, c); },
+               5.0);
 }
 
 TEST_F(WindowFunctionTest, NuttallMonotonic) {
@@ -197,14 +201,16 @@ TEST_F(WindowFunctionTest, BlackmanHarrisBasicValues) {
 }
 
 TEST_F(WindowFunctionTest, BlackmanHarrisSymmetry) {
-  TestSymmetry([](double x, double hw,
-                  double c) { return window::blackman_harris(x, hw, c); },
-               5.0);
+  TestSymmetry(
+      [](double x, double hw, double c) -> double {
+        return window::blackman_harris(x, hw, c);
+      },
+      5.0);
 }
 
 TEST_F(WindowFunctionTest, BlackmanHarrisMonotonic) {
   TestMonotonicDecrease(
-      [](double x, double hw, double c) {
+      [](double x, double hw, double c) -> double {
         return window::blackman_harris(x, hw, c);
       },
       5.0);
@@ -228,7 +234,9 @@ TEST_F(WindowFunctionTest, ParzenBasicValues) {
 
 TEST_F(WindowFunctionTest, ParzenMonotonic) {
   TestMonotonicDecrease(
-      [](double x, double hw, double c) { return window::parzen(x, hw, c); },
+      [](double x, double hw, double c) -> double {
+        return window::parzen(x, hw, c);
+      },
       5.0);
 }
 
@@ -308,9 +316,9 @@ TEST_F(WindowFunctionTest, LanczosZeroBeyondCutoff) {
 }
 
 TEST_F(WindowFunctionTest, LanczosSymmetry) {
-  TestSymmetry(
-      [](double x, double hw, double c) { return window::lanczos(x, hw, c); },
-      5.0, 2.0);
+  TestSymmetry([](double x, double hw,
+                  double c) -> double { return window::lanczos(x, hw, c); },
+               5.0, 2.0);
 }
 
 TEST_F(WindowFunctionTest, LanczosDifferentCutoffs) {

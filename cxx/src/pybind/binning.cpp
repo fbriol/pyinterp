@@ -128,13 +128,14 @@ auto bind_statistics_methods(ClassType &cls) -> void {
 template <typename BinningType, typename StateType, typename ClassType>
 auto bind_pickle_support(ClassType &cls) -> void {
   cls.def(
-         "__copy__", [](const BinningType &self) { return BinningType(self); },
+         "__copy__",
+         [](const BinningType &self) -> auto { return BinningType(self); },
          "Implement the shallow copy operation.",
          nanobind::call_guard<nanobind::gil_scoped_release>())
 
       .def(
           "__getstate__",
-          [](const BinningType &self) {
+          [](const BinningType &self) -> auto {
             nanobind::gil_scoped_release release;
             return self.getstate();
           },
@@ -142,9 +143,9 @@ auto bind_pickle_support(ClassType &cls) -> void {
 
       .def(
           "__setstate__",
-          [](BinningType &self, const StateType &state) {
+          [](BinningType &self, const StateType &state) -> void {
             nanobind::gil_scoped_release release;
-            return new (&self) BinningType(BinningType::setstate(state));
+            new (&self) BinningType(BinningType::setstate(state));
           },
           nanobind::arg("state"),
           "Set the state of the instance from pickling.");
@@ -173,7 +174,8 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
                    "Get the bin centers for the Y Axis of the grid.")
 
       .def_prop_ro(
-          "spheroid", [](const Binning2D<T> &self) { return self.spheroid(); },
+          "spheroid",
+          [](const Binning2D<T> &self) -> auto { return self.spheroid(); },
           "Get the spheroid used for geographic coordinates.")
 
       .def("push", &Binning2D<T>::push, nanobind::arg("x"), nanobind::arg("y"),

@@ -187,7 +187,8 @@ auto buffer_impl(const Geometry& geometry, const DistanceStrategy& distance,
     nb::gil_scoped_release release;
 
     std::visit(
-        [&](const auto& dist, const auto& j, const auto& e, const auto& p) {
+        [&](const auto& dist, const auto& j, const auto& e,
+            const auto& p) -> auto {
           bg::buffer(geometry, result, dist.get(), SideStraight::get(), j.get(),
                      e.get(), p.get());
         },

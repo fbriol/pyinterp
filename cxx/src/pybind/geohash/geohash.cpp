@@ -191,30 +191,31 @@ auto init_class(nb::module_& m) -> void {
                   "precision"_a, kErrorWithPrecisionDoc)
 
       .def("__repr__",
-           [](const GeoHash& self) {
+           [](const GeoHash& self) -> std::string {
              return "<GeoHash code='" + self.string_value() + "'>";
            })
 
-      .def("__str__", [](const GeoHash& self) { return std::string(self); })
+      .def("__str__",
+           [](const GeoHash& self) -> std::string { return std::string(self); })
 
       .def("__hash__",
-           [](const GeoHash& self) {
+           [](const GeoHash& self) -> size_t {
              return std::hash<std::string>{}(self.string_value());
            })
 
       .def("__eq__",
-           [](const GeoHash& self, const GeoHash& other) {
+           [](const GeoHash& self, const GeoHash& other) -> bool {
              return self.string_value() == other.string_value();
            })
 
       .def("__getstate__", &GeoHash::getstate)
 
-      .def(
-          "__setstate__",
-          [](GeoHash* self, const std::tuple<double, double, uint32_t>& state) {
-            new (self) GeoHash(std::get<0>(state), std::get<1>(state),
-                               std::get<2>(state));
-          });
+      .def("__setstate__",
+           [](GeoHash* self,
+              const std::tuple<double, double, uint32_t>& state) -> void {
+             new (self) GeoHash(std::get<0>(state), std::get<1>(state),
+                                std::get<2>(state));
+           });
 }
 
 }  // namespace pyinterp::geohash::pybind

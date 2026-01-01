@@ -322,7 +322,7 @@ TEST_F(Base32Test, DecodeBitShifting) {
 // Test constexpr capabilities
 TEST(Base32ConstexprTest, ConstexprEncode) {
   // Test that encode can be used in constexpr context
-  constexpr auto test_encode = []() {
+  constexpr auto test_encode = []() -> char {
     std::array<char, 1> buffer{};
     Base32::encode(31u, buffer);
     return buffer[0];

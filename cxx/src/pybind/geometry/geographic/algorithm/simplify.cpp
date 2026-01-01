@@ -35,7 +35,7 @@ template <typename... Geometries>
 inline auto define_simplify(nb::module_& m, const char* doc) -> void {
   auto simplify_impl = [](const auto& g, double max_distance,
                           const std::optional<Spheroid>& wgs,
-                          StrategyMethod strategy) {
+                          StrategyMethod strategy) -> auto {
     using GeometryType = std::decay_t<decltype(g)>;
     nb::gil_scoped_release release;
     return simplify<GeometryType>(g, max_distance, wgs, strategy);
@@ -45,7 +45,7 @@ inline auto define_simplify(nb::module_& m, const char* doc) -> void {
             "simplify",
             [simplify_impl](const Geometries& g, double max_distance,
                             const std::optional<Spheroid>& spheroid,
-                            StrategyMethod strategy) {
+                            StrategyMethod strategy) -> auto {
               return simplify_impl(g, max_distance, spheroid, strategy);
             },
             "geometry"_a, "max_distance"_a, "spheroid"_a = std::nullopt,

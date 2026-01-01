@@ -44,7 +44,7 @@ Returns:
       std::pair<NS::Polygon, NS::MultiPolygon>
 
 auto init_difference(nanobind::module_& m) -> void {
-  auto difference_impl = [](const auto& g1, const auto& g2) {
+  auto difference_impl = [](const auto& g1, const auto& g2) -> auto {
     nanobind::gil_scoped_release release;
     std::vector<Polygon> result;
     boost::geometry::difference(g1, g2, result);

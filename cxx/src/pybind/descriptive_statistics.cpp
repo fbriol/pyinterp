@@ -253,15 +253,15 @@ auto bind_descriptive_statistics(nb::module_& m, std::string_view suffix)
            "Get the state for pickling.")
       .def(
           "__setstate__",
-          [](PyDescriptiveStatistics<T>& self, nb::tuple& state) {
-            return new (&self) PyDescriptiveStatistics<T>(
+          [](PyDescriptiveStatistics<T>& self, nb::tuple& state) -> void {
+            new (&self) PyDescriptiveStatistics<T>(
                 PyDescriptiveStatistics<T>::setstate(state));
           },
           nb::arg("state"), "Set the state for unpickling.")
 
       .def(
           "__copy__",
-          [](const PyDescriptiveStatistics<T>& self) {
+          [](const PyDescriptiveStatistics<T>& self) -> auto {
             return PyDescriptiveStatistics<T>(self);
           },
           "Create a copy of this object.");
@@ -420,8 +420,8 @@ auto PyDescriptiveStatistics<T>::to_numpy_array(const Vector<U>& vec) const
   if (shape.size() == 1 && shape[0] == 1) {
     auto* data = new U[1];
     data[0] = vec[0];
-    nb::capsule owner(data,
-                      [](void* p) noexcept { delete[] static_cast<U*>(p); });
+    nb::capsule owner(
+        data, [](void* p) noexcept -> void { delete[] static_cast<U*>(p); });
     return nb::ndarray<nb::numpy, U>(data, {}, owner);
   }
 
@@ -429,8 +429,8 @@ auto PyDescriptiveStatistics<T>::to_numpy_array(const Vector<U>& vec) const
   auto* data = new U[vec.size()];
   std::copy_n(vec.data(), vec.size(), data);
 
-  nb::capsule owner(data,
-                    [](void* p) noexcept { delete[] static_cast<U*>(p); });
+  nb::capsule owner(
+      data, [](void* p) noexcept -> void { delete[] static_cast<U*>(p); });
   return nb::ndarray<nb::numpy, U>(data, shape.size(), shape.data(), owner);
 }
 
