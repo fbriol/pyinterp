@@ -1,9 +1,50 @@
-"""Pyinterp package."""
+"""Pyinterp - Interpolation and geospatial operations for Python.
+
+This package provides efficient interpolation methods for gridded data,
+geospatial operations, and statistical analysis tools.
+"""
 
 import copyreg
 from typing import Any
 
 from . import core
+
+from .core import (
+    # Axes
+    Axis,
+    TemporalAxis,
+    # Cartesian grids
+    Grid,
+    # Interpolation configurations
+    config,
+    # Interpolators
+    bivariate,
+    trivariate,
+    quadrivariate,
+    # Spatial indexes
+    RTree3D,
+    # Date and time utilities
+    dateutils,
+    Period,
+    PeriodList,
+    # Geometry operations
+    geometry,
+)
+
+__all__ = [
+    "Axis",
+    "Grid",
+    "Period",
+    "PeriodList",
+    "RTree3D",
+    "TemporalAxis",
+    "bivariate",
+    "config",
+    "dateutils",
+    "geometry",
+    "quadrivariate",
+    "trivariate",
+]
 
 
 def _unpickle_grid(state: tuple[Any, ...]) -> core.GridHolder:
