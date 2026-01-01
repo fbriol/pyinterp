@@ -358,20 +358,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # ##############################################################################
-# Add subdirectories
-# ##############################################################################
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind)
-add_subdirectory(cxx)
-
-# ##############################################################################
-# External dependencies
-# ##############################################################################
-find_package(Boost 1.80 REQUIRED)
-target_include_directories(pyinterp SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(core SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-
-# ##############################################################################
-# Enable clang-tidy if requested
+# Enable clang-tidy if requested (must be before add_subdirectory)
 # ##############################################################################
 if(ENABLE_CLANG_TIDY)
   find_program(
@@ -392,15 +379,30 @@ if(ENABLE_CLANG_TIDY)
       ";-fix")
   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_CMD}")
 
-  # Disable clang-tidy for third-party source files
-  set_source_files_properties(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind
-    PROPERTIES SKIP_LINTING ON)
-
   unset(THIRD_PARTY)
   unset(CLANG_TIDY_EXE CACHE)
   unset(CLANG_TIDY_CMD CACHE)
 endif()
+
+# ##############################################################################
+# Add subdirectories
+# ##############################################################################
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind)
+add_subdirectory(cxx)
+
+# ##############################################################################
+# Disable clang-tidy for third-party targets (after add_subdirectory)
+# ##############################################################################
+if(ENABLE_CLANG_TIDY)
+  set_target_properties(nanobind-static PROPERTIES CXX_CLANG_TIDY "")
+endif()
+
+# ##############################################################################
+# External dependencies
+# ##############################################################################
+find_package(Boost 1.80 REQUIRED)
+target_include_directories(pyinterp SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(core SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 # ##############################################################################
 # Print configuration summary
