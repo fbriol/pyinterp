@@ -20,6 +20,13 @@ from .core import (
     geometry,
 )
 from .regular_grid_interpolator import bivariate, quadrivariate, trivariate
+from .rtree import (
+    inverse_distance_weighting,
+    kriging,
+    query,
+    radial_basis_function,
+    window_function,
+)
 
 
 __all__ = [
@@ -33,8 +40,13 @@ __all__ = [
     "config",
     "dateutils",
     "geometry",
+    "inverse_distance_weighting",
+    "kriging",
     "quadrivariate",
+    "query",
+    "radial_basis_function",
     "trivariate",
+    "window_function",
 ]
 
 
