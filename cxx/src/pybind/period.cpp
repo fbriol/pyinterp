@@ -692,9 +692,9 @@ auto init_period(nanobind::module_& m) -> void {
       .def("is_sorted_and_disjoint", &PeriodList::is_sorted_and_disjoint,
            kPeriodListIsSortedAndDisjoint)
       .def(
-          "total_duration",
+          "aggregate_duration",
           [](const PeriodList& self) -> nanobind::object {
-            auto duration = self.total_duration();
+            auto duration = self.aggregate_duration();
             return make_scalar(duration, self.resolution().as_timedelta64());
           },
           kPeriodListTotalDuration)

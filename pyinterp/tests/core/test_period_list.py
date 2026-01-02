@@ -359,8 +359,8 @@ class TestPeriodListOperations:
         pl = PeriodList(periods)
         assert not pl.is_sorted_and_disjoint()
 
-    def test_total_duration_disjoint(self) -> None:
-        """Test total_duration with disjoint periods."""
+    def test_aggregate_duration_disjoint(self) -> None:
+        """Test aggregate_duration with disjoint periods."""
         periods = [
             Period(
                 np.datetime64("2020-01-01", "D"),
@@ -372,11 +372,11 @@ class TestPeriodListOperations:
             ),  # 6 days
         ]
         pl = PeriodList(periods)
-        duration = pl.total_duration()
+        duration = pl.aggregate_duration()
         assert duration == np.timedelta64(16, "D")
 
-    def test_total_duration_overlapping(self) -> None:
-        """Test total_duration with overlapping periods."""
+    def test_aggregate_duration_overlapping(self) -> None:
+        """Test aggregate_duration with overlapping periods."""
         periods = [
             Period(
                 np.datetime64("2020-01-01", "D"),
@@ -388,12 +388,12 @@ class TestPeriodListOperations:
             ),  # 11 days
         ]
         pl = PeriodList(periods)
-        duration = pl.total_duration()
+        duration = pl.aggregate_duration()
         # Should be 20 days total (merged coverage from 01 to 20)
         assert duration == np.timedelta64(20, "D")
 
-    def test_total_duration_adjacent(self) -> None:
-        """Test total_duration with adjacent periods."""
+    def test_aggregate_duration_adjacent(self) -> None:
+        """Test aggregate_duration with adjacent periods."""
         periods = [
             Period(
                 np.datetime64("2020-01-01", "D"),
@@ -405,30 +405,14 @@ class TestPeriodListOperations:
             ),
         ]
         pl = PeriodList(periods)
-        duration = pl.total_duration()
+        duration = pl.aggregate_duration()
         assert duration == np.timedelta64(20, "D")
 
-    def test_total_duration_empty(self) -> None:
-        """Test total_duration with empty list."""
+    def test_aggregate_duration_empty(self) -> None:
+        """Test aggregate_duration with empty list."""
         pl = PeriodList([])
-        duration = pl.total_duration()
+        duration = pl.aggregate_duration()
         assert duration == np.timedelta64(0, "D")
-
-    def test_total_duration_unsorted(self) -> None:
-        """Test total_duration with unsorted periods."""
-        periods = [
-            Period(
-                np.datetime64("2020-01-15", "D"),
-                np.datetime64("2020-01-20", "D"),
-            ),  # 6 days
-            Period(
-                np.datetime64("2020-01-01", "D"),
-                np.datetime64("2020-01-10", "D"),
-            ),  # 10 days
-        ]
-        pl = PeriodList(periods)
-        duration = pl.total_duration()
-        assert duration == np.timedelta64(16, "D")
 
     def test_is_close(self) -> None:
         """Test is_close method."""
@@ -689,7 +673,7 @@ class TestPeriodListEdgeCases:
         )
 
         assert pl.is_sorted_and_disjoint()
-        duration = pl.total_duration()
+        duration = pl.aggregate_duration()
         assert duration == np.timedelta64(10, "D")
 
     def test_multiple_overlapping_periods(self) -> None:
@@ -709,7 +693,7 @@ class TestPeriodListEdgeCases:
             ),
         ]
         pl = PeriodList(periods)
-        duration = pl.total_duration()
+        duration = pl.aggregate_duration()
         # Should be 25 days (merged from 01 to 25)
         assert duration == np.timedelta64(25, "D")
 
@@ -726,6 +710,6 @@ class TestPeriodListEdgeCases:
             ),
         ]
         pl = PeriodList(periods)
-        duration = pl.total_duration()
+        duration = pl.aggregate_duration()
         # Should be 30 days (the larger period)
         assert duration == np.timedelta64(30, "D")
