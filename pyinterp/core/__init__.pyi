@@ -16,7 +16,7 @@ from ..type_hints import (
     TwoDims,
     OneDim,
 )
-from . import geometry, fill,  period
+from . import geometry, fill, period
 from .config import geometric, rtree, windowed
 
 # Type alias for temporal coordinate arrays
