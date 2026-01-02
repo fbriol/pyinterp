@@ -13,8 +13,8 @@ import pytest
 
 from .... import core
 from ....core.config import windowed
-
 from ... import load_grid3d
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

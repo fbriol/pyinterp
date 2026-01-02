@@ -13,6 +13,7 @@ import pytest
 
 from ... import core
 
+
 MERCATOR_LATITUDES = np.array(
     [
         -89.000000,

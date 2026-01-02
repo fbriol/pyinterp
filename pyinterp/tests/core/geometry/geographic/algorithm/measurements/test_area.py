@@ -2,17 +2,17 @@
 
 from .......core.geometry.geographic import (
     Box,
+    LineString,
+    MultiLineString,
+    MultiPoint,
     MultiPolygon,
     Point,
     Polygon,
     Ring,
-    Spheroid,
-    LineString,
-    MultiPoint,
-    MultiLineString,
     Segment,
+    Spheroid,
 )
-from .......core.geometry.geographic.algorithms import area, Strategy
+from .......core.geometry.geographic.algorithms import Strategy, area
 
 
 def test_strategy_enum() -> None:

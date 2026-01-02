@@ -5,6 +5,7 @@ import pytest
 
 from ...core import geohash
 
+
 TEST_CASES: list[tuple[str, float, float]] = [
     ("77mkh2hcj7mz", -26.015434642, -26.173663656),
     ("wthnssq3w00x", 29.291182895, 118.331595326),

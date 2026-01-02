@@ -3,7 +3,7 @@
 import math
 
 from .......core.geometry.geographic import Segment, Spheroid
-from .......core.geometry.geographic.algorithms import azimuth, Strategy
+from .......core.geometry.geographic.algorithms import Strategy, azimuth
 
 
 def test_azimuth_segment_basic(segment_basic: Segment) -> None:

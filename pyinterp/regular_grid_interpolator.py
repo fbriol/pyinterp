@@ -20,12 +20,13 @@ from typing import TYPE_CHECKING, Literal, TypeVar, cast, get_args, overload
 from . import core
 from .core.config import geometric, windowed
 
+
 if TYPE_CHECKING:
     from .core import GridHolder
     from .type_hints import (
+        NDArray1DDateTime64,
         NDArray1DFloat32,
         NDArray1DFloat64,
-        NDArray1DDateTime64,
     )
 
 __all__ = ["bivariate", "quadrivariate", "trivariate"]

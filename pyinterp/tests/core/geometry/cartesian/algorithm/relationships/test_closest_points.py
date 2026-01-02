@@ -12,8 +12,6 @@ from .......core.geometry.cartesian import (
     Ring,
     Segment,
 )
-
-
 from .......core.geometry.cartesian.algorithms import closest_points
 
 

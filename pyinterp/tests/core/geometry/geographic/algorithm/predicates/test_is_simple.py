@@ -3,15 +3,15 @@
 import numpy as np
 
 from .......core.geometry.geographic import (
-    Point,
     Box,
-    Ring,
-    Polygon,
     LineString,
-    Segment,
-    MultiPoint,
     MultiLineString,
+    MultiPoint,
     MultiPolygon,
+    Point,
+    Polygon,
+    Ring,
+    Segment,
 )
 from .......core.geometry.geographic.algorithms import is_simple
 

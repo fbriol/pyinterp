@@ -1,9 +1,10 @@
 """Test MultiPolygon class."""
 
-import numpy as np
 import pickle
 
-from .....core.geometry.geographic import Ring, Polygon, MultiPolygon
+import numpy as np
+
+from .....core.geometry.geographic import MultiPolygon, Polygon, Ring
 
 
 def make_square_ring(

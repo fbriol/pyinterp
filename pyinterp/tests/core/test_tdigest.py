@@ -6,13 +6,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 import pickle
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
 
 from ... import core
+
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray

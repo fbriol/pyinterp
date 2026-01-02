@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
+
 if TYPE_CHECKING:
     import numpy as np
 

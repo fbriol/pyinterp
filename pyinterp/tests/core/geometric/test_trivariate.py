@@ -11,7 +11,6 @@ import pytest
 
 from .... import core
 from ....core.config import geometric
-
 from ... import load_grid3d
 
 

@@ -14,6 +14,7 @@ import pytest
 
 from ...core import Period
 
+
 TimeUnits: TypeAlias = Literal[
     "Y", "M", "W", "D", "h", "m", "s", "ms", "us", "ns"
 ]

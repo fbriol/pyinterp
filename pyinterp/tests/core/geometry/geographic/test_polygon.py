@@ -1,9 +1,10 @@
 """Test Polygon class."""
 
-import numpy as np
 import pickle
 
-from .....core.geometry.geographic import Ring, Polygon
+import numpy as np
+
+from .....core.geometry.geographic import Polygon, Ring
 
 
 def make_square_ring(

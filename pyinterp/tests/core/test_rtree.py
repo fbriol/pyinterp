@@ -12,12 +12,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from ...core import RTree3D, RTree3DFloat64, RTree3DFloat32
+from ...core import RTree3D, RTree3DFloat32, RTree3DFloat64
 from ...core.geometry.geographic import Spheroid
 
 
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
+
     from ...core import RTree3DHolder
 
 

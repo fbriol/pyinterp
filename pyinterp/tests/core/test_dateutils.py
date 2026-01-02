@@ -6,13 +6,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 import datetime
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
 
 from ...core import dateutils
+
 
 # Set random seed for deterministic tests
 RANDOM_SEED = 42

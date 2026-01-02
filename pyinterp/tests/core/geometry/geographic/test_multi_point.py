@@ -4,7 +4,7 @@ import pickle
 
 import numpy as np
 
-from .....core.geometry.geographic import Point, MultiPoint
+from .....core.geometry.geographic import MultiPoint, Point
 
 
 def make_point(lon: float = 0.0, lat: float = 0.0) -> Point:

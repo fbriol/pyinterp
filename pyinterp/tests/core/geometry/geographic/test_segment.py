@@ -1,9 +1,10 @@
 """Test Segment class."""
 
 import pickle
+
 import pytest
 
-from .....core.geometry.geographic import Segment, Point
+from .....core.geometry.geographic import Point, Segment
 
 
 def test_segment_construction() -> None:

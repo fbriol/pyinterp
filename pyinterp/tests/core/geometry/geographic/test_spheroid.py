@@ -12,6 +12,7 @@ import pytest
 
 from .....core.geometry.geographic import Spheroid
 
+
 # WGS84 constants
 WGS84_SEMI_MAJOR_AXIS = 6378137.0
 WGS84_FLATTENING = 1.0 / 298.257223563

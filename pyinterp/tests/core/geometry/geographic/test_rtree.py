@@ -11,15 +11,15 @@ import pickle
 import numpy as np
 import pytest
 
-from .....core.geometry.geographic import RTree
 from .....core.config.rtree import (
-    Query,
+    InterpolationWindow,
     InverseDistanceWeighting,
     Kriging,
+    Query,
     RadialBasisFunction,
-    InterpolationWindow,
     WindowKernel,
 )
+from .....core.geometry.geographic import RTree
 
 
 class TestRTreeInitialization:

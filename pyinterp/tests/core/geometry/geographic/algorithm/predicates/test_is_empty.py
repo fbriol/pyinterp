@@ -1,15 +1,15 @@
 """Test is_empty algorithm."""
 
 from .......core.geometry.geographic import (
-    Point,
     Box,
-    Ring,
-    Polygon,
-    Segment,
-    MultiPoint,
-    MultiLineString,
-    MultiPolygon,
     LineString,
+    MultiLineString,
+    MultiPoint,
+    MultiPolygon,
+    Point,
+    Polygon,
+    Ring,
+    Segment,
 )
 from .......core.geometry.geographic.algorithms import is_empty
 

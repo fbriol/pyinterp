@@ -13,10 +13,7 @@ from .......core.geometry.geographic import (
     Polygon,
     Ring,
 )
-from .......core.geometry.geographic.algorithms import (
-    from_geojson,
-    to_geojson,
-)
+from .......core.geometry.geographic.algorithms import from_geojson, to_geojson
 
 
 def test_point_to_geojson() -> None:

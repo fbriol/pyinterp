@@ -13,12 +13,7 @@ from .......core.geometry.geographic import (
     Segment,
     Spheroid,
 )
-
-
-from .......core.geometry.geographic.algorithms import (
-    closest_points,
-    Strategy,
-)
+from .......core.geometry.geographic.algorithms import Strategy, closest_points
 
 
 def test_closest_points_polygon_to_polygon() -> None:

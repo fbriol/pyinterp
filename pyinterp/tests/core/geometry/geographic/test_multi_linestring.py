@@ -1,7 +1,8 @@
 """Test MultiLineString class."""
 
-import numpy as np
 import pickle
+
+import numpy as np
 
 from .....core.geometry.geographic import LineString, MultiLineString
 

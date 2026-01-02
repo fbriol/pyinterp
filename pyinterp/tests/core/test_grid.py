@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 
 from ... import core
-
 from .. import load_grid2d, load_grid3d, load_grid4d
+
 
 DType = type[np.int8] | type[np.float32] | type[np.float64]
 
