@@ -7,7 +7,7 @@ geospatial operations, and statistical analysis tools.
 import copyreg
 from typing import Any
 
-from . import core
+from . import core, fill
 from .core import (
     Axis,
     Grid,
@@ -39,6 +39,7 @@ __all__ = [
     "bivariate",
     "config",
     "dateutils",
+    "fill",
     "geometry",
     "inverse_distance_weighting",
     "kriging",
