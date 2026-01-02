@@ -319,8 +319,20 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
 
   /// @brief Get the window function argument.
   /// @return Optional window function argument
-  [[nodiscard]] constexpr auto arg() const noexcept -> const double& {
-    return arg_;
+  [[nodiscard]] constexpr auto arg() const noexcept -> double {
+    if (!std::isnan(arg_)) {
+      return arg_;
+    }
+
+    // The default argument value depends on the window function selected to
+    // avoid invalid configurations.
+    switch (wf_) {
+      case math::interpolate::window::Kernel::kGaussian:
+      case math::interpolate::window::Kernel::kLanczos:
+        return 1.0;
+      default:
+        return 0.0;
+    }
   }
 
   /// @brief Set the window function type
@@ -339,7 +351,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
   [[nodiscard]] constexpr auto with_arg(
       std::optional<double> value) const noexcept -> InterpolationWindow {
     auto copy = *this;
-    copy.arg_ = value.value_or(0.0);
+    copy.arg_ = value.value_or(std::numeric_limits<double>::quiet_NaN());
     return copy;
   }
 
@@ -349,7 +361,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
       math::interpolate::window::Kernel::kGaussian};
 
   /// Optional window function argument
-  double arg_{0};
+  double arg_{std::numeric_limits<double>::quiet_NaN()};
 };
 
 }  // namespace pyinterp::config::rtree
