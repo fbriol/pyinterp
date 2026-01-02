@@ -15,13 +15,11 @@ from .core import (
     PeriodList,
     RTree3D,
     TemporalAxis,
-    bivariate,
     config,
     dateutils,
     geometry,
-    quadrivariate,
-    trivariate,
 )
+from .regular_grid_interpolator import bivariate, quadrivariate, trivariate
 
 
 __all__ = [
