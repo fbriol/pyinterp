@@ -8,7 +8,7 @@ For most use cases, you can simply pass keyword arguments:
 >>> result, counts = inverse_distance_weighting(tree, coords, k=10, p=2)
 
 For advanced configuration, pass a config object:
->>> from pyinterp.core.config import rtree
+>>> from pyinterp.config import rtree
 >>> config = rtree.InverseDistanceWeighting().with_k(10).with_p(2)
 >>> result, counts = inverse_distance_weighting(tree, coords, config)
 """
