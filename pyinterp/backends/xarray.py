@@ -9,7 +9,10 @@ Build interpolation objects from xarray.DataArray instances
 
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING, Any, cast
+
+import numpy as np
 
 from .. import cf, core
 from ..regular_grid_interpolator import (
@@ -21,9 +24,8 @@ from ..regular_grid_interpolator import (
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable
+    from collections.abc import Callable, Hashable, Iterable
 
-    import numpy as np
     import xarray as xr
 
     from ..type_hints import NDArray1D, NDArray1DDateTime64, NDArray1DFloat64
@@ -38,6 +40,12 @@ THREE_DIMENSIONS = 3
 
 #: Four dimensional grid.
 FOUR_DIMENSIONS = 4
+
+#: Index of the longitude axis in a 2D, 3D, or 4D grid.
+LONGITUDE_AXIS_INDEX = 0
+
+#: Index of the temporal axis in a 3D or 4D grid.
+TEMPORAL_AXIS_INDEX = 2
 
 
 class AxisIdentifier:
@@ -89,31 +97,154 @@ class AxisIdentifier:
         return self._axis(cf.AxisLatitudeUnit())
 
 
-def _dims_from_data_array(
+def _identify_temporal_axis(
+    data_array: xr.DataArray,
+    dims: Iterable[Hashable],
+) -> Hashable | None:
+    """Identify the temporal axis in the data array."""
+    for dim in dims:
+        # Check coordinate associated with the dimension
+        if dim in data_array.coords:
+            coord = data_array.coords[dim]
+            # Robust datetime check using numpy
+            if np.issubdtype(
+                coord.dtype,
+                np.datetime64,
+            ) or np.issubdtype(
+                coord.dtype,
+                np.timedelta64,
+            ):
+                # Support is limited to a single temporal axis; return as soon
+                # as one is found. Any additional temporal axes will be
+                # disregarded.
+                return dim
+    return None
+
+
+@dataclasses.dataclass(frozen=True)
+class _DimInfo:
+    """Information about a dimension in the data array."""
+
+    #: Data array
+    _data_array: xr.DataArray
+    #: Tuple of dimension names in standard order.
+    dims: tuple[Hashable, ...]
+    #: True if longitude was identified (at index 0).
+    has_longitude: bool = False
+    #: True if temporal axis was identified (at index 2).
+    has_temporal: bool = False
+    #: Indicates whether the dimension names differ in order from those in the
+    #: provided data array.
+    should_be_transposed: bool = False
+
+    def axis(self, index: int) -> core.Axis | core.TemporalAxis:
+        """Get dimension name at the specified index."""
+        values = self.data_array.coords[self.dims[index]].values
+        if index == LONGITUDE_AXIS_INDEX and self.has_longitude:
+            return core.Axis(values, period=360.0)
+        if index == TEMPORAL_AXIS_INDEX and self.has_temporal:
+            return core.TemporalAxis(values)
+        return core.Axis(values)
+
+    @property
+    def data_array(self) -> xr.DataArray:
+        """Get the associated data array."""
+        if self.should_be_transposed:
+            return self._data_array.transpose(*self.dims)
+        return self._data_array
+
+    @property
+    def datetime64(self) -> Hashable:
+        """Get the temporal axis information if present."""
+        if not self.has_temporal:
+            raise AttributeError("No temporal axis present")
+        return self.dims[2]
+
+
+def _get_canonical_dimensions(
     data_array: xr.DataArray,
     ndims: int = 2,
-) -> tuple[tuple[Hashable, ...], bool]:
-    """Get the name of dimensions that define the grid axes."""
-    size = len(data_array.shape)
-    if size != ndims:
+) -> _DimInfo:
+    """Get the name of dimensions that define the grid axes in canonical order.
+
+    Identifies longitude, latitude, and temporal axes using CF conventions.
+    Returns dimensions ordered as (Longitude, Latitude, Time, ...Others) to
+    standardize grid processing.
+
+    Target positions:
+    - Index 0: Longitude (if present)
+    - Index 1: Latitude (if present)
+    - Index 2: Temporal axis (if present and ndims >= 3)
+
+    Args:
+        data_array: Provided data array.
+        ndims: Number of dimensions expected for the variable.
+
+    Returns:
+        A _DimInfo instance containing ordered dimension names and flags
+        indicating presence of longitude and temporal axes.
+
+    Raises:
+        ValueError: If the number of dimensions doesn't match ndims.
+
+    """
+    if data_array.ndim != ndims:
         raise ValueError(
-            "The number of dimensions of the variable is incorrect. Expected "
-            f"{ndims}, found {size}."
+            f"The number of dimensions of the variable is incorrect. "
+            f"Expected {ndims}, found {data_array.ndim}."
         )
 
-    # Get all coordinate names
-    coord_names = tuple(data_array.coords.keys())
+    current_dims = list(data_array.dims)
 
-    # Always try to identify lon/lat for first two dimensions
+    # Identify lon/lat axes
     ident = AxisIdentifier(data_array)
-    lon = ident.longitude()
-    lat = ident.latitude()
+    lon_dim = ident.longitude()
+    lat_dim = ident.latitude()
 
-    if lon is not None and lat is not None:
-        # Geodetic: start with lon/lat, append remaining dimensions
-        remaining = [c for c in coord_names if c not in (lon, lat)]
-        return (lon, lat, *tuple(remaining)), True
-    return coord_names, False
+    # Identify temporal axis (only one supported)
+    time_dim = _identify_temporal_axis(data_array, current_dims)
+
+    has_longitude = lon_dim is not None
+    has_temporal = False
+
+    special_dims = {lon_dim, lat_dim, time_dim}
+    remaining_dims = [d for d in current_dims if d not in special_dims]
+
+    final_dims: list[Hashable] = []
+
+    # Slot 0: Longitude
+    if has_longitude:
+        final_dims.append(lon_dim)
+    elif remaining_dims:
+        final_dims.append(remaining_dims.pop(0))
+
+    # Slot 1: Latitude
+    if lat_dim is not None:
+        final_dims.append(lat_dim)
+    elif remaining_dims:
+        final_dims.append(remaining_dims.pop(0))
+
+    # Slot 2 : Time
+    if ndims >= THREE_DIMENSIONS:
+        if time_dim is not None:
+            final_dims.append(time_dim)
+            has_temporal = True
+        elif remaining_dims:
+            final_dims.append(remaining_dims.pop(0))
+
+    # Fill remaining slots with whatever is left
+    final_dims.extend(remaining_dims)
+
+    # Validate we have the right number of dimensions
+    assert len(final_dims) == ndims
+
+    return _DimInfo(
+        data_array,
+        tuple(final_dims),
+        has_longitude,
+        has_temporal,
+        tuple(current_dims) != tuple(final_dims),
+    )
 
 
 def _coords(
@@ -158,7 +289,30 @@ def _coords(
     return tuple(cast("NDArray1D", coords[dim]) for dim in dims)
 
 
-class Grid2D(core.Grid2D):
+class _GridHolder:
+    """Base class for grid holders."""
+
+    def __init__(
+        self,
+        grid: core.GridHolder,
+        dims: tuple[Hashable, ...],
+    ) -> None:
+        """Initialize the grid holder."""
+        self._dims = dims
+        self._instance = grid
+        self._datetime64: tuple[Hashable, core.TemporalAxis] | None = None
+        if self._instance.has_temporal_axis:
+            self._datetime64 = (
+                dims[2],
+                cast("core.TemporalAxis", self._instance.z),
+            )
+
+    def __getattr__(self, name: str) -> Any:  # noqa: ANN401
+        """Delegate attribute access to the underlying grid instance."""
+        return getattr(self._instance, name)
+
+
+class Grid2D(_GridHolder):
     """Build a Grid2D from Xarray data.
 
     Create a 2D grid interpolation object from the provided Xarray data array,
@@ -174,16 +328,15 @@ class Grid2D(core.Grid2D):
 
     def __init__(self, data_array: xr.DataArray) -> None:
         """Initialize the 2D grid from an Xarray data array."""
-        self._dims, geodetic = _dims_from_data_array(data_array, ndims=2)
-        self._datetime64: tuple[Hashable, core.TemporalAxis] | None = None
-        self._instance = core.Grid(
-            core.Axis(
-                data_array.coords[self._dims[0]].values,
-                period=360.0 if geodetic else None,
-            ),
-            core.Axis(data_array.coords[self._dims[1]].values),
-            data_array.transpose(*self._dims).values,
+        canonical_dimensions = _get_canonical_dimensions(
+            data_array, ndims=TWO_DIMENSIONS
         )
+        grid = core.Grid(
+            cast("core.Axis", canonical_dimensions.axis(0)),
+            cast("core.Axis", canonical_dimensions.axis(1)),
+            canonical_dimensions.data_array.values,
+        )
+        super().__init__(grid, canonical_dimensions.dims)
 
     def bivariate(
         self,
@@ -219,7 +372,7 @@ class Grid2D(core.Grid2D):
         )
 
 
-class Grid3D(core.Grid3D):
+class Grid3D(_GridHolder):
     """Build a Grid3D from Xarray data.
 
     Create a 3D grid interpolation object from the provided Xarray data array.
@@ -235,32 +388,26 @@ class Grid3D(core.Grid3D):
 
     def __init__(self, data_array: xr.DataArray) -> None:
         """Initialize the 3D grid from an Xarray data array."""
-        self._dims, geodetic = _dims_from_data_array(data_array, ndims=3)
-        self._datetime64: tuple[Hashable, core.TemporalAxis] | None = None
-
-        # Check if third axis is temporal
-        third_coord = data_array.coords[self._dims[2]]
-        is_temporal = hasattr(third_coord, "dtype") and "datetime64" in str(
-            third_coord.dtype
+        canonical_dimensions = _get_canonical_dimensions(
+            data_array, ndims=THREE_DIMENSIONS
         )
-        z_axis: core.Axis | core.TemporalAxis
 
-        if is_temporal:
-            # Create temporal grid
-            z_axis = core.TemporalAxis(third_coord.values)
-            self._datetime64 = (self._dims[2], z_axis)
-        else:
-            z_axis = core.Axis(third_coord.values)
-
-        self._instance = core.Grid(
-            core.Axis(
-                data_array.coords[self._dims[0]].values,
-                period=360.0 if geodetic else None,
+        grid = core.Grid(
+            cast(
+                "core.Axis",
+                canonical_dimensions.axis(0),
             ),
-            core.Axis(data_array.coords[self._dims[1]].values),
-            z_axis,
-            data_array.transpose(*self._dims).values,
+            cast(
+                "core.Axis",
+                canonical_dimensions.axis(1),
+            ),
+            cast(
+                "core.Axis | core.TemporalAxis",
+                canonical_dimensions.axis(2),
+            ),
+            canonical_dimensions.data_array.values,
         )
+        super().__init__(grid, canonical_dimensions.dims)
 
     def trivariate(
         self,
@@ -298,7 +445,7 @@ class Grid3D(core.Grid3D):
         )
 
 
-class Grid4D(core.Grid4D):
+class Grid4D(_GridHolder):
     """Build a Grid4D from Xarray data.
 
     Create a 4D grid interpolation object from the provided Xarray data array.
@@ -314,33 +461,30 @@ class Grid4D(core.Grid4D):
 
     def __init__(self, data_array: xr.DataArray) -> None:
         """Initialize the 4D grid from an Xarray data array."""
-        self._dims, geodetic = _dims_from_data_array(data_array, ndims=4)
-        self._datetime64: tuple[Hashable, core.TemporalAxis] | None = None
-
-        # Check if third axis is temporal
-        third_coord = data_array.coords[self._dims[2]]
-        is_temporal = hasattr(third_coord, "dtype") and "datetime64" in str(
-            third_coord.dtype
+        canonical_dimensions = _get_canonical_dimensions(
+            data_array, ndims=FOUR_DIMENSIONS
         )
-        z_axis: core.Axis | core.TemporalAxis
 
-        if is_temporal:
-            # Create temporal 4D grid
-            z_axis = core.TemporalAxis(third_coord.values)
-            self._datetime64 = (self._dims[2], z_axis)
-        else:
-            z_axis = core.Axis(third_coord.values)
-
-        self._instance = core.Grid(
-            core.Axis(
-                data_array.coords[self._dims[0]].values,
-                period=360.0 if geodetic else None,
+        grid = core.Grid(
+            cast(
+                "core.Axis",
+                canonical_dimensions.axis(0),
             ),
-            core.Axis(data_array.coords[self._dims[1]].values),
-            z_axis,
-            core.Axis(data_array.coords[self._dims[3]].values),
-            data_array.transpose(*self._dims).values,
+            cast(
+                "core.Axis",
+                canonical_dimensions.axis(1),
+            ),
+            cast(
+                "core.Axis | core.TemporalAxis",
+                canonical_dimensions.axis(2),
+            ),
+            cast(
+                "core.Axis",
+                canonical_dimensions.axis(3),
+            ),
+            canonical_dimensions.data_array.values,
         )
+        super().__init__(grid, canonical_dimensions.dims)
 
     def quadrivariate(
         self,
