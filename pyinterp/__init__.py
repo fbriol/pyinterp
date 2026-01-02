@@ -11,13 +11,12 @@ from . import core, fill
 from .core import (
     Axis,
     Grid,
-    Period,
-    PeriodList,
     RTree3D,
     TemporalAxis,
     config,
     dateutils,
     geometry,
+    period,
 )
 from .regular_grid_interpolator import bivariate, quadrivariate, trivariate
 from .rtree import (
@@ -32,8 +31,6 @@ from .rtree import (
 __all__ = [
     "Axis",
     "Grid",
-    "Period",
-    "PeriodList",
     "RTree3D",
     "TemporalAxis",
     "bivariate",
@@ -43,6 +40,7 @@ __all__ = [
     "geometry",
     "inverse_distance_weighting",
     "kriging",
+    "period",
     "quadrivariate",
     "query",
     "radial_basis_function",

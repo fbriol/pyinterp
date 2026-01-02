@@ -528,7 +528,8 @@ Returns:
 )";
 
 auto init_period(nanobind::module_& m) -> void {
-  nb::class_<Period>(m, "Period", "A Period.")
+  auto period = m.def_submodule("period", "Period handling module.");
+  nb::class_<Period>(period, "Period", "A Period.")
       .def(nb::init<const nb::object&, const nb::object&, bool>(), kPeriodInit,
            "begin"_a, "end"_a, "within"_a = true)
 
@@ -668,7 +669,7 @@ auto init_period(nanobind::module_& m) -> void {
           },
           "String representation of the Period.");
 
-  nb::class_<PeriodList>(m, "PeriodList", "A list of Period objects.")
+  nb::class_<PeriodList>(period, "PeriodList", "A list of Period objects.")
       .def(nb::init<nb::list>(), kPeriodListInit, "periods"_a = nb::none())
       .def(
           "append",

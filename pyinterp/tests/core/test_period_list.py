@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 import pytest
 
-from pyinterp.core import Period, PeriodList
+from ...core.period import Period, PeriodList
 
 
 class TestPeriodListConstruction:

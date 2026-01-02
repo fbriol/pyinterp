@@ -12,7 +12,7 @@ from typing import Literal, TypeAlias
 import numpy as np
 import pytest
 
-from ...core import Period
+from ...core.period import Period
 
 
 TimeUnits: TypeAlias = Literal[
