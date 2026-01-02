@@ -275,6 +275,13 @@ class InterpolationWindow {
         throw std::invalid_argument(
             std::format("Window function unknown: {}", static_cast<int>(wf)));
     }
+
+    if (arg_ == 0 &&
+        (wf == window::Kernel::kGaussian || wf == window::Kernel::kLanczos)) {
+      throw std::invalid_argument(
+          "Window function argument must be non-zero for Gaussian and "
+          "Lanczos windows.");
+    }
   }
 
   /// @brief Apply the window function to the data
