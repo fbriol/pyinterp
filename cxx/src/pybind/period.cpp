@@ -250,6 +250,28 @@ PeriodList::PeriodList(const nanobind::list& periods) : pyinterp::PeriodList() {
   }
 }
 
+PeriodList::PeriodList(const nanobind::object& periods, bool within)
+    : pyinterp::PeriodList() {
+  if (periods.is_none()) {
+    return;
+  }
+  resolution_ = retrieve_dtype("periods", periods);
+  if (resolution_.datetype() != dateutils::DType::DateType::kDatetime64) {
+    throw std::invalid_argument("periods must be a numpy.datetime64 array");
+  }
+  auto matrix = numpy_to_matrix(periods);
+  if (matrix.cols() != 2) {
+    throw std::invalid_argument("periods must be a Nx2 numpy.datetime64 array");
+  }
+  nb::gil_scoped_release release;
+  reserve(static_cast<size_t>(matrix.rows()));
+  for (int64_t i = 0; i < matrix.rows(); ++i) {
+    const auto begin = matrix(i, 0);
+    const auto end = matrix(i, 1);
+    push_back(pyinterp::Period{begin, end, within});
+  }
+}
+
 auto PeriodList::append(const Period& period) -> void {
   if (empty()) {
     resolution_ = period.resolution();
@@ -552,12 +574,22 @@ Returns:
     A new Period shifted by the offset.
 )";
 
-constexpr const char* const kPeriodListInit = R"(
+constexpr const char* const kPeriodListInitFromList = R"(
 A PeriodList object representing a list of Periods.
 
 Args:
     periods: If None (or not provided), creates an empty PeriodList. Otherwise,
         a Python list of Period objects to initialize the PeriodList.
+)";
+
+constexpr const char* const kPeriodListInitFromArray = R"(
+A PeriodList object representing a list of Periods.
+
+Args:
+    periods: If None (or not provided), creates an empty PeriodList. Otherwise,
+        a Nx2 numpy.datetime64 array where each row defines a Period with
+        [begin, end].
+    within: If True, end is inclusive; if False, end is exclusive.
 )";
 
 constexpr const char* const kPeriodListAppend = R"(
@@ -841,7 +873,10 @@ auto init_period(nanobind::module_& m) -> void {
           "String representation of the Period.");
 
   nb::class_<PeriodList>(period, "PeriodList", "A list of Period objects.")
-      .def(nb::init<nb::list>(), kPeriodListInit, "periods"_a = nb::none())
+      .def(nb::init<nb::list>(), kPeriodListInitFromList,
+           "periods"_a = nb::none())
+      .def(nb::init<const nb::object&, bool>(), kPeriodListInitFromArray,
+           "periods"_a = nb::none(), "within"_a = true)
       .def(
           "append",
           [](PeriodList& self, const Period& period) -> void {

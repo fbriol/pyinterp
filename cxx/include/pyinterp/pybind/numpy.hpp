@@ -57,6 +57,20 @@ inline auto numpy_to_vector(const nanobind::object &array) -> Vector<int64_t> {
       viewed.data(), static_cast<int64_t>(viewed.shape(0)));
 }
 
+/// @brief Convert a numpy datetime64/timedelta64 array to an Eigen matrix of
+/// int64_t values
+/// @param[in] array Numpy array to convert
+/// @return Eigen matrix of int64_t values
+inline auto numpy_to_matrix(const nanobind::object &array) -> Matrix<int64_t> {
+  auto viewed =
+      nanobind::cast<nanobind::ndarray<nanobind::numpy, int64_t,
+                                       nanobind::ndim<2>, nanobind::c_contig>>(
+          array.attr("view")("int64"));
+  return Eigen::Map<const Matrix<int64_t>>(
+      viewed.data(), static_cast<int64_t>(viewed.shape(0)),
+      static_cast<int64_t>(viewed.shape(1)));
+}
+
 /// @brief Return a datetime64/timedelta64 numpy array from an Eigen vector of
 /// int64_t values
 /// @param[in] vector Eigen vector of int64_t values

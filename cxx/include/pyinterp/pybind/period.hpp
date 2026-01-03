@@ -149,6 +149,13 @@ class PeriodList : public pyinterp::PeriodList {
   /// @param[in] periods The Python list of periods.
   explicit PeriodList(const nanobind::list& periods);
 
+  /// @brief Create a PeriodList from a matrix of begin/end values.
+  /// @param[in] periods A 2D numpy array with shape (N, 2) containing begin/end
+  /// values.
+  /// @param[in] bool within If true, end is inclusive; if false, end is
+  /// exclusive.
+  explicit PeriodList(const nanobind::object& periods, bool within = true);
+
   /// @brief Append a period to the list.
   /// @param[in] period The period to append.
   auto append(const Period& period) -> void;
