@@ -1,7 +1,7 @@
 from typing import overload
+
 from .. import geographic
 from . import (
-    _Concept,
     Box,
     LineString,
     MultiLineString,
@@ -11,6 +11,7 @@ from . import (
     Polygon,
     Ring,
     Segment,
+    _Concept,
 )
 
 def area(

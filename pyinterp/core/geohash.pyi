@@ -1,7 +1,7 @@
 from typing import overload
-from .geometry.geographic import Spheroid, Box, Point, Polygon, MultiPolygon
 
 from ..type_hints import NDArray1DFloat64, NDArray1DStr, NDArray2DStr
+from .geometry.geographic import Box, MultiPolygon, Point, Polygon, Spheroid
 
 class GeoHash:
     @staticmethod

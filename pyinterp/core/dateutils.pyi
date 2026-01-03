@@ -1,7 +1,7 @@
 from ..type_hints import (
     NDArray1DDateTime64,
-    NDArray1DTimeDelta64,
     NDArray1DInt32,
+    NDArray1DTimeDelta64,
     NDArray1DUInt8,
 )
 

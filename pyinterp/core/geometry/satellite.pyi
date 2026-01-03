@@ -18,12 +18,11 @@ def find_crossovers(
     predicate: float,
     allow_multiple: bool = False,
     use_cartesian: bool = True,
-    strategy: Strategy = Strategy.VINCENTY,
+    strategy: Strategy = ...,
     spheroid: Spheroid | None = None,
 ) -> list[CrossoverResult]: ...
 
 class CrossoverResult:
-    def __init__(self, *args, **kwargs) -> None: ...
     @property
     def index1(self) -> int: ...
     @property

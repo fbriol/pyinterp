@@ -1,9 +1,8 @@
-from typing import overload
 import enum
-from .. import cartesian
+from typing import overload
 
+from .. import cartesian
 from . import (
-    _Concept,
     Box,
     LineString,
     MultiLineString,
@@ -14,6 +13,7 @@ from . import (
     Ring,
     Segment,
     Spheroid,
+    _Concept,
 )
 
 ANDOYER: Strategy
@@ -24,13 +24,13 @@ VINCENTY: Strategy
 def area(
     geometry: _Concept,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = VINCENTY,
+    strategy: Strategy = ...,
 ) -> float: ...
 def azimuth(
     point1: Point,
     point2: Point,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = VINCENTY,
+    strategy: Strategy = ...,
 ) -> float: ...
 def centroid(geometry: Box | Segment) -> Point: ...
 def clear(geometry: _Concept) -> None: ...
@@ -39,175 +39,175 @@ def closest_points(
     geometry1: LineString,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: LineString,
     geometry2: MultiLineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: LineString,
     geometry2: MultiPoint,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: LineString,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: LineString,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPoint,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPoint,
     geometry2: MultiLineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPoint,
     geometry2: MultiPoint,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPoint,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPoint,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiLineString,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiLineString,
     geometry2: MultiLineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiLineString,
     geometry2: MultiPoint,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiLineString,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiLineString,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPolygon,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPolygon,
     geometry2: MultiLineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPolygon,
     geometry2: MultiPoint,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPolygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: MultiPolygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: Polygon,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: Polygon,
     geometry2: MultiLineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: Polygon,
     geometry2: MultiPoint,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: Polygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def closest_points(
     geometry1: Polygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Segment: ...
 @overload
 def convert_to_cartesian(geometry: Point) -> cartesian.Point: ...
@@ -232,7 +232,7 @@ def convert_to_cartesian(geometry: MultiPolygon) -> cartesian.MultiPolygon: ...
 def convex_hull(
     geometry: _Concept,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Polygon: ...
 def correct(geometry: _Concept) -> None: ...
 @overload
@@ -366,98 +366,98 @@ def densify(
     geometry: LineString,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> LineString: ...
 @overload
 def densify(
     geometry: Ring,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Ring: ...
 @overload
 def densify(
     geometry: Polygon,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Polygon: ...
 @overload
 def densify(
     geometry: MultiLineString,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> MultiLineString: ...
 @overload
 def densify(
     geometry: MultiPolygon,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> MultiPolygon: ...
 @overload
 def difference(
     geometry1: Ring,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: Ring,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: Polygon,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: Polygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: MultiPolygon,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: MultiPolygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: MultiPolygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: Ring,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def difference(
     geometry1: Polygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def disjoint(geometry1: Point, geometry2: Point) -> bool: ...
@@ -498,119 +498,119 @@ def distance(
     geometry1: Point,
     geometry2: Point,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Point,
     geometry2: Box,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Point,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Point,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Box,
     geometry2: Point,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Box,
     geometry2: Box,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Box,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: LineString,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: LineString,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: LineString,
     geometry2: Box,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Polygon,
     geometry2: Point,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Polygon,
     geometry2: Box,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Polygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: Polygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: MultiPolygon,
     geometry2: Point,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: MultiPolygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def distance(
     geometry1: MultiPolygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> float: ...
 def envelope(geometry: _Concept) -> Box: ...
 @overload
@@ -652,91 +652,91 @@ def intersection(
     geometry1: Ring,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: Ring,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: Polygon,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: Polygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: MultiPolygon,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: MultiPolygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: MultiPolygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: Ring,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: Polygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def intersection(
     geometry1: LineString,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[LineString]: ...
 @overload
 def intersection(
     geometry1: LineString,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[LineString]: ...
 @overload
 def intersection(
     geometry1: LineString,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[LineString]: ...
 @overload
 def intersection(
     geometry1: LineString,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Point]: ...
 @overload
 def intersects(geometry1: Point, geometry2: Point) -> bool: ...
@@ -776,7 +776,7 @@ def line_interpolate(
     geometry: LineString | Segment,
     distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Point: ...
 def is_empty(geometry: _Concept) -> bool: ...
 def is_simple(geometry: _Concept) -> bool: ...
@@ -787,7 +787,7 @@ def is_valid(geometry: _Concept) -> bool: ...
 def length(
     geometry: _Concept,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.VINCENTY,
+    strategy: Strategy = ...,
 ) -> float: ...
 def num_geometries(geometry: _Concept) -> int: ...
 def num_interior_rings(geometry: _Concept) -> int: ...
@@ -814,7 +814,7 @@ def overlaps(geometry1: MultiPolygon, geometry2: MultiPolygon) -> bool: ...
 def perimeter(
     geometry: Ring | Polygon | MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.VINCENTY,
+    strategy: Strategy = ...,
 ) -> float: ...
 @overload
 def relate(geometry1: Point, geometry2: Point, mask: str) -> bool: ...
@@ -846,35 +846,35 @@ def simplify(
     geometry: LineString,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> LineString: ...
 @overload
 def simplify(
     geometry: Ring,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Ring: ...
 @overload
 def simplify(
     geometry: Polygon,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> Polygon: ...
 @overload
 def simplify(
     geometry: MultiLineString,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> MultiLineString: ...
 @overload
 def simplify(
     geometry: MultiPolygon,
     max_distance: float,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> MultiPolygon: ...
 def to_geojson(
     geometry: Point
@@ -966,77 +966,77 @@ def union(
     geometry1: Ring,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: Ring,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: Polygon,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: Polygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: MultiPolygon,
     geometry2: Ring,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: MultiPolygon,
     geometry2: Polygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: MultiPolygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: Ring,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: Polygon,
     geometry2: MultiPolygon,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[Polygon]: ...
 @overload
 def union(
     geometry1: LineString,
     geometry2: LineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[LineString]: ...
 @overload
 def union(
     geometry1: MultiLineString,
     geometry2: MultiLineString,
     spheroid: Spheroid | None = None,
-    strategy: Strategy = Strategy.ANDOYER,
+    strategy: Strategy = ...,
 ) -> list[LineString]: ...
 def unique(geometry: _Concept) -> None: ...
 @overload
