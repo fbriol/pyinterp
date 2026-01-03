@@ -730,6 +730,13 @@ Returns:
     A new PeriodList with adjacent periods merged.
 )";
 
+constexpr const char* const kPeriodListSort = R"(
+Sort the periods in the list by their begin time.
+
+Note:
+    This method modifies the list in place.
+)";
+
 auto init_period(nanobind::module_& m) -> void {
   auto period = m.def_submodule("period", "Period handling module.");
   nb::class_<Period>(period, "Period", "A Period.")
@@ -962,6 +969,9 @@ auto init_period(nanobind::module_& m) -> void {
             return self.join_adjacent_periods(epsilon);
           },
           kPeriodListJoinAdjacentPeriods, "epsilon"_a)
+      .def(
+          "sort", [](PeriodList& self) -> void { self.sort(); },
+          kPeriodListSort, nb::call_guard<nb::gil_scoped_release>())
       .def("__getstate__", &PeriodList::getstate, "Get the state for pickling.")
       .def(
           "__setstate__",

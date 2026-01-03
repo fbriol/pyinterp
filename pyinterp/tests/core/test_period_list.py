@@ -713,3 +713,487 @@ class TestPeriodListEdgeCases:
         duration = pl.aggregate_duration()
         # Should be 30 days (the larger period)
         assert duration == np.timedelta64(30, "D")
+
+
+class TestPeriodListDuration:
+    """Test PeriodList duration vs aggregate_duration methods."""
+
+    def test_duration_empty(self) -> None:
+        """Test duration on empty list."""
+        pl = PeriodList([])
+        assert pl.duration() == np.timedelta64(0, "D")
+
+    def test_duration_single_period(self) -> None:
+        """Test duration with single period."""
+        pl = PeriodList([])
+        pl.append(
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            )
+        )
+        # Duration from begin to end (exclusive)
+        assert pl.duration() == np.timedelta64(10, "D")
+
+    def test_duration_multiple_disjoint(self) -> None:
+        """Test duration spans from first begin to last end."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-02-01", "D"),
+                np.datetime64("2020-02-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+        # Duration spans entire range: end() of last - begin of first
+        # = (Feb 10 + 1) - Jan 1 = Feb 11 - Jan 1 = 41 days
+        assert pl.duration() == np.timedelta64(41, "D")
+
+    def test_duration_vs_aggregate_duration(self) -> None:
+        """Test difference between duration and aggregate_duration."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-02-01", "D"),
+                np.datetime64("2020-02-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        # duration() spans entire range: back().end() - front().begin
+        assert pl.duration() == np.timedelta64(41, "D")
+
+        # aggregate_duration() sums individual periods
+        assert pl.aggregate_duration() == np.timedelta64(20, "D")
+
+
+class TestPeriodListMerge:
+    """Test PeriodList merge functionality."""
+
+    def test_merge_disjoint(self) -> None:
+        """Test merging two disjoint period lists."""
+        pl1 = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-01-01", "D"),
+                    np.datetime64("2020-01-10", "D"),
+                ),
+            ]
+        )
+        pl2 = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-02-01", "D"),
+                    np.datetime64("2020-02-10", "D"),
+                ),
+            ]
+        )
+
+        pl1.merge(pl2)
+        assert len(pl1) == 2
+        assert pl1[0].begin == np.datetime64("2020-01-01", "D")
+        assert pl1[1].begin == np.datetime64("2020-02-01", "D")
+
+    def test_merge_overlapping(self) -> None:
+        """Test merging lists with overlapping periods."""
+        pl1 = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-01-01", "D"),
+                    np.datetime64("2020-01-15", "D"),
+                ),
+            ]
+        )
+        pl2 = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-01-10", "D"),
+                    np.datetime64("2020-01-20", "D"),
+                ),
+            ]
+        )
+
+        pl1.merge(pl2)
+        # Should merge into single period
+        assert len(pl1) == 1
+        assert pl1[0].begin == np.datetime64("2020-01-01", "D")
+        assert pl1[0].last == np.datetime64("2020-01-20", "D")
+
+    def test_merge_adjacent(self) -> None:
+        """Test merging adjacent periods."""
+        pl1 = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-01-01", "D"),
+                    np.datetime64("2020-01-10", "D"),
+                ),
+            ]
+        )
+        pl2 = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-01-11", "D"),
+                    np.datetime64("2020-01-20", "D"),
+                ),
+            ]
+        )
+
+        pl1.merge(pl2)
+        # Should merge adjacent periods
+        assert len(pl1) == 1
+        assert pl1[0].begin == np.datetime64("2020-01-01", "D")
+        assert pl1[0].last == np.datetime64("2020-01-20", "D")
+
+    def test_merge_empty(self) -> None:
+        """Test merging with empty list."""
+        pl1 = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-01-01", "D"),
+                    np.datetime64("2020-01-10", "D"),
+                ),
+            ]
+        )
+        pl2 = PeriodList([])
+
+        pl1.merge(pl2)
+        assert len(pl1) == 1
+        assert pl1[0].begin == np.datetime64("2020-01-01", "D")
+
+
+class TestPeriodListFilter:
+    """Test PeriodList filtering methods."""
+
+    def test_filter_contained(self) -> None:
+        """Test filter_contained method."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-02-01", "D"),
+                np.datetime64("2020-02-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-03-01", "D"),
+                np.datetime64("2020-03-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        # Filter to periods within Jan 15 - Mar 5
+        container = Period(
+            np.datetime64("2020-01-15", "D"),
+            np.datetime64("2020-03-05", "D"),
+        )
+        filtered = pl.filter_contained(container)
+
+        assert len(filtered) == 1
+        assert filtered[0].begin == np.datetime64("2020-02-01", "D")
+
+    def test_filter_contained_none(self) -> None:
+        """Test filter_contained when none match."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        container = Period(
+            np.datetime64("2020-02-01", "D"),
+            np.datetime64("2020-02-10", "D"),
+        )
+        filtered = pl.filter_contained(container)
+
+        assert len(filtered) == 0
+
+    def test_filter_min_duration(self) -> None:
+        """Test filter_min_duration method."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-05", "D"),
+            ),  # 5 days
+            Period(
+                np.datetime64("2020-02-01", "D"),
+                np.datetime64("2020-02-20", "D"),
+            ),  # 20 days
+            Period(
+                np.datetime64("2020-03-01", "D"),
+                np.datetime64("2020-03-08", "D"),
+            ),  # 8 days
+        ]
+        pl = PeriodList(periods)
+
+        filtered = pl.filter_min_duration(np.timedelta64(10, "D"))
+
+        assert len(filtered) == 1
+        assert filtered[0].begin == np.datetime64("2020-02-01", "D")
+
+    def test_filter_min_duration_none(self) -> None:
+        """Test filter_min_duration when none match."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-03", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        filtered = pl.filter_min_duration(np.timedelta64(10, "D"))
+
+        assert len(filtered) == 0
+
+
+class TestPeriodListJoinAdjacent:
+    """Test PeriodList join_adjacent_periods method."""
+
+    def test_join_adjacent_periods(self) -> None:
+        """Test joining periods within epsilon."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-01-12", "D"),  # Gap of 1 day
+                np.datetime64("2020-01-20", "D"),
+            ),
+            Period(
+                np.datetime64("2020-01-22", "D"),  # Gap of 1 day
+                np.datetime64("2020-01-30", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        # Join with epsilon of 2 days
+        joined = pl.join_adjacent_periods(np.timedelta64(2, "D"))
+
+        assert len(joined) == 1
+        assert joined[0].begin == np.datetime64("2020-01-01", "D")
+        assert joined[0].last == np.datetime64("2020-01-30", "D")
+
+    def test_join_adjacent_strict_epsilon(self) -> None:
+        """Test epsilon is respected."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-01-15", "D"),  # Gap of 4 days
+                np.datetime64("2020-01-20", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        # Epsilon too small to join
+        joined = pl.join_adjacent_periods(np.timedelta64(2, "D"))
+
+        assert len(joined) == 2
+
+    def test_join_adjacent_empty(self) -> None:
+        """Test join on empty list."""
+        pl = PeriodList([])
+        joined = pl.join_adjacent_periods(np.timedelta64(5, "D"))
+        assert len(joined) == 0
+
+    def test_join_adjacent_single(self) -> None:
+        """Test join on single period."""
+        pl = PeriodList(
+            [
+                Period(
+                    np.datetime64("2020-01-01", "D"),
+                    np.datetime64("2020-01-10", "D"),
+                ),
+            ]
+        )
+        joined = pl.join_adjacent_periods(np.timedelta64(5, "D"))
+        assert len(joined) == 1
+        assert joined[0].begin == np.datetime64("2020-01-01", "D")
+
+
+class TestPeriodListVectorOperations:
+    """Test PeriodList vector operations with numpy arrays."""
+
+    def test_belong_to_a_period(self) -> None:
+        """Test belong_to_a_period method."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-02-01", "D"),
+                np.datetime64("2020-02-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        dates = np.array(
+            [
+                np.datetime64("2019-12-25", "D"),  # Before all
+                np.datetime64("2020-01-05", "D"),  # In first period
+                np.datetime64("2020-01-15", "D"),  # Between periods
+                np.datetime64("2020-02-05", "D"),  # In second period
+                np.datetime64("2020-03-01", "D"),  # After all
+            ]
+        )
+
+        flags = pl.belong_to_a_period(dates)
+
+        assert len(flags) == 5
+        assert not flags[0]
+        assert flags[1]
+        assert not flags[2]
+        assert flags[3]
+        assert not flags[4]
+
+    def test_belong_to_a_period_boundaries(self) -> None:
+        """Test belong_to_a_period at period boundaries."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        dates = np.array(
+            [
+                np.datetime64("2020-01-01", "D"),  # Begin
+                np.datetime64("2020-01-10", "D"),  # Last
+                np.datetime64("2020-01-11", "D"),  # After end
+            ]
+        )
+
+        flags = pl.belong_to_a_period(dates)
+
+        assert flags[0]  # Begin is included
+        assert flags[1]  # Last is included
+        assert not flags[2]  # After end is excluded
+
+    def test_cross_a_period(self) -> None:
+        """Test cross_a_period method."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-10", "D"),
+                np.datetime64("2020-01-20", "D"),
+            ),
+            Period(
+                np.datetime64("2020-02-10", "D"),
+                np.datetime64("2020-02-20", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        dates = np.array(
+            [
+                np.datetime64("2020-01-05", "D"),  # Before first
+                np.datetime64("2020-01-15", "D"),  # In first
+                np.datetime64("2020-01-25", "D"),  # Between
+                np.datetime64("2020-02-15", "D"),  # In second (last)
+            ]
+        )
+
+        flags = pl.cross_a_period(dates)
+
+        assert len(flags) == 4
+        # Since last date is in a period, all should be true
+        assert all(flags)
+
+    def test_cross_a_period_after_all(self) -> None:
+        """Test cross_a_period when dates after all periods."""
+        periods = [
+            Period(
+                np.datetime64("2020-01-10", "D"),
+                np.datetime64("2020-01-20", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        dates = np.array(
+            [
+                np.datetime64("2020-01-05", "D"),
+                np.datetime64("2020-01-15", "D"),
+                np.datetime64("2020-02-01", "D"),  # After all periods
+            ]
+        )
+
+        flags = pl.cross_a_period(dates)
+
+        assert flags[0]  # Before period, period exists
+        assert flags[1]  # In period
+        # Last date is after all periods, so algorithm stops
+        assert not flags[2]
+
+
+class TestPeriodListSort:
+    """Test PeriodList sorting functionality."""
+
+    def test_sort(self) -> None:
+        """Test sort method."""
+        periods = [
+            Period(
+                np.datetime64("2020-02-01", "D"),
+                np.datetime64("2020-02-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-03-01", "D"),
+                np.datetime64("2020-03-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        # Unsorted list should fail check
+        assert not pl.is_sorted_and_disjoint()
+
+        # Sort the list in place
+        pl.sort()
+
+        # Now it should be sorted
+        assert pl.is_sorted_and_disjoint()
+        assert pl[0].begin == np.datetime64("2020-01-01", "D")
+        assert pl[1].begin == np.datetime64("2020-02-01", "D")
+        assert pl[2].begin == np.datetime64("2020-03-01", "D")
+
+    def test_sort_preserves_data(self) -> None:
+        """Test that sort preserves period data."""
+        periods = [
+            Period(
+                np.datetime64("2020-03-01", "D"),
+                np.datetime64("2020-03-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-01-01", "D"),
+                np.datetime64("2020-01-10", "D"),
+            ),
+            Period(
+                np.datetime64("2020-02-01", "D"),
+                np.datetime64("2020-02-10", "D"),
+            ),
+        ]
+        pl = PeriodList(periods)
+
+        pl.sort()
+
+        assert len(pl) == 3
+        assert pl[0].begin == np.datetime64("2020-01-01", "D")
+        assert pl[0].last == np.datetime64("2020-01-10", "D")
+        assert pl[1].begin == np.datetime64("2020-02-01", "D")
+        assert pl[1].last == np.datetime64("2020-02-10", "D")
+        assert pl[2].begin == np.datetime64("2020-03-01", "D")
+        assert pl[2].last == np.datetime64("2020-03-10", "D")
