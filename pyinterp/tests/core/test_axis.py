@@ -169,8 +169,8 @@ def test_axis_regular_ascending() -> None:
 
     # Test find_index
     test_coords = np.arange(0, 359, 1, dtype=np.float64) + 0.01
-    indexes = a.find_index(test_coords, bounded=True)
-    assert np.all(indexes == np.arange(0, 359, 1))
+    index = a.find_index(test_coords, bounded=True)
+    assert np.all(index == np.arange(0, 359, 1))
 
     # Test find_indexes (surrounding indexes)
     test_coords = np.arange(0, 359, 1, dtype=np.float64) + 0.5
@@ -379,14 +379,14 @@ def test_axis_out_of_bounds() -> None:
 
     # Test find_index with bounded=False (should return -1)
     test_coords = np.array([-10.0, 370.0], dtype=np.float64)
-    indexes = a.find_index(test_coords, bounded=False)
-    assert indexes[0] == -1
-    assert indexes[1] == -1
+    index = a.find_index(test_coords, bounded=False)
+    assert index[0] == -1
+    assert index[1] == -1
 
     # Test find_index with bounded=True (should clamp)
-    indexes = a.find_index(test_coords, bounded=True)
-    assert indexes[0] == 0  # Clamped to first
-    assert indexes[1] == 359  # Clamped to last
+    index = a.find_index(test_coords, bounded=True)
+    assert index[0] == 0  # Clamped to first
+    assert index[1] == 359  # Clamped to last
 
     # Test find_indexes (should return -1 for out of bounds)
     indexes = a.find_indexes(test_coords)
