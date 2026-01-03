@@ -866,6 +866,16 @@ auto init_period(nanobind::module_& m) -> void {
       .def("shift", &Period::shift, kPeriodShift, "offset"_a)
 
       .def(
+          "__repr__",
+          [](const Period& self) -> std::string {
+            return std::format(
+                "Period(begin={}, last={}, resolution='{}')",
+                dateutils::datetime64_to_string(self.begin, self.resolution()),
+                dateutils::datetime64_to_string(self.last, self.resolution()),
+                std::string(self.resolution()));
+          },
+          "String representation of the Period.")
+      .def(
           "__str__",
           [](const Period& self) -> std::string {
             return static_cast<std::string>(self);
@@ -961,7 +971,7 @@ auto init_period(nanobind::module_& m) -> void {
           nanobind::arg("state"),
           "Set the state of the instance from pickling.")
       .def(
-          "__str__",
+          "__repr__",
           [](const PeriodList& self) -> std::string {
             return static_cast<std::string>(self);
           },
