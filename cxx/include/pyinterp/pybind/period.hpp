@@ -4,7 +4,6 @@
 
 #include "pyinterp/dateutils.hpp"
 #include "pyinterp/period.hpp"
-#include "pyinterp/pybind/numpy.hpp"
 
 namespace pyinterp::pybind {
 
@@ -159,6 +158,11 @@ class PeriodList : public pyinterp::PeriodList {
   /// @param[in] period The period to set.
   auto setitem(size_t index, const Period& period) -> void;
 
+  /// @brief Merge two lists of periods.
+  /// @param[in] other The other PeriodList to merge with.
+  /// @return A new PeriodList with merged periods.
+  auto merge(const PeriodList& other) -> void;
+
   /// @brief Check if a date is within tolerance of any period in the list.
   /// @param[in] date A numpy.datetime64 scalar.
   /// @param[in] tolerance The tolerance margin as a numpy.timedelta64 scalar.
@@ -177,6 +181,26 @@ class PeriodList : public pyinterp::PeriodList {
   /// @return The containing Period, or None if not found.
   [[nodiscard]] auto find_containing(const nanobind::object& date) const
       -> std::optional<Period>;
+
+  /// @copydoc pyinterp::PeriodList::filter_contained
+  [[nodiscard]] auto filter_contained(const Period& period) const noexcept
+      -> PeriodList;
+
+  /// @copydoc pyinterp::PeriodList::filter_min_duration
+  [[nodiscard]] auto filter_min_duration(
+      const nanobind::object& min_duration) const noexcept -> PeriodList;
+
+  /// @copydoc pyinterp::PeriodList::cross_a_period
+  [[nodiscard]] auto cross_a_period(const nanobind::object& dates) const
+      -> Vector<bool>;
+
+  /// @copydoc pyinterp::PeriodList::belong_to_a_period
+  [[nodiscard]] auto belong_to_a_period(const nanobind::object& dates) const
+      -> Vector<bool>;
+
+  /// @copydoc pyinterp::PeriodList::join_adjacent_periods
+  [[nodiscard]] inline auto join_adjacent_periods(
+      const nanobind::object& epsilon) const -> PeriodList;
 
   /// @brief Get the state of the object for pickling.
   /// @return A tuple representing the state of the object.

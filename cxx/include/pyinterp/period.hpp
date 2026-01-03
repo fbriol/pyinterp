@@ -255,13 +255,20 @@ class PeriodList : public std::vector<Period> {
   [[nodiscard]] inline auto cross_a_period(
       const Eigen::Ref<const Vector<int64_t>>& dates) const -> Vector<bool>;
 
-  /// @brief Search for dates that belong to any managed period.
+  /// @brief Test which dates fall within any of the managed periods.
   ///
-  /// Masks the dates provided to determine if they belong to one of the given
-  /// periods. Returns a boolean vector of same size as the input vectors. True
-  /// if the date belongs to the period.
-  /// @param dates Vector of dates to check.
-  /// @return A vector of booleans indicating membership in the periods.
+  /// Efficiently checks each input date to determine if it is contained within
+  /// at least one period in the list. Uses a single-pass algorithm that
+  /// advances through the periods as dates are processed.
+  ///
+  /// @param dates Vector of dates to check (should be sorted for optimal
+  /// performance).
+  /// @return Boolean vector where true indicates the date is contained in a
+  /// period.
+  ///
+  /// @note This is a simple membership test - returns true only if the date
+  /// falls within [begin, last] of some period. Compare with cross_a_period()
+  /// which has more complex "look-ahead" semantics.
   [[nodiscard]] inline auto belong_to_a_period(
       const Eigen::Ref<const Vector<int64_t>>& dates) const -> Vector<bool>;
 

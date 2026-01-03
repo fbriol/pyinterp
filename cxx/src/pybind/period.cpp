@@ -1,5 +1,6 @@
 #include "pyinterp/pybind/period.hpp"
 
+#include <nanobind/eigen/dense.h>
 #include <nanobind/make_iterator.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
@@ -273,6 +274,78 @@ auto PeriodList::setitem(size_t index, const Period& period) -> void {
   }
 }
 
+auto PeriodList::merge(const PeriodList& other) -> void {
+  if (other.resolution_ != resolution_) {
+    pyinterp::PeriodList::merge(other);
+  } else {
+    pyinterp::PeriodList converted;
+    converted.reserve(other.size());
+    for (const auto& item : other) {
+      auto period = Period{item, other.resolution_};
+      converted.emplace_back(
+          static_cast<pyinterp::Period&&>(period.convert_to(resolution_)));
+    }
+    pyinterp::PeriodList::merge(converted);
+  }
+}
+
+auto PeriodList::filter_contained(const Period& period) const noexcept
+    -> PeriodList {
+  auto result = pyinterp::PeriodList::filter_contained(
+      static_cast<const pyinterp::Period&>(period.convert_to(resolution_)));
+  return PeriodList{std::move(result), resolution_};
+}
+
+auto PeriodList::filter_min_duration(
+    const nanobind::object& min_duration) const noexcept -> PeriodList {
+  auto [duration_resolution, duration_value] =
+      convert_timedelta64("min_duration", min_duration);
+  const auto converted_duration = dateutils::convert(
+      duration_value, duration_resolution, resolution_.as_timedelta64());
+  nb::gil_scoped_release release;
+  auto result = pyinterp::PeriodList::filter_min_duration(converted_duration);
+  return PeriodList{std::move(result), resolution_};
+}
+
+auto PeriodList::cross_a_period(const nanobind::object& dates) const
+    -> Vector<bool> {
+  auto dtype = retrieve_dtype("dates", dates);
+  if (dtype.datetype() != dateutils::DType::DateType::kDatetime64) {
+    throw std::invalid_argument("dates must be a numpy.datetime64 array");
+  }
+  auto epoch = numpy_to_vector(dates);
+  if (dtype.resolution() != resolution_.resolution()) {
+    dateutils::convert(epoch, dtype, resolution_);
+  }
+  nb::gil_scoped_release release;
+  return pyinterp::PeriodList::cross_a_period(epoch);
+}
+
+auto PeriodList::belong_to_a_period(const nanobind::object& dates) const
+    -> Vector<bool> {
+  auto dtype = retrieve_dtype("dates", dates);
+  if (dtype.datetype() != dateutils::DType::DateType::kDatetime64) {
+    throw std::invalid_argument("dates must be a numpy.datetime64 array");
+  }
+  auto epoch = numpy_to_vector(dates);
+  if (dtype.resolution() != resolution_.resolution()) {
+    dateutils::convert(epoch, dtype, resolution_);
+  }
+  nb::gil_scoped_release release;
+  return pyinterp::PeriodList::belong_to_a_period(epoch);
+}
+
+auto PeriodList::join_adjacent_periods(const nanobind::object& epsilon) const
+    -> PeriodList {
+  auto [tolerance_resolution, tolerance_value] =
+      convert_timedelta64("epsilon", epsilon);
+  const auto converted_epsilon = dateutils::convert(
+      tolerance_value, tolerance_resolution, resolution_.as_timedelta64());
+  nb::gil_scoped_release release;
+  auto result = pyinterp::PeriodList::join_adjacent_periods(converted_epsilon);
+  return PeriodList{std::move(result), resolution_};
+}
+
 auto PeriodList::is_close(const nanobind::object& date,
                           const nanobind::object& tolerance) const -> bool {
   auto [date_resolution, date_value] = convert_datetime64("date", date);
@@ -520,11 +593,109 @@ Returns:
     True if the periods are sorted and disjoint, False otherwise.
 )";
 
-constexpr const char* const kPeriodListTotalDuration = R"(
+constexpr const char* const kPeriodListDuration = R"(
+Calculate the total duration covered by the periods in the list.
+
+Returns:
+    The total duration as an integer representing the number of time units.
+
+Note:
+    The algorithm assumes that periods are sorted, otherwise the result may be
+    incorrect.
+)";
+
+constexpr const char* const kPeriodListAggregateDuration = R"(
 Calculate the total duration covered by the periods in the list.
 
 Returns:
     The total duration as a numpy.timedelta64 scalar.
+
+Note:
+    The algorithm assumes that periods are sorted and disjoint, otherwise the
+    result may be incorrect.
+)";
+
+constexpr const char* const kPeriodListMerge = R"(
+Merge another PeriodList into this PeriodList.
+
+Args:
+    other: The other PeriodList to merge with.
+)";
+
+constexpr const char* const kPeriodListFilterContained = R"(
+Filter periods that are fully contained within the given Period.
+
+Args:
+    period: The Period to check containment against.
+
+Returns:
+    A new PeriodList with periods contained within the given Period.
+)";
+
+constexpr const char* const kPeriodListFilterMinDuration = R"(
+Filter periods with a minimum duration.
+
+Args:
+    duration: The minimum duration as a numpy.timedelta64 scalar.
+
+Returns:
+    A new PeriodList with periods having at least the minimum duration.
+)";
+
+constexpr const char* const kPeriodListCrossAPeriod = R"(
+Identify dates that cross (enter or are within) any managed period.
+
+For each input date, determines whether it either:
+- Falls inside one of the periods, OR
+- Has at least one period beginning at or after it (before the last input
+  date)
+
+This effectively identifies dates that "encounter" a period in the
+temporal sequence, excluding only those dates that come after all periods
+have ended.
+
+Args:
+ dates: Vector of dates to check (should be sorted for optimal
+  performance).
+
+Returns:
+  A vector of booleans where true indicates the date crosses a period.
+
+Note:
+  If the last date in the input falls within a period, all dates are
+  marked as true since they all precede or coincide with a period.
+)";
+
+constexpr const char* const kPeriodListBelongToAPeriod = R"(
+Test which dates fall within any of the managed periods.
+
+Efficiently checks each input date to determine if it is contained within
+at least one period in the list. Uses a single-pass algorithm that
+advances through the periods as dates are processed.
+
+Args:
+  dates: Vector of dates to check (should be sorted for optimal
+    performance).
+
+Returns:
+  A Boolean vector where true indicates the date is contained in a
+  period.
+
+Note:
+  This is a simple membership test - returns true only if the date
+  falls within [begin, last] of some period. Compare with cross_a_period()
+  which has more complex "look-ahead" semantics.
+)";
+
+constexpr const char* const kPeriodListJoinAdjacentPeriods = R"(
+Join periods that are adjacent within a specified epsilon.
+
+Args:
+    epsilon: The maximum gap between periods to consider them adjacent, as a
+        numpy.timedelta64 scalar.
+
+Returns:
+    A new PeriodList with adjacent periods merged.
 )";
 
 auto init_period(nanobind::module_& m) -> void {
@@ -690,14 +861,62 @@ auto init_period(nanobind::module_& m) -> void {
               -> std::optional<Period> { return self.find_containing(date); },
           kPeriodListFindContaining, "date"_a)
       .def("is_sorted_and_disjoint", &PeriodList::is_sorted_and_disjoint,
-           kPeriodListIsSortedAndDisjoint)
+           kPeriodListIsSortedAndDisjoint,
+           nb::call_guard<nb::gil_scoped_release>())
+      .def(
+          "duration",
+          [](const PeriodList& self) -> nanobind::object {
+            auto duration = self.duration();
+            return make_scalar(duration, self.resolution().as_timedelta64());
+          },
+          kPeriodListDuration)
       .def(
           "aggregate_duration",
           [](const PeriodList& self) -> nanobind::object {
-            auto duration = self.aggregate_duration();
+            int64_t duration;
+            {
+              nb::gil_scoped_release release;
+              duration = self.aggregate_duration();
+            }
             return make_scalar(duration, self.resolution().as_timedelta64());
           },
-          kPeriodListTotalDuration)
+          kPeriodListAggregateDuration)
+      .def(
+          "merge",
+          [](PeriodList& self, const PeriodList& other) -> void {
+            self.merge(other);
+          },
+          kPeriodListMerge, "other"_a, nb::call_guard<nb::gil_scoped_release>())
+      .def(
+          "filter_contained",
+          [](const PeriodList& self, const Period& period) -> PeriodList {
+            return self.filter_contained(period);
+          },
+          kPeriodListFilterContained, "period"_a,
+          nb::call_guard<nb::gil_scoped_release>())
+      .def(
+          "filter_min_duration",
+          [](const PeriodList& self, const nb::object& min_duration)
+              -> PeriodList { return self.filter_min_duration(min_duration); },
+          kPeriodListFilterMinDuration, "duration"_a)
+      .def(
+          "cross_a_period",
+          [](const PeriodList& self, const nb::object& dates) -> Vector<bool> {
+            return self.cross_a_period(dates);
+          },
+          kPeriodListCrossAPeriod, "dates"_a)
+      .def(
+          "belong_to_a_period",
+          [](const PeriodList& self, const nb::object& dates) -> Vector<bool> {
+            return self.belong_to_a_period(dates);
+          },
+          kPeriodListBelongToAPeriod, "dates"_a)
+      .def(
+          "join_adjacent_periods",
+          [](const PeriodList& self, const nb::object& epsilon) -> PeriodList {
+            return self.join_adjacent_periods(epsilon);
+          },
+          kPeriodListJoinAdjacentPeriods, "epsilon"_a)
       .def("__getstate__", &PeriodList::getstate, "Get the state for pickling.")
       .def(
           "__setstate__",
