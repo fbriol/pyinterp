@@ -297,6 +297,60 @@ TEST(PeriodListTest, MergeDisjointPeriods) {
   EXPECT_EQ(list1[1].begin, 50);
 }
 
+TEST(PeriodListTest, MergeOverlappingPeriods) {
+  PeriodList list1;
+  list1.push_back(Period(10, 30));
+  list1.push_back(Period(50, 70));
+
+  PeriodList list2;
+  list2.push_back(Period(20, 40));   // Overlaps with first
+  list2.push_back(Period(45, 55));   // Overlaps with second
+
+  list1.merge(list2);
+
+  // Should merge overlapping periods
+  EXPECT_EQ(list1.size(), 2);
+  EXPECT_EQ(list1[0].begin, 10);
+  EXPECT_EQ(list1[0].last, 40);
+  EXPECT_EQ(list1[1].begin, 45);
+  EXPECT_EQ(list1[1].last, 70);
+}
+
+TEST(PeriodListTest, MergeEmptyLists) {
+  PeriodList list1;
+  PeriodList list2;
+
+  list1.merge(list2);
+  EXPECT_EQ(list1.size(), 0);
+
+  list1.push_back(Period(10, 20));
+  list1.merge(list2);
+  EXPECT_EQ(list1.size(), 1);
+  EXPECT_EQ(list1[0].begin, 10);
+}
+
+TEST(PeriodListTest, MergeComplexScenario) {
+  PeriodList list1;
+  list1.push_back(Period(10, 20));
+  list1.push_back(Period(30, 40));
+  list1.push_back(Period(60, 70));
+
+  PeriodList list2;
+  list2.push_back(Period(15, 35));   // Bridges first two periods
+  list2.push_back(Period(80, 90));   // New period after all
+
+  list1.merge(list2);
+
+  // Should merge first two periods into one, keep others separate
+  EXPECT_EQ(list1.size(), 3);
+  EXPECT_EQ(list1[0].begin, 10);
+  EXPECT_EQ(list1[0].last, 40);
+  EXPECT_EQ(list1[1].begin, 60);
+  EXPECT_EQ(list1[1].last, 70);
+  EXPECT_EQ(list1[2].begin, 80);
+  EXPECT_EQ(list1[2].last, 90);
+}
+
 TEST(PeriodListTest, JoinAdjacentPeriods) {
   PeriodList list;
   list.push_back(Period(10, 20));
@@ -357,7 +411,25 @@ TEST(PeriodListTest, FindAndClose) {
   EXPECT_FALSE(list.is_close(90, 5));
 }
 
-TEST(PeriodListTest, TotalDuration) {
+TEST(PeriodListTest, Duration) {
+  PeriodList list;
+  EXPECT_EQ(list.duration(), 0);  // Empty list
+
+  list.push_back(Period(10, 20));  // [10, 20]
+  EXPECT_EQ(list.duration(), 11);  // Single element: 20 - 10 + 1 = 11
+
+  list.push_back(Period(30, 40));  // [30, 40]
+  list.sort();
+  // Duration from first begin to last end: 40 - 10 + 1 = 31
+  EXPECT_EQ(list.duration(), 31);
+
+  list.push_back(Period(50, 60));  // [50, 60]
+  list.sort();
+  // Duration from first begin to last end: 60 - 10 + 1 = 51
+  EXPECT_EQ(list.duration(), 51);
+}
+
+TEST(PeriodListTest, AggregateDuration) {
   PeriodList list;
   EXPECT_EQ(list.aggregate_duration(), 0);  // Empty list
 
@@ -366,6 +438,30 @@ TEST(PeriodListTest, TotalDuration) {
   list.push_back(Period(40, 45));  // duration = 6
 
   EXPECT_EQ(list.aggregate_duration(), 28);  // 11 + 11 + 6
+}
+
+TEST(PeriodListTest, AggregateDurationWithOverlap) {
+  PeriodList list;
+  list.push_back(Period(0, 10));   // [0, 10]
+  list.push_back(Period(5, 15));   // [5, 15] - overlaps with first
+  list.push_back(Period(20, 30));  // [20, 30] - disjoint
+  list.sort();
+
+  // Aggregate should merge overlapping periods: [0, 15] + [20, 30] = 16 + 11 = 27
+  EXPECT_EQ(list.aggregate_duration(), 27);
+}
+
+TEST(PeriodListTest, DurationVsAggregateDuration) {
+  PeriodList list;
+  list.push_back(Period(0, 10));   // [0, 10]
+  list.push_back(Period(50, 60));  // [50, 60]
+  list.sort();
+
+  // duration() gives span from first to last
+  EXPECT_EQ(list.duration(), 61);  // 60 - 0 + 1 = 61
+
+  // aggregate_duration() gives sum of individual durations
+  EXPECT_EQ(list.aggregate_duration(), 22);  // 11 + 11 = 22
 }
 
 TEST(PeriodListTest, OverlappingPeriods) {
@@ -556,6 +652,142 @@ TEST(PeriodListTest, BelongToAPeriodAllInside) {
   for (int i = 0; i < 5; ++i) {
     EXPECT_TRUE(flags(i));
   }
+}
+
+TEST(PeriodListTest, BelongToAPeriodBoundaries) {
+  PeriodList list;
+  list.push_back(Period(10, 20));
+  list.push_back(Period(30, 40));
+
+  Vector<int64_t> dates(4);
+  dates << 10, 20, 30, 40;  // All on boundaries
+
+  auto flags = list.belong_to_a_period(dates);
+
+  EXPECT_EQ(flags.size(), 4);
+  EXPECT_TRUE(flags(0));   // 10: begin of first period
+  EXPECT_TRUE(flags(1));   // 20: last of first period
+  EXPECT_TRUE(flags(2));   // 30: begin of second period
+  EXPECT_TRUE(flags(3));   // 40: last of second period
+}
+
+TEST(PeriodListTest, CrossAPeriodEdgeCases) {
+  PeriodList list;
+  list.push_back(Period(10, 20));
+  list.push_back(Period(30, 40));
+
+  Vector<int64_t> dates(5);
+  dates << 5, 25, 35, 45, 50;
+
+  auto flags = list.cross_a_period(dates);
+
+  EXPECT_EQ(flags.size(), 5);
+  // The algorithm finds the period containing or after the last date (50).
+  // Since 50 is after all periods, it stops processing dates when it reaches
+  // the period that would be after the last date.
+  EXPECT_TRUE(flags(0));   // 5: before first period, has periods after
+  EXPECT_TRUE(flags(1));   // 25: between periods, has periods after
+  EXPECT_TRUE(flags(2));   // 35: in second period
+  // Once we reach dates that are after all periods or at the last_index,
+  // the algorithm stops marking them as true
+  EXPECT_FALSE(flags(3));  // 45: after all periods
+  EXPECT_FALSE(flags(4));  // 50: after all periods (last date)
+}
+
+TEST(PeriodListTest, CrossAPeriodLastDateInPeriod) {
+  PeriodList list;
+  list.push_back(Period(10, 20));
+  list.push_back(Period(30, 50));
+
+  Vector<int64_t> dates(3);
+  dates << 5, 25, 40;  // Last date (40) is in second period
+
+  auto flags = list.cross_a_period(dates);
+
+  EXPECT_EQ(flags.size(), 3);
+  // If last date is in a period, all should be true (optimization)
+  EXPECT_TRUE(flags(0));
+  EXPECT_TRUE(flags(1));
+  EXPECT_TRUE(flags(2));
+}
+
+TEST(PeriodListTest, CrossAPeriodEmpty) {
+  PeriodList list;  // Empty list
+
+  Vector<int64_t> dates(3);
+  dates << 5, 10, 15;
+
+  auto flags = list.cross_a_period(dates);
+
+  EXPECT_EQ(flags.size(), 3);
+  EXPECT_FALSE(flags(0));
+  EXPECT_FALSE(flags(1));
+  EXPECT_FALSE(flags(2));
+}
+
+TEST(PeriodListTest, BelongToAPeriodEmpty) {
+  PeriodList list;  // Empty list
+
+  Vector<int64_t> dates(3);
+  dates << 5, 10, 15;
+
+  auto flags = list.belong_to_a_period(dates);
+
+  EXPECT_EQ(flags.size(), 3);
+  EXPECT_FALSE(flags(0));
+  EXPECT_FALSE(flags(1));
+  EXPECT_FALSE(flags(2));
+}
+
+TEST(PeriodListTest, JoinAdjacentPeriodsNoJoin) {
+  PeriodList list;
+  list.push_back(Period(10, 20));
+  list.push_back(Period(30, 40));  // Gap of 9
+  list.push_back(Period(50, 60));  // Gap of 9
+
+  auto result = list.join_adjacent_periods(5);  // Epsilon too small
+
+  EXPECT_EQ(result.size(), 3);  // No periods joined
+  EXPECT_EQ(result[0].begin, 10);
+  EXPECT_EQ(result[1].begin, 30);
+  EXPECT_EQ(result[2].begin, 50);
+}
+
+TEST(PeriodListTest, IsSortedAndDisjointVariousCases) {
+  PeriodList list;
+  EXPECT_TRUE(list.is_sorted_and_disjoint());  // Empty
+
+  list.push_back(Period(10, 20));
+  EXPECT_TRUE(list.is_sorted_and_disjoint());  // Single element
+
+  list.push_back(Period(30, 40));
+  EXPECT_TRUE(list.is_sorted_and_disjoint());  // Two disjoint
+
+  list.push_back(Period(25, 35));  // Out of order
+  EXPECT_FALSE(list.is_sorted_and_disjoint());
+
+  list.clear();
+  list.push_back(Period(10, 20));
+  list.push_back(Period(15, 25));  // Overlapping
+  EXPECT_FALSE(list.is_sorted_and_disjoint());
+}
+
+TEST(PeriodListTest, SortPreservesData) {
+  PeriodList list;
+  list.push_back(Period(50, 60));
+  list.push_back(Period(10, 20));
+  list.push_back(Period(30, 40));
+
+  list.sort();
+
+  EXPECT_EQ(list.size(), 3);
+  EXPECT_EQ(list[0].begin, 10);
+  EXPECT_EQ(list[0].last, 20);
+  EXPECT_EQ(list[1].begin, 30);
+  EXPECT_EQ(list[1].last, 40);
+  EXPECT_EQ(list[2].begin, 50);
+  EXPECT_EQ(list[2].last, 60);
+  EXPECT_TRUE(list.is_sorted_and_disjoint());
 }
 
 }  // namespace pyinterp
