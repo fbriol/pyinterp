@@ -199,7 +199,10 @@ def test_multipolygon_to_wkt(multipolygon_simple: MultiPolygon) -> None:
 
 def test_multipolygon_from_wkt() -> None:
     """Test MultiPolygon from WKT deserialization."""
-    wkt = "MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), ((2 2, 3 2, 3 3, 2 3, 2 2)))"
+    wkt = (
+        "MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), "
+        "((2 2, 3 2, 3 3, 2 3, 2 2)))"
+    )
     multipolygon = from_wkt(wkt)
 
     assert isinstance(multipolygon, MultiPolygon)
