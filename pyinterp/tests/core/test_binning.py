@@ -579,7 +579,9 @@ class TestBinningFactoryFunctions:
         x_axis = core.Axis(np.arange(5.0))
         y_axis = core.Axis(np.arange(5.0))
 
-        binning = core.Binning2D(x_axis, y_axis, spheroid=None, dtype="float32")
+        binning = core.Binning2D(
+            x_axis, y_axis, spheroid=None, dtype="float32"
+        )
         assert binning is not None
 
     def test_binning2d_factory_with_float64(self) -> None:
@@ -587,7 +589,9 @@ class TestBinningFactoryFunctions:
         x_axis = core.Axis(np.arange(5.0))
         y_axis = core.Axis(np.arange(5.0))
 
-        binning = core.Binning2D(x_axis, y_axis, spheroid=None, dtype="float64")
+        binning = core.Binning2D(
+            x_axis, y_axis, spheroid=None, dtype="float64"
+        )
         assert binning is not None
 
     def test_binning2d_factory_with_none_dtype(self) -> None:

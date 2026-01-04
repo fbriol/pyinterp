@@ -94,7 +94,9 @@ class TestMultigrid:
         fill.multigrid(grid32, config_obj)
         assert grid32.dtype == np.float32
 
-    def test_multigrid_fills_nan(self, sample_data_float64: np.ndarray) -> None:
+    def test_multigrid_fills_nan(
+        self, sample_data_float64: np.ndarray
+    ) -> None:
         """Test that Multigrid fills NaN values."""
         grid = sample_data_float64.copy()
         nan_count_before = np.isnan(grid).sum()

@@ -554,7 +554,9 @@ class TestQuadrivariateWindowed:
             config = self.make_config(getattr(windowed.Quadrivariate, method))
             result = core.quadrivariate(grid, x, y, z, u, config)
 
-            assert result.shape == (1,), f"Method {method} produced wrong shape"
+            assert result.shape == (1,), (
+                f"Method {method} produced wrong shape"
+            )
             assert np.isfinite(result[0]), f"Method {method} produced NaN"
 
     def test_error_on_mismatched_array_sizes(self) -> None:
@@ -798,7 +800,9 @@ class TestQuadrivariateWindowed:
             third_axis=windowed.AxisConfig.linear(),
             fourth_axis=windowed.AxisConfig.linear(),
         )
-        result_linear = core.quadrivariate(grid, x, y, z, u, config_linear_both)
+        result_linear = core.quadrivariate(
+            grid, x, y, z, u, config_linear_both
+        )
 
         # Nearest on both axes
         config_nearest_both = self.make_config(

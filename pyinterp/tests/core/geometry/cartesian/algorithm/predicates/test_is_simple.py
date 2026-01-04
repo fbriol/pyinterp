@@ -153,7 +153,9 @@ def test_is_simple_multipolygon(
     assert is_simple(multipolygon_complex) is True
 
 
-def test_is_simple_multipolygon_empty(multipolygon_empty: MultiPolygon) -> None:
+def test_is_simple_multipolygon_empty(
+    multipolygon_empty: MultiPolygon,
+) -> None:
     """Test is_simple for empty multipolygon."""
     # Empty multipolygon is simple
     assert is_simple(multipolygon_empty) is True

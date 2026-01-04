@@ -893,7 +893,9 @@ class TestPeriodResolutionConversion:
         # Query with milliseconds
         assert p.contains(np.datetime64("2020-01-10T12:00:00.500", "ms"))
         # Outside period
-        assert not p.contains(np.datetime64("2020-01-10T12:00:02.000000", "us"))
+        assert not p.contains(
+            np.datetime64("2020-01-10T12:00:02.000000", "us")
+        )
 
 
 class TestPeriodEdgeCases:

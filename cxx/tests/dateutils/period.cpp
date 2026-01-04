@@ -303,8 +303,8 @@ TEST(PeriodListTest, MergeOverlappingPeriods) {
   list1.push_back(Period(50, 70));
 
   PeriodList list2;
-  list2.push_back(Period(20, 40));   // Overlaps with first
-  list2.push_back(Period(45, 55));   // Overlaps with second
+  list2.push_back(Period(20, 40));  // Overlaps with first
+  list2.push_back(Period(45, 55));  // Overlaps with second
 
   list1.merge(list2);
 
@@ -336,8 +336,8 @@ TEST(PeriodListTest, MergeComplexScenario) {
   list1.push_back(Period(60, 70));
 
   PeriodList list2;
-  list2.push_back(Period(15, 35));   // Bridges first two periods
-  list2.push_back(Period(80, 90));   // New period after all
+  list2.push_back(Period(15, 35));  // Bridges first two periods
+  list2.push_back(Period(80, 90));  // New period after all
 
   list1.merge(list2);
 
@@ -447,7 +447,8 @@ TEST(PeriodListTest, AggregateDurationWithOverlap) {
   list.push_back(Period(20, 30));  // [20, 30] - disjoint
   list.sort();
 
-  // Aggregate should merge overlapping periods: [0, 15] + [20, 30] = 16 + 11 = 27
+  // Aggregate should merge overlapping periods: [0, 15] + [20, 30] = 16 + 11 =
+  // 27
   EXPECT_EQ(list.aggregate_duration(), 27);
 }
 
@@ -665,10 +666,10 @@ TEST(PeriodListTest, BelongToAPeriodBoundaries) {
   auto flags = list.belong_to_a_period(dates);
 
   EXPECT_EQ(flags.size(), 4);
-  EXPECT_TRUE(flags(0));   // 10: begin of first period
-  EXPECT_TRUE(flags(1));   // 20: last of first period
-  EXPECT_TRUE(flags(2));   // 30: begin of second period
-  EXPECT_TRUE(flags(3));   // 40: last of second period
+  EXPECT_TRUE(flags(0));  // 10: begin of first period
+  EXPECT_TRUE(flags(1));  // 20: last of first period
+  EXPECT_TRUE(flags(2));  // 30: begin of second period
+  EXPECT_TRUE(flags(3));  // 40: last of second period
 }
 
 TEST(PeriodListTest, CrossAPeriodEdgeCases) {
@@ -685,9 +686,9 @@ TEST(PeriodListTest, CrossAPeriodEdgeCases) {
   // The algorithm finds the period containing or after the last date (50).
   // Since 50 is after all periods, it stops processing dates when it reaches
   // the period that would be after the last date.
-  EXPECT_TRUE(flags(0));   // 5: before first period, has periods after
-  EXPECT_TRUE(flags(1));   // 25: between periods, has periods after
-  EXPECT_TRUE(flags(2));   // 35: in second period
+  EXPECT_TRUE(flags(0));  // 5: before first period, has periods after
+  EXPECT_TRUE(flags(1));  // 25: between periods, has periods after
+  EXPECT_TRUE(flags(2));  // 35: in second period
   // Once we reach dates that are after all periods or at the last_index,
   // the algorithm stops marking them as true
   EXPECT_FALSE(flags(3));  // 45: after all periods

@@ -77,7 +77,9 @@ class TestSpheroid:
             wgs84_semi_minor_axis, rel=1e-9
         )
 
-    def test_first_eccentricity_squared(self, wgs84_spheroid: Spheroid) -> None:
+    def test_first_eccentricity_squared(
+        self, wgs84_spheroid: Spheroid
+    ) -> None:
         """Test first eccentricity squared."""
         # e2 = 2f - f^2
         expected_e2 = 2 * WGS84_FLATTENING - WGS84_FLATTENING**2
@@ -140,8 +142,9 @@ class TestSpheroid:
         expected_erc = (
             wgs84_semi_minor_axis * wgs84_semi_minor_axis
         ) / WGS84_SEMI_MAJOR_AXIS
-        assert wgs84_spheroid.equatorial_radius_of_curvature() == pytest.approx(
-            expected_erc, rel=1e-9
+        assert (
+            wgs84_spheroid.equatorial_radius_of_curvature()
+            == pytest.approx(expected_erc, rel=1e-9)
         )
 
     def test_polar_radius_of_curvature(

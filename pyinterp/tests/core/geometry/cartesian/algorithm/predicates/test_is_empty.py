@@ -63,7 +63,9 @@ def test_is_empty_linestring(
     assert is_empty(linestring_empty) is True
 
 
-def test_is_empty_polygon(polygon_1x1: Polygon, polygon_empty: Polygon) -> None:
+def test_is_empty_polygon(
+    polygon_1x1: Polygon, polygon_empty: Polygon
+) -> None:
     """Test is_empty for polygons."""
     # Non-empty polygon
     assert is_empty(polygon_1x1) is False

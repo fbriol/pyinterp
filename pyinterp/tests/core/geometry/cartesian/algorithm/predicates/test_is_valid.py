@@ -73,7 +73,9 @@ def test_is_valid_ring_empty(ring_empty: Ring) -> None:
     assert is_valid(ring_empty) is False
 
 
-def test_is_valid_polygon(polygon_1x1: Polygon, polygon_10x10: Polygon) -> None:
+def test_is_valid_polygon(
+    polygon_1x1: Polygon, polygon_10x10: Polygon
+) -> None:
     """Test is_valid for polygons."""
     # Valid polygons
     assert is_valid(polygon_1x1) is True

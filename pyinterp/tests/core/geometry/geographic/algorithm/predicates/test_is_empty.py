@@ -42,7 +42,9 @@ def test_is_empty_ring(ring_empty: Ring, ring_square_1x1: Ring) -> None:
     assert not is_empty(ring_square_1x1)
 
 
-def test_is_empty_polygon(polygon_empty: Polygon, polygon_1x1: Polygon) -> None:
+def test_is_empty_polygon(
+    polygon_empty: Polygon, polygon_1x1: Polygon
+) -> None:
     """Test is_empty for Polygon."""
     # Empty polygon
     assert is_empty(polygon_empty)

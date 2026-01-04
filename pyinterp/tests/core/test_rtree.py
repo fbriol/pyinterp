@@ -262,7 +262,9 @@ class TestRTree3DInsertion:
 
     def test_insert_float64(self, rtree_float64: RTree3DFloat64) -> None:
         """Test incremental insertion with float64."""
-        coords1 = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=np.float64)
+        coords1 = np.array(
+            [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=np.float64
+        )
         values1 = np.array([10.0, 20.0], dtype=np.float64)
         rtree_float64.insert(coords1, values1)
 
@@ -276,7 +278,9 @@ class TestRTree3DInsertion:
 
     def test_insert_float32(self, rtree_float32: RTree3DFloat32) -> None:
         """Test incremental insertion with float32."""
-        coords1 = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=np.float32)
+        coords1 = np.array(
+            [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=np.float32
+        )
         values1 = np.array([10.0, 20.0], dtype=np.float32)
         rtree_float32.insert(coords1, values1)
 

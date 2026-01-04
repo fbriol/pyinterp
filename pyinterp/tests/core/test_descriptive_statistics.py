@@ -156,7 +156,9 @@ class TestDescriptiveStatisticsFloat64:
         )
         assert ds.min() == np.min(random_values)
         assert ds.sum_of_weights() == pytest.approx(np.sum(random_weights))
-        assert ds.sum() == pytest.approx(np.sum(random_values * random_weights))
+        assert ds.sum() == pytest.approx(
+            np.sum(random_values * random_weights)
+        )
         assert ds.variance() == pytest.approx(
             weighted_mom2(random_values, random_weights)
         )

@@ -233,7 +233,9 @@ def test_num_interior_rings_multipolygon(
 
 
 # Num_geometries tests
-def test_num_geometries_multipolygon(multipolygon_simple: MultiPolygon) -> None:
+def test_num_geometries_multipolygon(
+    multipolygon_simple: MultiPolygon,
+) -> None:
     """Test num_geometries for multipolygon."""
     count = num_geometries(multipolygon_simple)
 

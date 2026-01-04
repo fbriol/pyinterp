@@ -114,14 +114,18 @@ class TestFFTInpaint:
         # Strict convergence
         grid_strict = sample_data_float64.copy()
         config_strict = (
-            config.fill.FFTInpaint().with_epsilon(1e-8).with_max_iterations(500)
+            config.fill.FFTInpaint()
+            .with_epsilon(1e-8)
+            .with_max_iterations(500)
         )
         iterations_strict, _ = fill.fft_inpaint(grid_strict, config_strict)
 
         # Relaxed convergence
         grid_relaxed = sample_data_float64.copy()
         config_relaxed = (
-            config.fill.FFTInpaint().with_epsilon(1e-3).with_max_iterations(100)
+            config.fill.FFTInpaint()
+            .with_epsilon(1e-3)
+            .with_max_iterations(100)
         )
         iterations_relaxed, _ = fill.fft_inpaint(grid_relaxed, config_relaxed)
 

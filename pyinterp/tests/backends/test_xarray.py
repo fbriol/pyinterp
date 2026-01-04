@@ -174,7 +174,9 @@ class TestDimsFromDataArray:
         self, geodetic_3d_temporal_data: xr.DataArray
     ) -> None:
         """Test geodetic 3D temporal array dimension extraction."""
-        dim_info = _get_canonical_dimensions(geodetic_3d_temporal_data, ndims=3)
+        dim_info = _get_canonical_dimensions(
+            geodetic_3d_temporal_data, ndims=3
+        )
         assert dim_info.dims == ("lon", "lat", "time")
         assert dim_info.has_longitude is True
         assert dim_info.has_temporal is True
@@ -215,7 +217,9 @@ class TestCoords:
 
     def test_coords_length_mismatch(self) -> None:
         """Test error when number of coordinates doesn't match."""
-        coords_dict: dict[Hashable, NDArray1D] = {"lon": np.array([10.0, 20.0])}
+        coords_dict: dict[Hashable, NDArray1D] = {
+            "lon": np.array([10.0, 20.0])
+        }
         with pytest.raises(IndexError):
             _coords(coords_dict, ("lon", "lat"))
 
@@ -246,7 +250,9 @@ class TestGrid2D:
         grid = Grid2D(cartesian_2d_data)
         assert grid.ndim == 2
 
-    def test_init_dimension_error(self, geodetic_3d_data: xr.DataArray) -> None:
+    def test_init_dimension_error(
+        self, geodetic_3d_data: xr.DataArray
+    ) -> None:
         """Test Grid2D initialization fails with 3D data."""
         with pytest.raises(ValueError, match="number of dimensions"):
             Grid2D(geodetic_3d_data)
@@ -280,7 +286,9 @@ class TestGrid3D:
         assert grid.ndim == 3
         assert grid._datetime64 is not None
 
-    def test_init_dimension_error(self, geodetic_2d_data: xr.DataArray) -> None:
+    def test_init_dimension_error(
+        self, geodetic_2d_data: xr.DataArray
+    ) -> None:
         """Test Grid3D initialization fails with 2D data."""
         with pytest.raises(ValueError, match="number of dimensions"):
             Grid3D(geodetic_2d_data)
@@ -307,7 +315,9 @@ class TestGrid4D:
         grid = Grid4D(geodetic_4d_data)
         assert grid.ndim == 4
 
-    def test_init_dimension_error(self, geodetic_2d_data: xr.DataArray) -> None:
+    def test_init_dimension_error(
+        self, geodetic_2d_data: xr.DataArray
+    ) -> None:
         """Test Grid4D initialization fails with 2D data."""
         with pytest.raises(ValueError, match="number of dimensions"):
             Grid4D(geodetic_2d_data)

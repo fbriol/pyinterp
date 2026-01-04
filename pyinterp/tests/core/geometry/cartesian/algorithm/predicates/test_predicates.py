@@ -2,7 +2,13 @@
 
 import numpy as np
 
-from .......core.geometry.cartesian import Box, LineString, Point, Polygon, Ring
+from .......core.geometry.cartesian import (
+    Box,
+    LineString,
+    Point,
+    Polygon,
+    Ring,
+)
 from .......core.geometry.cartesian.algorithms import (
     covered_by,
     crosses,

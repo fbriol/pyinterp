@@ -79,7 +79,9 @@ class TestFindCrossovers:
         assert abs(xover.point.lon) < 0.1, (
             "Crossover longitude should be near 0"
         )
-        assert abs(xover.point.lat) < 0.1, "Crossover latitude should be near 0"
+        assert abs(xover.point.lat) < 0.1, (
+            "Crossover latitude should be near 0"
+        )
 
     def test_crossover_no_intersection(self) -> None:
         """Test that parallel tracks return no crossovers."""
@@ -390,7 +392,9 @@ class TestFindCrossovers:
         lon1, lat1, lon2, lat2 = self.create_crossing_tracks()
 
         with pytest.raises(ValueError, match="positive finite"):
-            satellite.find_crossovers(lon1, lat1, lon2, lat2, predicate=-1000.0)
+            satellite.find_crossovers(
+                lon1, lat1, lon2, lat2, predicate=-1000.0
+            )
 
         with pytest.raises(ValueError, match="positive finite"):
             satellite.find_crossovers(lon1, lat1, lon2, lat2, predicate=0.0)

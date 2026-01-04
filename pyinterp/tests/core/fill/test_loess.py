@@ -49,7 +49,9 @@ class TestLoess:
         return config.fill.Loess()
 
     def test_loess_basic_float64(
-        self, sample_data_float64: np.ndarray, default_config: config.fill.Loess
+        self,
+        sample_data_float64: np.ndarray,
+        default_config: config.fill.Loess,
     ) -> None:
         """Test basic LOESS fill with float64 data."""
         result = fill.loess(sample_data_float64, default_config)
@@ -60,7 +62,9 @@ class TestLoess:
         assert result.shape == sample_data_float64.shape
 
     def test_loess_basic_float32(
-        self, sample_data_float32: np.ndarray, default_config: config.fill.Loess
+        self,
+        sample_data_float32: np.ndarray,
+        default_config: config.fill.Loess,
     ) -> None:
         """Test basic LOESS fill with float32 data."""
         result = fill.loess(sample_data_float32, default_config)

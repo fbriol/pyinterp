@@ -123,7 +123,9 @@ class TestGaussSeidel:
         # Relaxed convergence
         grid_relaxed = sample_data_float64.copy()
         config_relaxed = (
-            config.fill.GaussSeidel().with_epsilon(1e-3).with_max_iterations(20)
+            config.fill.GaussSeidel()
+            .with_epsilon(1e-3)
+            .with_max_iterations(20)
         )
         iterations_relaxed, _ = fill.gauss_seidel(grid_relaxed, config_relaxed)
 
@@ -206,7 +208,9 @@ class TestGaussSeidel:
         """Test Gauss-Seidel with different thread counts."""
         for num_threads in [1, 2, 4]:
             grid = sample_data_float64.copy()
-            config_obj = config.fill.GaussSeidel().with_num_threads(num_threads)
+            config_obj = config.fill.GaussSeidel().with_num_threads(
+                num_threads
+            )
 
             iterations, residual = fill.gauss_seidel(grid, config_obj)
 
