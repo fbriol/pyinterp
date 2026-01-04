@@ -1,6 +1,8 @@
 import enum
 from typing import overload
 
+from ....type_hints import NDArray1DFloat64
+
 from .. import cartesian
 from . import (
     Box,
@@ -361,6 +363,11 @@ def crosses(geometry1: MultiLineString, geometry2: MultiLineString) -> bool: ...
 def crosses(geometry1: MultiLineString, geometry2: MultiPolygon) -> bool: ...
 @overload
 def crosses(geometry1: MultiPolygon, geometry2: MultiPolygon) -> bool: ...
+def curvilinear_distance(
+    geometry: LineString | Ring,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = ...,
+) -> NDArray1DFloat64: ...
 @overload
 def densify(
     geometry: LineString,

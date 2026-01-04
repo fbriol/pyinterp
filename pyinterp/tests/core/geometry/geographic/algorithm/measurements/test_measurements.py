@@ -12,6 +12,7 @@ from .......core.geometry.geographic import (
     Ring,
 )
 from .......core.geometry.geographic.algorithms import (
+    curvilinear_distance,
     envelope,
     length,
     num_geometries,
@@ -66,6 +67,56 @@ def test_length_empty_linestring() -> None:
 
     result = length(linestring)
     assert result == 0.0
+
+
+# Curvilinear distance tests
+def test_curvilinear_distance_linestring() -> None:
+    """Test curvilinear distance along a linestring."""
+    lon = np.array([0.0, 1.0, 2.0])
+    lat = np.array([0.0, 0.0, 0.0])
+    linestring = LineString(lon, lat)
+
+    result = curvilinear_distance(linestring)
+
+    # Should return an array of cumulative distances
+    assert isinstance(result, np.ndarray)
+    assert len(result) == len(lon)
+    # First point should be at distance 0
+    assert result[0] == 0.0
+    # Subsequent distances should be monotonically increasing
+    assert np.all(np.diff(result) >= 0.0)
+    # Last distance should equal the total length
+    assert np.isclose(result[-1], length(linestring))
+
+
+def test_curvilinear_distance_ring() -> None:
+    """Test curvilinear distance along a ring."""
+    lon = np.array([0.0, 1.0, 1.0, 0.0, 0.0])
+    lat = np.array([0.0, 0.0, 1.0, 1.0, 0.0])
+    ring = Ring(lon, lat)
+
+    result = curvilinear_distance(ring)
+
+    # Should return an array of cumulative distances
+    assert isinstance(result, np.ndarray)
+    assert len(result) == len(lon)
+    # First point should be at distance 0
+    assert result[0] == 0.0
+    # Subsequent distances should be monotonically increasing
+    assert np.all(np.diff(result) >= 0.0)
+    # Last distance should equal the perimeter
+    assert np.isclose(result[-1], perimeter(ring))
+
+
+def test_curvilinear_distance_empty_linestring() -> None:
+    """Test curvilinear distance on empty linestring."""
+    linestring = LineString()
+
+    result = curvilinear_distance(linestring)
+
+    # Should return an empty array
+    assert isinstance(result, np.ndarray)
+    assert len(result) == 0
 
 
 # Perimeter tests

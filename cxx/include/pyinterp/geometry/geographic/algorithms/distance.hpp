@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/geometry.hpp>
 
 #include "pyinterp/geometry/geographic/algorithms/strategy.hpp"
@@ -76,6 +77,54 @@ template <typename Geometry1, typename Geometry2>
     case kVincenty:
       return distance<Geometry1, Geometry2, kVincenty>(geometry1, geometry2,
                                                        spheroid);
+  }
+  std::unreachable();
+}
+
+/// @brief Calculate the curvilinear distance along the geometry
+/// @tparam Geometry Geometry type
+/// @tparam Method Strategy method to use
+/// @param[in] geometry Geometric object
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
+/// @return Calculated distance
+template <typename Geometry, StrategyMethod Method>
+[[nodiscard]] inline auto curvilinear_distance(
+    const Geometry &geometry, const std::optional<Spheroid> &spheroid)
+    -> Eigen::VectorXd {
+  Eigen::VectorXd distances(geometry.size());
+  if (geometry.size() == 0) {
+    return distances;
+  }
+  auto strategy = make_distance_strategy<Method>(make_spheroid(spheroid));
+  auto acc = 0.0;
+  distances(0) = acc;
+  for (std::size_t i = 1; i < geometry.size(); ++i) {
+    acc += boost::geometry::distance(geometry[i - 1], geometry[i], strategy);
+    distances(i) = acc;
+  }
+  return distances;
+}
+
+/// @brief Calculate the curvilinear distance along the geometry
+/// @tparam Geometry Geometry type
+/// @param[in] geometry Geometric object
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
+/// @param[in] strategy Strategy method to use
+/// @return Calculated distance
+template <typename Geometry>
+[[nodiscard]] inline auto curvilinear_distance(
+    const Geometry &geometry, const std::optional<Spheroid> &spheroid,
+    const StrategyMethod strategy) -> Eigen::VectorXd {
+  using enum StrategyMethod;
+  switch (strategy) {
+    case kAndoyer:
+      return curvilinear_distance<Geometry, kAndoyer>(geometry, spheroid);
+    case kKarney:
+      return curvilinear_distance<Geometry, kKarney>(geometry, spheroid);
+    case kThomas:
+      return curvilinear_distance<Geometry, kThomas>(geometry, spheroid);
+    case kVincenty:
+      return curvilinear_distance<Geometry, kVincenty>(geometry, spheroid);
   }
   std::unreachable();
 }
