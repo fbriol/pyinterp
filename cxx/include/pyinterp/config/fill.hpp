@@ -96,51 +96,52 @@ class FillBase : public ThreadConfig {
   /// @brief Set the first guess strategy
   /// @param[in] value First guess strategy
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_first_guess(FirstGuess value) const noexcept
+  [[nodiscard]] constexpr auto with_first_guess(this Derived self,
+                                                FirstGuess value) noexcept
       -> Derived {
-    auto copy = static_cast<const Derived&>(*this);
-    copy.first_guess_ = value;
-    return copy;
+    self.first_guess_ = value;
+    return self;
   }
 
   /// @brief Set the is_periodic setting
   /// @param[in] value Whether grid is periodic
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_is_periodic(bool value) const noexcept
+  [[nodiscard]] constexpr auto with_is_periodic(this Derived self,
+                                                bool value) noexcept
       -> Derived {
-    auto copy = static_cast<const Derived&>(*this);
-    copy.is_periodic_ = value;
-    return copy;
+    self.is_periodic_ = value;
+    return self;
   }
 
   /// @brief Set the maximum iterations
   /// @param[in] value Maximum iterations
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_max_iterations(
-      uint32_t value) const noexcept -> Derived {
-    auto copy = static_cast<const Derived&>(*this);
-    copy.max_iterations_ = value;
-    return copy;
+  [[nodiscard]] constexpr auto with_max_iterations(this Derived self,
+                                                   uint32_t value) noexcept
+      -> Derived {
+    self.max_iterations_ = value;
+    return self;
   }
 
   /// @brief Set the convergence threshold
   /// @param[in] value Epsilon value
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_epsilon(double value) const noexcept
-      -> Derived {
-    auto copy = static_cast<const Derived&>(*this);
-    copy.epsilon_ = value;
-    return copy;
+  [[nodiscard]] constexpr auto with_epsilon(
+
+      this Derived self, double value) noexcept -> Derived {
+    self.epsilon_ = value;
+    return self;
   }
 
   /// @brief Set the number of threads
   /// @param[in] value Number of threads
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_num_threads(size_t value) const noexcept
+  [[nodiscard]] constexpr auto with_num_threads(this Derived self,
+                                                size_t value) noexcept
       -> Derived {
-    auto copy = static_cast<const Derived&>(*this);
-    static_cast<ThreadConfig&>(copy) = ThreadConfig::with_num_threads(value);
-    return copy;
+    auto base = static_cast<ThreadConfig&>(self).with_num_threads(value);
+    static_cast<ThreadConfig&>(self) = base;
+    return self;
   }
 
  protected:
@@ -169,11 +170,11 @@ class Loess : public FillBase<Loess> {
   /// @brief Set the value type to process
   /// @param[in] value Value type
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_value_type(
-      LoessValueType value) const noexcept -> Loess {
-    auto copy = *this;
-    copy.value_type_ = value;
-    return copy;
+  [[nodiscard]] constexpr auto with_value_type(this Loess self,
+                                               LoessValueType value) noexcept
+      -> Loess {
+    self.value_type_ = value;
+    return self;
   }
 
   /// @brief Get the half-window size along x-axis.
@@ -183,11 +184,12 @@ class Loess : public FillBase<Loess> {
   /// @brief Set the half-window size along x-axis
   /// @param[in] value Half-window size along x-axis
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_nx(uint32_t value) const noexcept -> Loess {
+  /// @throws std::invalid_argument if value is zero
+  [[nodiscard]] constexpr auto with_nx(this Loess self, uint32_t value)
+      -> Loess {
     Loess::check_windows_size(value);
-    auto copy = *this;
-    copy.nx_ = value;
-    return copy;
+    self.nx_ = value;
+    return self;
   }
 
   /// @brief Get the half-window size along y-axis.
@@ -197,11 +199,12 @@ class Loess : public FillBase<Loess> {
   /// @brief Set the half-window size along y-axis
   /// @param[in] value Half-window size along y-axis
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_ny(uint32_t value) const noexcept -> Loess {
+  /// @throws std::invalid_argument if value is zero
+  [[nodiscard]] constexpr auto with_ny(this Loess self, uint32_t value)
+      -> Loess {
     Loess::check_windows_size(value);
-    auto copy = *this;
-    copy.ny_ = value;
-    return copy;
+    self.ny_ = value;
+    return self;
   }
 
  private:
@@ -232,11 +235,10 @@ class FFTInpaint : public FillBase<FFTInpaint> {
   /// @brief Set the sigma parameter
   /// @param[in] value Sigma value
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_sigma(double value) const noexcept
-      -> FFTInpaint {
-    auto copy = *this;
-    copy.sigma_ = value;
-    return copy;
+  [[nodiscard]] constexpr auto with_sigma(this FFTInpaint self,
+                                          double value) noexcept -> FFTInpaint {
+    self.sigma_ = value;
+    return self;
   }
 
  private:
@@ -259,11 +261,11 @@ class GaussSeidel : public FillBase<GaussSeidel> {
   /// @brief Set the relaxation parameter
   /// @param[in] value Relaxation value
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_relaxation(double value) const noexcept
+  [[nodiscard]] constexpr auto with_relaxation(this GaussSeidel self,
+                                               double value) noexcept
       -> GaussSeidel {
-    auto copy = *this;
-    copy.relaxation_ = value;
-    return copy;
+    self.relaxation_ = value;
+    return self;
   }
 
  private:
@@ -292,21 +294,21 @@ class Multigrid : public FillBase<Multigrid> {
   /// @brief Set the number of pre-smoothing iterations
   /// @param[in] value Pre-smoothing iterations
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_pre_smooth(uint32_t value) const noexcept
+  [[nodiscard]] constexpr auto with_pre_smooth(this Multigrid self,
+                                               uint32_t value) noexcept
       -> Multigrid {
-    auto copy = *this;
-    copy.pre_smooth_ = value;
-    return copy;
+    self.pre_smooth_ = value;
+    return self;
   }
 
   /// @brief Set the number of post-smoothing iterations
   /// @param[in] value Post-smoothing iterations
   /// @return Updated configuration
-  [[nodiscard]] constexpr auto with_post_smooth(uint32_t value) const noexcept
+  [[nodiscard]] constexpr auto with_post_smooth(this Multigrid self,
+                                                uint32_t value) noexcept
       -> Multigrid {
-    auto copy = *this;
-    copy.post_smooth_ = value;
-    return copy;
+    self.post_smooth_ = value;
+    return self;
   }
 
  private:

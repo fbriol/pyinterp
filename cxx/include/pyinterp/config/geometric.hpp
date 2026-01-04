@@ -224,11 +224,11 @@ class Trivariate : public BivariateBase<Trivariate> {
   /// @brief Update the third-axis configuration.
   /// @param[in] config New third-axis configuration.
   /// @return Updated `Trivariate` instance.
-  [[nodiscard]] constexpr auto with_third_axis(const AxisConfig& config) const
+  [[nodiscard]] constexpr auto with_third_axis(this Trivariate self,
+                                               const AxisConfig& config)
       -> Trivariate {
-    auto copy = *this;
-    copy.third_axis_ = config;
-    return copy;
+    self.third_axis_ = config;
+    return self;
   }
 
   // Allow Base class to access members
@@ -290,21 +290,21 @@ class Quadrivariate : public BivariateBase<Quadrivariate> {
   /// @brief Update the third-axis configuration.
   /// @param[in] config New third-axis configuration.
   /// @return Updated `Quadrivariate` instance.
-  [[nodiscard]] constexpr auto with_third_axis(const AxisConfig& config) const
+  [[nodiscard]] constexpr auto with_third_axis(this Quadrivariate self,
+                                               const AxisConfig& config)
       -> Quadrivariate {
-    auto copy = *this;
-    copy.third_axis_ = config;
-    return copy;
+    self.third_axis_ = config;
+    return self;
   }
 
   /// @brief Update the fourth-axis configuration.
   /// @param[in] config New fourth-axis configuration.
   /// @return Updated `Quadrivariate` instance.
-  [[nodiscard]] constexpr auto with_fourth_axis(const AxisConfig& config) const
+  [[nodiscard]] constexpr auto with_fourth_axis(this Quadrivariate self,
+                                                const AxisConfig& config)
       -> Quadrivariate {
-    auto copy = *this;
-    copy.fourth_axis_ = config;
-    return copy;
+    self.fourth_axis_ = config;
+    return self;
   }
 
   // Allow Base class to access members

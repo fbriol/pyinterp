@@ -36,6 +36,10 @@ add_testcase(math "${CMAKE_CURRENT_SOURCE_DIR}/math.cpp")
 file(GLOB_RECURSE axis_src "${CMAKE_CURRENT_SOURCE_DIR}/math/axis/*.cpp")
 add_testcase(axis "${axis_src}")
 
+# config
+file(GLOB_RECURSE config_src "${CMAKE_CURRENT_SOURCE_DIR}/config/*.cpp")
+add_testcase(config "${config_src}")
+
 # interpolate
 file(GLOB_RECURSE interpolate_src
      "${CMAKE_CURRENT_SOURCE_DIR}/math/interpolate/*.cpp")

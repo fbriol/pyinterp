@@ -14,7 +14,6 @@
 #include "pyinterp/parallel_for.hpp"
 
 namespace pyinterp::windowed::pybind {
-namespace detail {
 
 /// @brief Alias for the interpolation result type
 /// @tparam T Value type
@@ -135,7 +134,7 @@ template <typename GridType, typename ResultType, typename ZType>
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
-              detail::quadrivariate_single<GridType, ResultType, ZType>(
+              quadrivariate_single<GridType, ResultType, ZType>(
                   grid, x[ix], y[ix], z[ix], u[ix], cfg, interpolator.get(),
                   cache);
           if (interpolated_value.has_value()) {
@@ -187,43 +186,6 @@ template <typename GridType, typename ResultType>
                                                         u, cfg);
     }
   }
-}
-
-constexpr const char* const kQuadrivariateDocstring = R"doc(
-Perform quadrivariate interpolation on a 4D grid using windowed approach.
-
-Args:
-    grid: 4D grid containing data to interpolate.
-    x: X-coordinates for interpolation.
-    y: Y-coordinates for interpolation.
-    z: Z-coordinates (third axis) for interpolation.
-    u: U-coordinates (fourth axis) for interpolation.
-    config: Configuration parameters for interpolation.
-
-Returns:
-    Vector of interpolated values.
-
-Raises:
-    ValueError: If a point is out of the grid bounds
-      and `config.common.bounds_error` is set to `True`.
-)doc";
-
-}  // namespace detail
-
-template <typename GridType, typename ResultType>
-auto bind_quadrivariate(nanobind::module_& m) -> void {
-  m.def(
-      "quadrivariate",
-      [](const GridType& grid, const Eigen::Ref<const Vector<double>>& x,
-         const Eigen::Ref<const Vector<double>>& y, const nanobind::object& z,
-         const Eigen::Ref<const Vector<double>>& u,
-         const config::windowed::Quadrivariate& config) -> Vector<ResultType> {
-        return detail::quadrivariate<GridType, ResultType>(grid, x, y, z, u,
-                                                           config);
-      },
-      nanobind::arg("grid"), nanobind::arg("x"), nanobind::arg("y"),
-      nanobind::arg("z"), nanobind::arg("u"), nanobind::arg("config"),
-      detail::kQuadrivariateDocstring);
 }
 
 }  // namespace pyinterp::windowed::pybind

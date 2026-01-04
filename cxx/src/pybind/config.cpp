@@ -32,6 +32,7 @@ auto add_common_attributes(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
 
 namespace geometric::pybind {
 
+/// @brief Add bivariate/trivariate/quadrivariate-specific methods
 template <typename Class>
 inline auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
   pyclass
@@ -77,14 +78,8 @@ inline auto bind(nb::module_& m) -> void {
 namespace windowed::pybind {
 
 template <typename Class>
-auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
+auto add_windowed_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
   pyclass
-      .def_static("bicubic", &Class::bicubic,
-                  "Create a configuration for bicubic interpolation.",
-                  nb::call_guard<nb::gil_scoped_release>())
-      .def_static("bilinear", &Class::bilinear,
-                  "Create a configuration for bilinear interpolation.",
-                  nb::call_guard<nb::gil_scoped_release>())
       .def_static("akima", &Class::akima,
                   "Create a configuration for Akima spline interpolation.",
                   nb::call_guard<nb::gil_scoped_release>())
@@ -113,23 +108,27 @@ auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
                   "Create a configuration for polynomial spline "
                   "interpolation.",
                   nb::call_guard<nb::gil_scoped_release>())
-      .def("with_num_threads", &Class::with_num_threads, nb::arg("value"),
-           "Number of threads to use for interpolation. A value of 0 means "
-           "that all available cores will be used.",
-           nb::call_guard<nb::gil_scoped_release>())
-      .def("with_bounds_error", &Class::with_bounds_error, nb::arg("value"),
-           "Whether to raise an error when interpolated values are "
-           "requested outside the domain defined by the input "
-           "data.",
-           nb::call_guard<nb::gil_scoped_release>())
+      .def("with_boundary_mode", &Class::with_boundary_mode,
+           "Update boundary mode.", nb::arg("mode"),
+           nb::call_guard<nb::gil_scoped_release>());
+  return pyclass;
+}
+
+template <typename Class>
+auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
+  add_windowed_methods(pyclass);
+  pyclass
+      .def_static("bicubic", &Class::bicubic,
+                  "Create a configuration for bicubic interpolation.",
+                  nb::call_guard<nb::gil_scoped_release>())
+      .def_static("bilinear", &Class::bilinear,
+                  "Create a configuration for bilinear interpolation.",
+                  nb::call_guard<nb::gil_scoped_release>())
       .def("with_window_size_x", &Class::with_window_size_x,
            "Update window size in x direction.", nb::arg("size"),
            nb::call_guard<nb::gil_scoped_release>())
       .def("with_window_size_y", &Class::with_window_size_y,
            "Update window size in y direction.", nb::arg("size"),
-           nb::call_guard<nb::gil_scoped_release>())
-      .def("with_boundary_mode", &Class::with_boundary_mode,
-           "Update boundary mode.", nb::arg("mode"),
            nb::call_guard<nb::gil_scoped_release>());
   return pyclass;
 }
@@ -156,6 +155,14 @@ auto bind(nb::module_& m) -> void {
       .def_static("nearest", &AxisConfig::nearest,
                   "Create a configuration for nearest-neighbor interpolation.",
                   nb::call_guard<nb::gil_scoped_release>());
+
+  // Bind windowed Univariate configuration
+  add_common_attributes(add_windowed_methods(
+      nb::class_<Univariate>(m, "Univariate",
+                             "Parameters controlling univariate windowed "
+                             "interpolation on one-dimensional signals.")
+          .def(nb::init<>(), "Default constructor.",
+               nb::call_guard<nb::gil_scoped_release>())));
 
   add_common_attributes(add_methods(
       nb::class_<Bivariate>(m, "Bivariate",

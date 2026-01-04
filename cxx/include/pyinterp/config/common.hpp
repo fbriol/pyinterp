@@ -78,14 +78,13 @@ class ThreadConfig {
   /// @brief Update the `num_threads` setting.
   /// @param[in] value New value for `num_threads`.
   /// @return Updated `ThreadConfig` instance with the new setting.
-  [[nodiscard]] constexpr auto with_num_threads(size_t value) const
-      -> ThreadConfig {
-    auto copy = *this;
+  [[nodiscard]] constexpr auto with_num_threads(this ThreadConfig self,
+                                                size_t value) -> ThreadConfig {
     if (value == 0) {
       value = std::thread::hardware_concurrency();
     }
-    copy.num_threads_ = value;
-    return copy;
+    self.num_threads_ = value;
+    return self;
   }
 
  private:
@@ -108,19 +107,20 @@ class Common : public ThreadConfig {
   /// @brief Update the `bounds_error` setting.
   /// @param[in] value New value for `bounds_error`.
   /// @return Updated `Common` instance with the new setting.
-  [[nodiscard]] constexpr auto with_bounds_error(bool value) const -> Common {
-    auto copy = *this;
-    copy.bounds_error_ = value;
-    return copy;
+  [[nodiscard]] constexpr auto with_bounds_error(this Common self, bool value)
+      -> Common {
+    self.bounds_error_ = value;
+    return self;
   }
 
   /// @brief Update the `num_threads` setting.
   /// @param[in] value New value for `num_threads`.
   /// @return Updated `Common` instance with the new setting.
-  [[nodiscard]] constexpr auto with_num_threads(size_t value) const -> Common {
-    auto copy = *this;
-    static_cast<ThreadConfig&>(copy) = ThreadConfig::with_num_threads(value);
-    return copy;
+  [[nodiscard]] constexpr auto with_num_threads(this Common self, size_t value)
+      -> Common {
+    auto base = static_cast<ThreadConfig&>(self).with_num_threads(value);
+    static_cast<ThreadConfig&>(self) = base;
+    return self;
   }
 
  private:

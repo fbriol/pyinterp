@@ -19,8 +19,6 @@ namespace pyinterp::windowed::pybind {
 template <typename DataType>
 using Grid2D = pyinterp::pybind::Grid2D<DataType>;
 
-namespace detail {
-
 /// @brief Alias for the interpolation result type
 /// @tparam T Value type
 template <typename T>
@@ -94,9 +92,8 @@ template <typename DataType, typename ResultType>
         auto interpolator = cfg.spatial().factory<double>();
 
         for (int64_t ix = start; ix < end; ++ix) {
-          auto interpolated_value =
-              detail::bivariate_single<DataType, ResultType>(
-                  grid, x[ix], y[ix], cfg, interpolator.get(), cache);
+          auto interpolated_value = bivariate_single<DataType, ResultType>(
+              grid, x[ix], y[ix], cfg, interpolator.get(), cache);
           if (interpolated_value.has_value()) {
             result[ix] = *interpolated_value.value;
           }
@@ -105,44 +102,6 @@ template <typename DataType, typename ResultType>
       cfg.common().num_threads());
 
   return result;
-}
-
-constexpr const char* const kBivariateDocstring = R"doc(
-    Perform bivariate interpolation on a 2D grid.
-
-Args:
-    grid: 2D grid containing data to interpolate.
-    x: X-coordinates for interpolation.
-    y: Y-coordinates for interpolation.
-    config: Configuration parameters for interpolation.
-
-Returns:
-    Vector of interpolated values.
-
-Raises:
-    ValueError: If input arrays have mismatched shapes or if interpolation
-                cannot be performed due to boundary conditions.
-)doc";
-
-}  // namespace detail
-
-/// @brief Bind bivariate interpolation function to a Python module
-/// @tparam DataType Data type of the grid
-/// @tparam ResultType Result type of the interpolation
-/// @param[in,out] m Python module
-template <typename DataType, typename ResultType>
-auto bind_bivariate(nanobind::module_& m) -> void {
-  m.def(
-      "bivariate",
-      [](const Grid2D<DataType>& grid,
-         const Eigen::Ref<const Eigen::VectorXd>& x,
-         const Eigen::Ref<const Eigen::VectorXd>& y,
-         const config::windowed::Bivariate& config) -> Vector<ResultType> {
-        return detail::bivariate<DataType, ResultType>(grid, x, y, config);
-      },
-      nanobind::arg("grid"), nanobind::arg("x"), nanobind::arg("y"),
-      nanobind::arg("config"), detail::kBivariateDocstring,
-      nanobind::call_guard<nanobind::gil_scoped_release>());
 }
 
 }  // namespace pyinterp::windowed::pybind

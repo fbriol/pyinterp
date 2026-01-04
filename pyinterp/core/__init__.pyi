@@ -60,6 +60,12 @@ __all__ = [
 # Type alias for temporal coordinate arrays
 TemporalArray: TypeAlias = NDArray1DDateTime64 | NDArray1DTimeDelta64
 
+def univariate(
+    grid: GridHolder, x: NDArray1DFloat64, config: windowed.Univariate
+) -> NDArray1DFloat64 | NDArray1DFloat32: ...
+def univariate_derivative(
+    grid: GridHolder, x: NDArray1DFloat64, config: windowed.Univariate
+) -> NDArray1DFloat64 | NDArray1DFloat32: ...
 def bivariate(
     grid: GridHolder,
     x: NDArray1DFloat64,

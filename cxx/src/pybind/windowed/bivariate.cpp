@@ -5,7 +5,27 @@
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/grid_dispatch.hpp"
 
+namespace nb = nanobind;
+using nb::literals::operator""_a;
+
 namespace pyinterp::windowed::pybind {
+
+constexpr const char* const kBivariateDocstring = R"doc(
+    Perform bivariate interpolation on a 2D grid.
+
+Args:
+    grid: 2D grid containing data to interpolate.
+    x: X-coordinates for interpolation.
+    y: Y-coordinates for interpolation.
+    config: Configuration parameters for interpolation.
+
+Returns:
+    Vector of interpolated values.
+
+Raises:
+    ValueError: If input arrays have mismatched shapes or if interpolation
+                cannot be performed due to boundary conditions.
+)doc";
 
 // Dummy point type for dispatcher (windowed doesn't use Point template)
 template <typename T>
@@ -29,16 +49,14 @@ struct BivariateInterpolator {
                   const Eigen::Ref<const Eigen::VectorXd>& y,
                   const config::windowed::Bivariate& config) const
       -> Vector<ResultType> {
-    nanobind::gil_scoped_release release;
-    return detail::bivariate<DataType, ResultType>(grid, x, y, config);
+    nb::gil_scoped_release release;
+    return bivariate<DataType, ResultType>(grid, x, y, config);
   }
 };
 
 }  // namespace
 
-auto init_bivariate(nanobind::module_& m) -> void {
-  namespace nb = nanobind;
-
+auto init_bivariate(nb::module_& m) -> void {
   m.def(
       "bivariate",
       [](const GridHolder& grid, const Eigen::Ref<const Eigen::VectorXd>& x,
@@ -47,8 +65,7 @@ auto init_bivariate(nanobind::module_& m) -> void {
         return GridDispatcher<DummyPoint>::dispatch_bivariate(
             grid, x, y, config, BivariateInterpolator{});
       },
-      nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("config"),
-      detail::kBivariateDocstring);
+      "grid"_a, "x"_a, "y"_a, "config"_a, kBivariateDocstring);
 }
 
 }  // namespace pyinterp::windowed::pybind

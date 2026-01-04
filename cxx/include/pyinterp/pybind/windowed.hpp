@@ -5,6 +5,10 @@
 namespace pyinterp {
 namespace windowed::pybind {
 
+/// @brief Initialize univariate bindings.
+/// @param[in,out] m Nanobind module
+auto init_univariate(nanobind::module_& m) -> void;
+
 /// @brief Initialize bivariate bindings.
 /// @param[in,out] m Nanobind module
 auto init_bivariate(nanobind::module_& m) -> void;
@@ -24,6 +28,7 @@ namespace pybind {
 /// @brief Initialize windowed bindings.
 /// @param[in,out] m Nanobind module
 inline auto init_windowed(nanobind::module_& m) -> void {
+  windowed::pybind::init_univariate(m);
   windowed::pybind::init_bivariate(m);
   windowed::pybind::init_trivariate(m);
   windowed::pybind::init_quadrivariate(m);

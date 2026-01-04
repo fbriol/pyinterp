@@ -5,7 +5,28 @@
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/grid_dispatch.hpp"
 
+namespace nb = nanobind;
+using nb::literals::operator""_a;
+
 namespace pyinterp::windowed::pybind {
+
+constexpr const char* const kTrivariateDocstring = R"doc(
+Perform trivariate interpolation on a 3D grid using windowed approach.
+
+Args:
+    grid: 3D grid containing data to interpolate.
+    x: X-coordinates for interpolation.
+    y: Y-coordinates for interpolation.
+    z: Z-coordinates (third axis) for interpolation.
+    config: Configuration parameters for interpolation.
+
+Returns:
+    Vector of interpolated values.
+
+Raises:
+    ValueError: If a point is out of the grid bounds
+                and `config.common.bounds_error` is set to `True`.
+)doc";
 
 // Dummy point type for dispatcher (windowed doesn't use Point template)
 template <typename T>
@@ -31,17 +52,14 @@ struct TrivariateInterpolator {
                   const Eigen::Ref<const Vector<ZType>>& z,
                   const config::windowed::Trivariate& config) const
       -> Vector<ResultType> {
-    nanobind::gil_scoped_release release;
-    return detail::trivariate<GridType, ResultType, ZType>(grid, x, y, z,
-                                                           config);
+    nb::gil_scoped_release release;
+    return trivariate<GridType, ResultType, ZType>(grid, x, y, z, config);
   }
 };
 
 }  // namespace
 
-auto init_trivariate(nanobind::module_& m) -> void {
-  namespace nb = nanobind;
-
+auto init_trivariate(nb::module_& m) -> void {
   m.def(
       "trivariate",
       [](const GridHolder& grid, const Eigen::Ref<const Eigen::VectorXd>& x,
@@ -50,8 +68,7 @@ auto init_trivariate(nanobind::module_& m) -> void {
         return GridDispatcher<DummyPoint>::dispatch_trivariate(
             grid, x, y, z, config, TrivariateInterpolator{});
       },
-      nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("z"),
-      nb::arg("config"), detail::kTrivariateDocstring);
+      "grid"_a, "x"_a, "y"_a, "z"_a, "config"_a, kTrivariateDocstring);
 }
 
 }  // namespace pyinterp::windowed::pybind

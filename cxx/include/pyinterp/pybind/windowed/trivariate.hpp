@@ -14,7 +14,6 @@
 #include "pyinterp/parallel_for.hpp"
 
 namespace pyinterp::windowed::pybind {
-namespace detail {
 
 /// @brief Alias for the interpolation result type
 /// @tparam T Value type
@@ -110,7 +109,7 @@ template <typename GridType, typename ResultType, typename ZType>
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
-              detail::trivariate_single<GridType, ResultType, ZType>(
+              trivariate_single<GridType, ResultType, ZType>(
                   grid, x[ix], y[ix], z[ix], cfg, interpolator.get(), cache);
           if (interpolated_value.has_value()) {
             result[ix] = *interpolated_value.value;
@@ -156,41 +155,6 @@ template <typename GridType, typename ResultType>
                                                      cfg);
     }
   }
-}
-
-constexpr const char* const kTrivariateDocstring = R"doc(
-Perform trivariate interpolation on a 3D grid using windowed approach.
-
-Args:
-    grid: 3D grid containing data to interpolate.
-    x: X-coordinates for interpolation.
-    y: Y-coordinates for interpolation.
-    z: Z-coordinates (third axis) for interpolation.
-    config: Configuration parameters for interpolation.
-
-Returns:
-    Vector of interpolated values.
-
-Raises:
-    ValueError: If a point is out of the grid bounds
-                and `config.common.bounds_error` is set to `True`.
-)doc";
-
-}  // namespace detail
-
-/// @brief Bind trivariate interpolation function to a Python module
-template <typename GridType, typename ResultType>
-auto bind_trivariate(nanobind::module_& m) -> void {
-  m.def(
-      "trivariate",
-      [](const GridType& grid, const Eigen::Ref<const Eigen::VectorXd>& x,
-         const Eigen::Ref<const Eigen::VectorXd>& y, const nanobind::object& z,
-         const config::windowed::Trivariate& config) -> Vector<ResultType> {
-        return detail::trivariate<GridType, ResultType>(grid, x, y, z, config);
-      },
-      nanobind::arg("grid"), nanobind::arg("x"), nanobind::arg("y"),
-      nanobind::arg("z"), nanobind::arg("config"),
-      detail::kTrivariateDocstring);
 }
 
 }  // namespace pyinterp::windowed::pybind

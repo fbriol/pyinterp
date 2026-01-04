@@ -125,10 +125,8 @@ class Spatial {
   template <typename T>
   [[nodiscard]] auto factory() const
       -> std::unique_ptr<math::interpolate::BivariateBase<T>> {
-    if (std::holds_alternative<Bicubic>(method_)) {
-      return math::interpolate::factory<T>(std::get<Bicubic>(method_));
-    }
-    return math::interpolate::factory<T>(std::get<Spline>(method_));
+    return std::visit([](auto&& m) { return math::interpolate::factory<T>(m); },
+                      method_);
   }
 
   /// @brief Create a configuration for bilinear interpolation.
@@ -193,29 +191,29 @@ class Spatial {
   /// @brief Update the `boundary_mode` setting.
   /// @param[in] mode New boundary mode.
   /// @return Updated `Spatial` instance with the new setting.
-  [[nodiscard]] constexpr auto with_boundary_mode(BoundaryMode mode) const
+  [[nodiscard]] constexpr auto with_boundary_mode(this Spatial self,
+                                                  BoundaryMode mode)
       -> Spatial {
-    auto copy = *this;
-    copy.boundary_mode_ = mode;
-    return copy;
+    self.boundary_mode_ = mode;
+    return self;
   }
 
   /// @brief Update window size in the x direction.
   /// @param[in] size New window size in x direction.
   /// @return Updated `Spatial` instance with the new window size.
-  [[nodiscard]] constexpr auto with_window_size_x(int size) const -> Spatial {
-    auto copy = *this;
-    copy.window_size_x_ = size;
-    return copy;
+  [[nodiscard]] constexpr auto with_window_size_x(this Spatial self, int size)
+      -> Spatial {
+    self.window_size_x_ = size;
+    return self;
   }
 
   /// @brief Update window size in the y direction.
   /// @param[in] size New window size in y direction.
   /// @return Updated `Spatial` instance with the new window size.
-  [[nodiscard]] constexpr auto with_window_size_y(int size) const -> Spatial {
-    auto copy = *this;
-    copy.window_size_y_ = size;
-    return copy;
+  [[nodiscard]] constexpr auto with_window_size_y(this Spatial self, int size)
+      -> Spatial {
+    self.window_size_y_ = size;
+    return self;
   }
 
  private:
@@ -233,11 +231,19 @@ class Spatial {
 };
 
 // Forward declarations
+class Univariate;
 class Bivariate;
 class Trivariate;
 class Quadrivariate;
 
 }  // namespace windowed
+
+/// @brief Traits to determine the number of additional axes for the
+/// `Univariate` configuration type.
+template <>
+struct InterpolationTraits<windowed::Univariate> {
+  static constexpr size_t num_axes = 0;
+};
 
 /// @brief Traits to determine the number of additional axes for the
 /// `Bivariate` (windowed) configuration type.
@@ -262,130 +268,348 @@ struct InterpolationTraits<windowed::Quadrivariate> {
 
 namespace windowed {
 
-/// @brief Base class for multi-dimensional windowed interpolation
-/// configurations using the Curiously Recurring Template Pattern (CRTP).
-/// @tparam Derived The derived configuration class.
-template <typename Derived>
-class WindowBase : public Base<Spatial, Derived> {
+/// @brief Configuration for 1D univariate interpolation method
+class UnivariateMethod {
  public:
-  /// @brief Create a configuration for akima spline interpolation
-  /// @return Configuration with akima spline interpolation method
-  [[nodiscard]] static constexpr auto akima() -> Derived {
-    return create_config(Spatial::akima(), AxisConfig::linear());
+  /// @brief Default constructor
+  constexpr UnivariateMethod() = default;
+
+  /// @brief Constructor with an explicit interpolation method
+  /// @param[in] method Interpolation method to use
+  constexpr explicit UnivariateMethod(Spline method) : method_(method) {}
+
+  /// @brief Get the interpolation method.
+  /// @return Interpolation method
+  [[nodiscard]] constexpr auto method() const -> Spline { return method_; }
+
+  /// @brief Get the boundary mode.
+  /// @return Boundary mode
+  [[nodiscard]] constexpr auto boundary_mode() const -> BoundaryMode {
+    return boundary_mode_;
   }
 
-  /// @brief Create a configuration for Akima periodic spline interpolation
-  /// @return Configuration with Akima periodic spline interpolation method
-  [[nodiscard]] static constexpr auto akima_periodic() -> Derived {
-    return create_config(Spatial::akima_periodic(), AxisConfig::linear());
+  /// @brief Get the window size.
+  /// @return Window size
+  [[nodiscard]] constexpr auto window_size() const -> int {
+    return window_size_;
   }
 
-  /// @brief Create a configuration for C spline interpolation
-  /// @return Configuration with C spline interpolation method
-  [[nodiscard]] static constexpr auto c_spline() -> Derived {
-    return create_config(Spatial::c_spline(), AxisConfig::linear());
+  /// @brief Create the interpolator instance.
+  /// @tparam T Data type handled by the interpolator.
+  /// @return Unique pointer to the interpolator instance.
+  template <typename T>
+  [[nodiscard]] auto factory() const
+      -> std::unique_ptr<math::interpolate::Univariate<T>> {
+    return math::interpolate::univariate::factory<T>(method_);
   }
 
-  /// @brief Create a configuration for C spline not-a-knot interpolation
-  /// @return Configuration with C spline not-a-knot interpolation method
-  [[nodiscard]] static constexpr auto c_spline_not_a_knot() -> Derived {
-    return create_config(Spatial::c_spline_not_a_knot(), AxisConfig::linear());
+  /// @brief Create a configuration for linear interpolation.
+  [[nodiscard]] static constexpr auto linear() -> UnivariateMethod {
+    return UnivariateMethod{Spline::kLinear};
   }
 
-  /// @brief Create a configuration for C spline periodic interpolation
-  /// @return Configuration with C spline periodic interpolation method
-  [[nodiscard]] static constexpr auto c_spline_periodic() -> Derived {
-    return create_config(Spatial::c_spline_periodic(), AxisConfig::linear());
+  /// @brief Create a configuration for Akima spline interpolation.
+  [[nodiscard]] static constexpr auto akima() -> UnivariateMethod {
+    return UnivariateMethod{Spline::kAkima};
   }
 
-  /// @brief Create a configuration for steffen spline interpolation
-  /// @return Configuration with steffen spline interpolation method
-  [[nodiscard]] static constexpr auto steffen() -> Derived {
-    return create_config(Spatial::steffen(), AxisConfig::linear());
+  /// @brief Create a configuration for Akima periodic spline interpolation.
+  [[nodiscard]] static constexpr auto akima_periodic() -> UnivariateMethod {
+    return UnivariateMethod{Spline::kAkimaPeriodic};
   }
 
-  /// @brief Create a configuration for linear interpolation
-  /// @return Configuration with linear interpolation method
-  [[nodiscard]] static constexpr auto linear() -> Derived {
-    return create_config(Spatial::linear(), AxisConfig::linear());
+  /// @brief Create a configuration for cubic spline interpolation.
+  [[nodiscard]] static constexpr auto c_spline() -> UnivariateMethod {
+    return UnivariateMethod{Spline::kCSpline};
   }
 
-  /// @brief Create a configuration for polynomial spline interpolation
-  /// @return Configuration with polynomial spline interpolation method
-  [[nodiscard]] static constexpr auto polynomial() -> Derived {
-    return create_config(Spatial::polynomial(), AxisConfig::linear());
+  /// @brief Create a configuration for cubic spline not-a-knot interpolation.
+  [[nodiscard]] static constexpr auto c_spline_not_a_knot()
+      -> UnivariateMethod {
+    return UnivariateMethod{Spline::kCSplineNotAKnot};
   }
 
-  /// @brief Create a configuration for bilinear interpolation
-  /// @return Configuration with bilinear interpolation method
-  [[nodiscard]] static constexpr auto bilinear() -> Derived {
-    return create_config(Spatial::bilinear(), AxisConfig::linear());
+  /// @brief Create a configuration for cubic spline periodic interpolation.
+  [[nodiscard]] static constexpr auto c_spline_periodic() -> UnivariateMethod {
+    return UnivariateMethod{Spline::kCSplinePeriodic};
   }
 
-  /// @brief Create a configuration for bicubic interpolation
-  /// @return Configuration with bicubic interpolation method
-  [[nodiscard]] static constexpr auto bicubic() -> Derived {
-    return create_config(Spatial::bicubic(), AxisConfig::linear());
+  /// @brief Create a configuration for Steffen spline interpolation.
+  [[nodiscard]] static constexpr auto steffen() -> UnivariateMethod {
+    return UnivariateMethod{Spline::kSteffen};
+  }
+
+  /// @brief Create a configuration for polynomial interpolation.
+  [[nodiscard]] static constexpr auto polynomial() -> UnivariateMethod {
+    return UnivariateMethod{Spline::kPolynomial};
+  }
+
+  /// @brief Update the `boundary_mode` setting.
+  /// @param[in] mode New boundary mode.
+  /// @return Updated instance with the new setting.
+  [[nodiscard]] constexpr auto with_boundary_mode(this UnivariateMethod self,
+                                                  BoundaryMode mode)
+      -> UnivariateMethod {
+    self.boundary_mode_ = mode;
+    return self;
+  }
+
+  /// @brief Update window size.
+  /// @param[in] size New window size.
+  /// @return Updated instance with the new window size.
+  [[nodiscard]] constexpr auto with_window_size(this UnivariateMethod self,
+                                                int size) -> UnivariateMethod {
+    self.window_size_ = size;
+    return self;
   }
 
  private:
-  /// @brief Helper to create a configuration with the appropriate number
-  /// of axes for the derived type.
-  [[nodiscard]] static constexpr auto create_config(
-      const Spatial& spatial, const AxisConfig& axis_config) -> Derived {
-    constexpr size_t num_axes = InterpolationTraits<Derived>::num_axes;
+  /// Interpolation method
+  Spline method_{Spline::kLinear};
 
-    if constexpr (num_axes == 0) {
-      // 2D case
-      return Derived{spatial};
-    } else if constexpr (num_axes == 1) {
-      // 3D case
-      return Derived{spatial, axis_config};
-    } else if constexpr (num_axes == 2) {
-      // 4D case
-      return Derived{spatial, axis_config, axis_config};
-    }
+  /// Boundary mode
+  BoundaryMode boundary_mode_{BoundaryMode::kUndef};
+
+  /// Window size
+  int window_size_{3};
+};
+
+/// @brief Mixin providing common configuration modifiers.
+template <typename Derived>
+class CommonModifiers {
+ public:
+  /// @brief Update the `bounds_error` setting on the derived config.
+  /// @param[in] value New value for `bounds_error`.
+  /// @return Updated derived configuration instance.
+  [[nodiscard]] constexpr auto with_bounds_error(this Derived self, bool value)
+      -> Derived {
+    self.common_ = self.common_.with_bounds_error(value);
+    return self;
+  }
+
+  /// @brief Update the `num_threads` setting on the derived config.
+  /// @param[in] value New value for `num_threads`.
+  /// @return Updated derived configuration instance.
+  [[nodiscard]] constexpr auto with_num_threads(this Derived self, size_t value)
+      -> Derived {
+    self.common_ = self.common_.with_num_threads(value);
+    return self;
   }
 };
 
-/// @brief Modifiers for spatial settings in windowed interpolation
-/// configurations.
-/// @tparam Derived The derived configuration class.
+/// @brief Mixin providing spatial window modifiers.
 template <typename Derived>
-class WindowSpatialModifiers {
+class SpatialModifiers {
  public:
-  /// @brief Update window size in the x direction on the derived config.
-  /// @param[in] size New window size in x direction.
+  /// @brief Update the `window_size_x` setting on the derived config.
+  /// @param[in] size New window size for the x-axis.
   /// @return Updated derived configuration instance.
-  [[nodiscard]] constexpr auto with_window_size_x(int size) const -> Derived {
-    Derived result = static_cast<const Derived&>(*this);
-    result.set_spatial(result.spatial().with_window_size_x(size));
-    return result;
+  [[nodiscard]] constexpr auto with_window_size_x(this Derived self, int size)
+      -> Derived {
+    self.spatial_ = self.spatial_.with_window_size_x(size);
+    return self;
   }
 
-  /// @brief Update window size in the y direction on the derived config.
-  /// @param[in] size New window size in y direction.
+  /// @brief Update the `window_size_y` setting on the derived config.
+  /// @param[in] size New window size for the y-axis.
   /// @return Updated derived configuration instance.
-  [[nodiscard]] constexpr auto with_window_size_y(int size) const -> Derived {
-    Derived result = static_cast<const Derived&>(*this);
-    result.set_spatial(result.spatial().with_window_size_y(size));
-    return result;
+  [[nodiscard]] constexpr auto with_window_size_y(this Derived self, int size)
+      -> Derived {
+    self.spatial_ = self.spatial_.with_window_size_y(size);
+    return self;
   }
 
-  /// @brief Update the boundary mode on the derived config.
+  /// @brief Update the `boundary_mode` setting on the derived config.
   /// @param[in] mode New boundary mode.
   /// @return Updated derived configuration instance.
-  [[nodiscard]] constexpr auto with_boundary_mode(BoundaryMode mode) const
+  [[nodiscard]] constexpr auto with_boundary_mode(this Derived self,
+                                                  BoundaryMode mode)
       -> Derived {
-    Derived result = static_cast<const Derived&>(*this);
-    result.set_spatial(result.spatial().with_boundary_mode(mode));
-    return result;
+    self.spatial_ = self.spatial_.with_boundary_mode(mode);
+    return self;
   }
+};
+
+/// @brief Mixin providing static factory methods for windowed interpolation.
+/// Static methods ARE inherited, so derived classes get them automatically!
+template <typename Derived>
+class WindowedFactories {
+ private:
+  /// @brief Helper to create a Derived instance with default axis configs.
+  /// @param[in] spatial Spatial interpolation configuration
+  /// @return Derived instance
+  [[nodiscard]] static constexpr auto make(const Spatial& spatial) -> Derived {
+    constexpr size_t num_axes = InterpolationTraits<Derived>::num_axes;
+    auto axis = AxisConfig::linear();
+
+    if constexpr (num_axes == 0) {
+      return Derived{spatial};
+    } else if constexpr (num_axes == 1) {
+      return Derived{spatial, axis};
+    } else if constexpr (num_axes == 2) {
+      return Derived{spatial, axis, axis};
+    }
+  }
+
+ public:
+  /// @brief Create a configuration for Akima spline interpolation.
+  /// @return `Derived` configured with the Akima spline interpolation method.
+  [[nodiscard]] static constexpr auto akima() -> Derived {
+    return make(Spatial::akima());
+  }
+
+  /// @brief Create a configuration for Akima periodic spline interpolation.
+  /// @return `Derived` configured with the Akima periodic spline method.
+  [[nodiscard]] static constexpr auto akima_periodic() -> Derived {
+    return make(Spatial::akima_periodic());
+  }
+
+  /// @brief Create a configuration for a C-spline interpolation.
+  /// @return `Derived` configured with the C-spline interpolation method.
+  [[nodiscard]] static constexpr auto c_spline() -> Derived {
+    return make(Spatial::c_spline());
+  }
+
+  /// @brief Create a configuration for C-spline (not-a-knot) interpolation.
+  /// @return `Derived` configured with the not-a-knot C-spline method.
+  [[nodiscard]] static constexpr auto c_spline_not_a_knot() -> Derived {
+    return make(Spatial::c_spline_not_a_knot());
+  }
+
+  /// @brief Create a configuration for C-spline periodic interpolation.
+  /// @return `Derived` configured with the C-spline periodic method.
+  [[nodiscard]] static constexpr auto c_spline_periodic() -> Derived {
+    return make(Spatial::c_spline_periodic());
+  }
+
+  /// @brief Create a configuration for Steffen spline interpolation.
+  /// @return `Derived` configured with the Steffen spline method.
+  [[nodiscard]] static constexpr auto steffen() -> Derived {
+    return make(Spatial::steffen());
+  }
+
+  /// @brief Create a configuration for linear interpolation.
+  /// @return `Derived` configured with the linear interpolation method.
+  [[nodiscard]] static constexpr auto linear() -> Derived {
+    return make(Spatial::linear());
+  }
+
+  /// @brief Create a configuration for polynomial interpolation.
+  /// @return `Derived` configured with the polynomial interpolation method.
+  [[nodiscard]] static constexpr auto polynomial() -> Derived {
+    return make(Spatial::polynomial());
+  }
+
+  /// @brief Create a configuration for bilinear interpolation.
+  /// @return `Derived` configured with the bilinear interpolation method.
+  [[nodiscard]] static constexpr auto bilinear() -> Derived {
+    return make(Spatial::bilinear());
+  }
+
+  /// @brief Create a configuration for bicubic interpolation.
+  /// @return `Derived` configured with the bicubic interpolation method.
+  [[nodiscard]] static constexpr auto bicubic() -> Derived {
+    return make(Spatial::bicubic());
+  }
+};
+
+/// @brief Univariate windowed interpolation configuration (1D)
+class Univariate : public CommonModifiers<Univariate> {
+ public:
+  /// @brief Default constructor
+  constexpr Univariate() = default;
+
+  /// @brief Constructor with univariate method and common configurations
+  /// @param[in] univariate Univariate method configuration
+  /// @param[in] common Common interpolation configuration
+  constexpr explicit Univariate(const UnivariateMethod& univariate,
+                                const Common& common = {})
+      : univariate_(univariate), common_(common) {}
+
+  /// @brief Get the univariate method configuration.
+  /// @return Univariate method configuration
+  [[nodiscard]] constexpr auto univariate() const -> const UnivariateMethod& {
+    return univariate_;
+  }
+
+  /// @brief Get the common interpolation configuration.
+  /// @return Common interpolation configuration
+  [[nodiscard]] constexpr auto common() const -> const Common& {
+    return common_;
+  }
+
+  /// @brief Create a configuration for linear interpolation.
+  [[nodiscard]] static constexpr auto linear() -> Univariate {
+    return Univariate{UnivariateMethod::linear()};
+  }
+
+  /// @brief Create a configuration for Akima spline interpolation.
+  [[nodiscard]] static constexpr auto akima() -> Univariate {
+    return Univariate{UnivariateMethod::akima()};
+  }
+
+  /// @brief Create a configuration for Akima periodic spline interpolation.
+  [[nodiscard]] static constexpr auto akima_periodic() -> Univariate {
+    return Univariate{UnivariateMethod::akima_periodic()};
+  }
+
+  /// @brief Create a configuration for cubic spline interpolation.
+  [[nodiscard]] static constexpr auto c_spline() -> Univariate {
+    return Univariate{UnivariateMethod::c_spline()};
+  }
+
+  /// @brief Create a configuration for cubic spline not-a-knot interpolation.
+  [[nodiscard]] static constexpr auto c_spline_not_a_knot() -> Univariate {
+    return Univariate{UnivariateMethod::c_spline_not_a_knot()};
+  }
+
+  /// @brief Create a configuration for cubic spline periodic interpolation.
+  [[nodiscard]] static constexpr auto c_spline_periodic() -> Univariate {
+    return Univariate{UnivariateMethod::c_spline_periodic()};
+  }
+
+  /// @brief Create a configuration for Steffen spline interpolation.
+  [[nodiscard]] static constexpr auto steffen() -> Univariate {
+    return Univariate{UnivariateMethod::steffen()};
+  }
+
+  /// @brief Create a configuration for polynomial interpolation.
+  [[nodiscard]] static constexpr auto polynomial() -> Univariate {
+    return Univariate{UnivariateMethod::polynomial()};
+  }
+
+  /// @brief Update window size.
+  /// @param[in] size New window size.
+  /// @return Updated `Univariate` instance with the new window size.
+  [[nodiscard]] constexpr auto with_window_size(this Univariate self, int size)
+      -> Univariate {
+    self.univariate_ = self.univariate_.with_window_size(size);
+    return self;
+  }
+
+  /// @brief Update the `boundary_mode` setting.
+  /// @param[in] mode New boundary mode.
+  /// @return Updated `Univariate` instance with the new setting.
+  [[nodiscard]] constexpr auto with_boundary_mode(this Univariate self,
+                                                  BoundaryMode mode)
+      -> Univariate {
+    self.univariate_ = self.univariate_.with_boundary_mode(mode);
+    return self;
+  }
+
+ private:
+  friend class CommonModifiers<Univariate>;
+
+  /// Univariate method configuration
+  UnivariateMethod univariate_;
+  /// Common interpolation configuration
+  Common common_;
 };
 
 /// @brief Window interpolation configuration (2D only)
-class Bivariate : public WindowBase<Bivariate>,
-                  public WindowSpatialModifiers<Bivariate> {
+class Bivariate : public CommonModifiers<Bivariate>,
+                  public SpatialModifiers<Bivariate>,
+                  public WindowedFactories<Bivariate> {
  public:
   /// @brief Default constructor
   constexpr Bivariate() = default;
@@ -409,13 +633,11 @@ class Bivariate : public WindowBase<Bivariate>,
     return common_;
   }
 
-  /// @brief Set the spatial interpolation configuration (for internal use).
-  constexpr void set_spatial(const Spatial& spatial) { spatial_ = spatial; }
-
-  // Allow Base class to access members
-  friend class Base<Spatial, Bivariate>;
-
  private:
+  friend class CommonModifiers<Bivariate>;
+  friend class SpatialModifiers<Bivariate>;
+  friend class WindowedFactories<Bivariate>;
+
   /// Spatial interpolation configuration
   Spatial spatial_;
   /// Common interpolation configuration
@@ -423,8 +645,9 @@ class Bivariate : public WindowBase<Bivariate>,
 };
 
 /// @brief Windows interpolation configuration (3D only)
-class Trivariate : public WindowBase<Trivariate>,
-                   public WindowSpatialModifiers<Trivariate> {
+class Trivariate : public CommonModifiers<Trivariate>,
+                   public SpatialModifiers<Trivariate>,
+                   public WindowedFactories<Trivariate> {
  public:
   /// @brief Default constructor
   constexpr Trivariate() = default;
@@ -455,23 +678,21 @@ class Trivariate : public WindowBase<Trivariate>,
     return common_;
   }
 
-  /// @brief Set the spatial interpolation configuration (for internal use).
-  constexpr void set_spatial(const Spatial& spatial) { spatial_ = spatial; }
-
   /// @brief Update third axis configuration
   /// @param[in] config New third axis configuration
   /// @return Updated TrivariateConfig instance
-  [[nodiscard]] constexpr auto with_third_axis(const AxisConfig& config) const
+  [[nodiscard]] constexpr auto with_third_axis(this Trivariate self,
+                                               const AxisConfig& config)
       -> Trivariate {
-    auto copy = *this;
-    copy.third_axis_ = config;
-    return copy;
+    self.third_axis_ = config;
+    return self;
   }
 
-  // Allow Base class to access members
-  friend class Base<Spatial, Trivariate>;
-
  private:
+  friend class CommonModifiers<Trivariate>;
+  friend class SpatialModifiers<Trivariate>;
+  friend class WindowedFactories<Trivariate>;
+
   /// Spatial interpolation configuration
   Spatial spatial_;
   /// Third axis interpolation configuration
@@ -481,8 +702,9 @@ class Trivariate : public WindowBase<Trivariate>,
 };
 
 /// @brief Windows interpolation configuration (4D only)
-class Quadrivariate : public WindowBase<Quadrivariate>,
-                      public WindowSpatialModifiers<Quadrivariate> {
+class Quadrivariate : public CommonModifiers<Quadrivariate>,
+                      public SpatialModifiers<Quadrivariate>,
+                      public WindowedFactories<Quadrivariate> {
  public:
   /// @brief Default constructor
   constexpr Quadrivariate() = default;
@@ -525,33 +747,31 @@ class Quadrivariate : public WindowBase<Quadrivariate>,
     return common_;
   }
 
-  /// @brief Set the spatial interpolation configuration (for internal use).
-  constexpr void set_spatial(const Spatial& spatial) { spatial_ = spatial; }
-
   /// @brief Update third axis configuration
   /// @param[in] config New third axis configuration
   /// @return Updated QuadrivariateConfig instance
-  [[nodiscard]] constexpr auto with_third_axis(const AxisConfig& config) const
+  [[nodiscard]] constexpr auto with_third_axis(this Quadrivariate self,
+                                               const AxisConfig& config)
       -> Quadrivariate {
-    auto copy = *this;
-    copy.third_axis_ = config;
-    return copy;
+    self.third_axis_ = config;
+    return self;
   }
 
   /// @brief Update fourth axis configuration
   /// @param[in] config New fourth axis configuration
   /// @return Updated QuadrivariateConfig instance
-  [[nodiscard]] constexpr auto with_fourth_axis(const AxisConfig& config) const
+  [[nodiscard]] constexpr auto with_fourth_axis(this Quadrivariate self,
+                                                const AxisConfig& config)
       -> Quadrivariate {
-    auto copy = *this;
-    copy.fourth_axis_ = config;
-    return copy;
+    self.fourth_axis_ = config;
+    return self;
   }
 
-  // Allow Base class to access members
-  friend class Base<Spatial, Quadrivariate>;
-
  private:
+  friend class CommonModifiers<Quadrivariate>;
+  friend class SpatialModifiers<Quadrivariate>;
+  friend class WindowedFactories<Quadrivariate>;
+
   /// Spatial interpolation configuration
   Spatial spatial_;
   /// Third axis interpolation configuration

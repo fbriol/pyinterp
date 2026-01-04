@@ -242,6 +242,13 @@ class InterpolationCache {
     return points_per_dim_[dim];
   }
 
+  /// Get a VectorMap view for 1D cache
+  /// @return VectorMap of the values
+  [[nodiscard]] auto vector() const -> VectorMap {
+    static_assert(kNDim == 1, "Vector access requires exactly 1 dimension");
+    return VectorMap(values_.data(), points_per_dim_[0]);
+  }
+
   /// Get a MatrixMap view of the X-Y plane at specified higher-dim indices
   /// @tparam RestIndices Types for higher-dimension indices
   /// @param[in] indices Indices for higher dimensions (if any)

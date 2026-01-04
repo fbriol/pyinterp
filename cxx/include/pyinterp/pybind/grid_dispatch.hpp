@@ -24,6 +24,10 @@ template <typename DataType>
 using InterpolationResultType =
     std::conditional_t<std::is_same_v<DataType, double>, double, float>;
 
+/// @brief Concept for checking if a grid is 1D.
+template <typename GridType>
+concept Is1DGrid = (GridType::kNDim == 1);
+
 /// @brief Concept for checking if a grid is 2D.
 template <typename GridType>
 concept Is2DGrid = (GridType::kNDim == 2);
@@ -73,6 +77,40 @@ class GridDispatcher {
   [[nodiscard]] static constexpr auto is_float64_result(
       std::string_view dtype_str) -> bool {
     return dtype_str == "float64";
+  }
+
+  /// @brief Dispatch univariate interpolation to the appropriate concrete grid
+  /// type.
+  /// @tparam ConfigType Configuration type.
+  /// @tparam InterpolationFunc Interpolation function template.
+  /// @param grid The grid holder.
+  /// @param x X coordinates.
+  /// @param config Configuration object.
+  /// @param func The interpolation function - should be callable as
+  /// func.template operator()<DataType, ResultType>(grid, x, config)
+  /// @return nanobind::object containing the result vector.
+  template <typename ConfigType, typename InterpolationFunc>
+  static auto dispatch_univariate(const GridHolder& grid,
+                                  const Eigen::Ref<const Vector<double>>& x,
+                                  const ConfigType& config,
+                                  InterpolationFunc&& func)
+      -> nanobind::object {
+    if (grid.ndim() != 1) {
+      throw std::invalid_argument(
+          std::format("univariate requires 1D grid, got {}D", grid.ndim()));
+    }
+
+    return grid.visit([&](const auto& concrete_grid) -> nanobind::object {
+      using GridType = std::decay_t<decltype(concrete_grid)>;
+
+      if constexpr (detail::Is1DGrid<GridType>) {
+        using DataType = typename GridType::data_type;
+        using ResultType = detail::InterpolationResultType<DataType>;
+        return nanobind::cast(func.template operator()<DataType, ResultType>(
+            concrete_grid, x, config));
+      }
+      std::unreachable();
+    });
   }
 
   /// @brief Dispatch bivariate interpolation to the appropriate concrete grid
