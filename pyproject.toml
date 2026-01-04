@@ -5,7 +5,7 @@ backend-path = ["_custom_build"]
 
 [tool.ruff]
 target-version = "py312"
-line-length = 80
+line-length = 79
 exclude = [
   "*.pyi",
   "docs",

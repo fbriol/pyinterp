@@ -29,7 +29,13 @@ if TYPE_CHECKING:
         NDArray1DFloat64,
     )
 
-__all__ = ["bivariate", "quadrivariate", "trivariate"]
+__all__ = [
+    "bivariate",
+    "quadrivariate",
+    "trivariate",
+    "univariate",
+    "univariate_derivative",
+]
 
 #: Geometric interpolation methods (simple, non-windowed)
 GeometricMethods = Literal["bilinear", "idw", "nearest"]
@@ -69,6 +75,11 @@ _BOUNDARY_MAP = {
     "wrap": windowed.Boundary.WRAP,
 }
 
+_AXIS_MAP = {
+    "linear": windowed.AxisConfig.linear,
+    "nearest": windowed.AxisConfig.nearest,
+}
+
 # TypeVars for generic config creation
 _GeometricConfig = TypeVar(
     "_GeometricConfig",
@@ -79,6 +90,7 @@ _GeometricConfig = TypeVar(
 
 _WindowedConfig = TypeVar(
     "_WindowedConfig",
+    windowed.Univariate,
     windowed.Bivariate,
     windowed.Trivariate,
     windowed.Quadrivariate,
@@ -88,6 +100,7 @@ _WindowedConfig = TypeVar(
 def _make_geometric_config(
     method: GeometricMethods,
     class_type: type[_GeometricConfig],
+    *,
     bounds_error: bool = False,
     num_threads: int = 0,
 ) -> _GeometricConfig:
@@ -107,9 +120,50 @@ def _make_geometric_config(
     )
 
 
+@overload
 def _make_windowed_config(
     method: WindowedMethods,
-    class_type: type[_WindowedConfig],
+    class_type: type[windowed.Univariate],
+    *,
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    window_size: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
+) -> windowed.Univariate: ...
+
+
+@overload
+def _make_windowed_config(
+    method: WindowedMethods,
+    class_type: type[windowed.Bivariate],
+    *,
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    window_size_x: int | None = None,
+    window_size_y: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
+) -> windowed.Bivariate: ...
+
+
+@overload
+def _make_windowed_config(
+    method: WindowedMethods,
+    class_type: type[windowed.Trivariate],
+    *,
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    window_size_x: int | None = None,
+    window_size_y: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
+    third_axis: AxisConfigStr | None = None,
+) -> windowed.Trivariate: ...
+
+
+@overload
+def _make_windowed_config(
+    method: WindowedMethods,
+    class_type: type[windowed.Quadrivariate],
+    *,
     bounds_error: bool = False,
     num_threads: int = 0,
     window_size_x: int | None = None,
@@ -117,65 +171,70 @@ def _make_windowed_config(
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
     fourth_axis: AxisConfigStr | None = None,
+) -> windowed.Quadrivariate: ...
+
+
+def _make_windowed_config(
+    method: WindowedMethods,
+    class_type: type[_WindowedConfig],
+    *,
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    window_size: int | None = None,
+    window_size_x: int | None = None,
+    window_size_y: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
+    third_axis: AxisConfigStr | None = None,
+    fourth_axis: AxisConfigStr | None = None,
 ) -> _WindowedConfig:
-    """Create a windowed interpolation configuration."""
     if method not in _WINDOWED_METHODS:
         raise ValueError(
-            f"Unknown windowed method: '{method}'. "
-            f"Valid methods: {', '.join(_WINDOWED_METHODS)}"
+            f"Unknown method: '{method}'. "
+            f"Valid: {', '.join(_WINDOWED_METHODS)}"
         )
 
-    factory = getattr(class_type, method)
-    config = factory()
-
+    config = getattr(class_type, method)()
     config = config.with_bounds_error(bounds_error).with_num_threads(
         num_threads
     )
 
+    if boundary_mode is not None:
+        config = config.with_boundary_mode(_BOUNDARY_MAP[boundary_mode])
+    if window_size is not None:
+        config = config.with_window_size(window_size)
     if window_size_x is not None:
         config = config.with_window_size_x(window_size_x)
     if window_size_y is not None:
         config = config.with_window_size_y(window_size_y)
-    if boundary_mode is not None:
-        config = config.with_boundary_mode(_BOUNDARY_MAP[boundary_mode])
-
-    def _axis_config(axis: AxisConfigStr) -> windowed.AxisConfig:
-        return (
-            windowed.AxisConfig.linear()
-            if axis == "linear"
-            else windowed.AxisConfig.nearest()
-        )
-
-    # Apply axis configurations for 3D/4D
     if third_axis is not None:
-        config = config.with_third_axis(_axis_config(third_axis))
-
+        config = config.with_third_axis(_AXIS_MAP[third_axis]())
     if fourth_axis is not None:
-        config = config.with_fourth_axis(_axis_config(fourth_axis))
+        config = config.with_fourth_axis(_AXIS_MAP[fourth_axis]())
 
-    return cast("_WindowedConfig", config)
+    return config
 
 
 def _validate_no_windowed_options(
     method: str,
-    window_size_x: int | None,
-    window_size_y: int | None,
-    boundary_mode: BoundaryMode | None,
+    window_size: int | None = None,
+    window_size_x: int | None = None,
+    window_size_y: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
     fourth_axis: AxisConfigStr | None = None,
 ) -> None:
     """Validate that windowed options aren't used with geometric methods."""
-    invalid_opts = []
-    if window_size_x is not None:
-        invalid_opts.append("window_size_x")
-    if window_size_y is not None:
-        invalid_opts.append("window_size_y")
-    if boundary_mode is not None:
-        invalid_opts.append("boundary_mode")
-    if third_axis is not None:
-        invalid_opts.append("third_axis")
-    if fourth_axis is not None:
-        invalid_opts.append("fourth_axis")
+    options = {
+        "window_size": window_size,
+        "window_size_x": window_size_x,
+        "window_size_y": window_size_y,
+        "boundary_mode": boundary_mode,
+        "third_axis": third_axis,
+        "fourth_axis": fourth_axis,
+    }
+    invalid_opts = [
+        name for name, value in options.items() if value is not None
+    ]
 
     if invalid_opts:
         raise TypeError(
@@ -185,6 +244,139 @@ def _validate_no_windowed_options(
         )
 
 
+# Univariate interpolation
+@overload
+def univariate(
+    grid: GridHolder,
+    x: NDArray1DFloat64,
+    method: windowed.Univariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+
+
+@overload
+def univariate(
+    grid: GridHolder,
+    x: NDArray1DFloat64,
+    method: WindowedMethods = "linear",
+    *,
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    window_size: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+
+
+def univariate(
+    grid: GridHolder,
+    x: NDArray1DFloat64,
+    method: windowed.Univariate | WindowedMethods = "linear",
+    *,
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    window_size: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
+) -> NDArray1DFloat32 | NDArray1DFloat64:
+    """Univariate interpolation.
+
+    Args:
+        grid: The 1D grid to interpolate from
+        x: X coordinates at which to interpolate
+        method: Interpolation method (config object or string)
+        bounds_error: If True, raise error for out-of-bounds coordinates
+        num_threads: Number of threads to use (0 = auto)
+        window_size: Window size for the interpolation
+        boundary_mode: Boundary handling mode
+
+    Return:
+        Interpolated values
+
+    Examples:
+        Simple usage:
+
+        >>> result = univariate(grid, x, "linear")
+        >>> result = univariate(grid, x, "c_spline", window_size=10)
+
+        Advanced usage with config objects:
+
+        >>> from pyinterp.core.config import windowed
+        >>> config = windowed.Univariate.c_spline().with_window_size(10)
+        >>> result = univariate(grid, x, config)
+
+    """
+    # If method is a config object, use it directly
+    if isinstance(method, windowed.Univariate):
+        return core.univariate(grid, x, method)
+
+    # String-based method - create config (univariate only supports windowed)
+    method = cast("WindowedMethods", method)
+    config = _make_windowed_config(
+        method,
+        windowed.Univariate,
+        bounds_error=bounds_error,
+        num_threads=num_threads,
+        window_size=window_size,
+        boundary_mode=boundary_mode,
+    )
+
+    return core.univariate(grid, x, config)
+
+
+def univariate_derivative(
+    grid: GridHolder,
+    x: NDArray1DFloat64,
+    method: windowed.Univariate | WindowedMethods = "linear",
+    *,
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    window_size: int | None = None,
+    boundary_mode: BoundaryMode | None = None,
+) -> NDArray1DFloat32 | NDArray1DFloat64:
+    """Calculate derivatives on a 1D grid.
+
+    Args:
+        grid: The 1D grid containing data
+        x: X coordinates at which to calculate derivatives
+        method: Interpolation method (config object or string)
+        bounds_error: If True, raise error for out-of-bounds coordinates
+        num_threads: Number of threads to use (0 = auto)
+        window_size: Window size for the derivative calculation
+        boundary_mode: Boundary handling mode
+
+    Return:
+        Derivative values
+
+    Examples:
+        Simple usage:
+
+        >>> derivative = univariate_derivative(grid, x, "c_spline")
+        >>> derivative = univariate_derivative(grid, x, "akima", window_size=7)
+
+        Advanced usage with config objects:
+
+        >>> from pyinterp.core.config import windowed
+        >>> config = windowed.Univariate.c_spline().with_window_size(10)
+        >>> derivative = univariate_derivative(grid, x, config)
+
+    """
+    # If method is a config object, use it directly
+    if not isinstance(method, str):
+        return core.univariate_derivative(grid, x, method)
+
+    # String-based method - create config
+    method = cast("WindowedMethods", method)
+    config = _make_windowed_config(
+        method,
+        windowed.Univariate,
+        bounds_error=bounds_error,
+        num_threads=num_threads,
+        window_size=window_size,
+        boundary_mode=boundary_mode,
+    )
+
+    return core.univariate_derivative(grid, x, config)
+
+
+# Bivariate interpolation
 @overload
 def bivariate(
     grid: GridHolder,
@@ -238,15 +430,15 @@ def bivariate(
     """Bivariate interpolation.
 
     Args:
-        grid : The 2D grid to interpolate from
+        grid: The 2D grid to interpolate from
         x: X coordinates at which to interpolate
         y: Y coordinates at which to interpolate
-        method : Interpolation method (config object or string)
-        bounds_error : If True, raise error for out-of-bounds coordinates
-        num_threads : Number of threads to use (0 = auto)
-        window_size_x : Window size for X axis (windowed methods only)
-        window_size_y : Window size for Y axis (windowed methods only)
-        boundary_mode : Boundary handling mode (windowed methods only)
+        method: Interpolation method (config object or string)
+        bounds_error: If True, raise error for out-of-bounds coordinates
+        num_threads: Number of threads to use (0 = auto)
+        window_size_x: Window size for X axis (windowed methods only)
+        window_size_y: Window size for Y axis (windowed methods only)
+        boundary_mode: Boundary handling mode (windowed methods only)
 
     Return:
         Interpolated values
@@ -275,26 +467,28 @@ def bivariate(
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
-            window_size_x,
-            window_size_y,
-            boundary_mode,
+            window_size_x=window_size_x,
+            window_size_y=window_size_y,
+            boundary_mode=boundary_mode,
         )
+        method = cast("GeometricMethods", method)
         config = _make_geometric_config(
-            method,  # type: ignore[arg-type]
+            method,
             geometric.Bivariate,
-            bounds_error,
-            num_threads,
+            bounds_error=bounds_error,
+            num_threads=num_threads,
         )
     else:
         # Windowed method
+        method = cast("WindowedMethods", method)
         config = _make_windowed_config(
-            method,  # type: ignore[arg-type]
+            method,
             windowed.Bivariate,
-            bounds_error,
-            num_threads,
-            window_size_x,
-            window_size_y,
-            boundary_mode,
+            bounds_error=bounds_error,
+            num_threads=num_threads,
+            window_size_x=window_size_x,
+            window_size_y=window_size_y,
+            boundary_mode=boundary_mode,
         )
 
     return core.bivariate(grid, x, y, config)
@@ -359,17 +553,17 @@ def trivariate(
     """Trivariate interpolation.
 
     Args:
-    grid : The 3D grid to interpolate from
-    x: X coordinates at which to interpolate
-    y: Y coordinates at which to interpolate
-    z: Z coordinates at which to interpolate
-    method : Interpolation method (config object or string)
-    bounds_error : If True, raise error for out-of-bounds coordinates
-    num_threads : Number of threads to use (0 = auto)
-    window_size_x : Window size for X axis (windowed methods only)
-    window_size_y : Window size for Y axis (windowed methods only)
-    boundary_mode : Boundary handling mode (windowed methods only)
-    third_axis : Interpolation method for Z axis (windowed methods only)
+        grid: The 3D grid to interpolate from
+        x: X coordinates at which to interpolate
+        y: Y coordinates at which to interpolate
+        z: Z coordinates at which to interpolate
+        method: Interpolation method (config object or string)
+        bounds_error: If True, raise error for out-of-bounds coordinates
+        num_threads: Number of threads to use (0 = auto)
+        window_size_x: Window size for X axis (windowed methods only)
+        window_size_y: Window size for Y axis (windowed methods only)
+        boundary_mode: Boundary handling mode (windowed methods only)
+        third_axis: Interpolation method for Z axis (windowed methods only)
 
     Return:
         Interpolated values
@@ -393,28 +587,30 @@ def trivariate(
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
-            window_size_x,
-            window_size_y,
-            boundary_mode,
-            third_axis,
+            window_size_x=window_size_x,
+            window_size_y=window_size_y,
+            boundary_mode=boundary_mode,
+            third_axis=third_axis,
         )
+        method = cast("GeometricMethods", method)
         config = _make_geometric_config(
-            method,  # type: ignore[arg-type]
+            method,
             geometric.Trivariate,
-            bounds_error,
-            num_threads,
+            bounds_error=bounds_error,
+            num_threads=num_threads,
         )
     else:
         # Windowed method
+        method = cast("WindowedMethods", method)
         config = _make_windowed_config(
-            method,  # type: ignore[arg-type]
+            method,
             windowed.Trivariate,
-            bounds_error,
-            num_threads,
-            window_size_x,
-            window_size_y,
-            boundary_mode,
-            third_axis,
+            bounds_error=bounds_error,
+            num_threads=num_threads,
+            window_size_x=window_size_x,
+            window_size_y=window_size_y,
+            boundary_mode=boundary_mode,
+            third_axis=third_axis,
         )
 
     return core.trivariate(grid, x, y, z, config)
@@ -485,19 +681,19 @@ def quadrivariate(
     """Quadrivariate interpolation.
 
     Args:
-    grid : The 4D grid to interpolate from
-    x: X coordinates at which to interpolate
-    y: Y coordinates at which to interpolate
-    z: Z coordinates at which to interpolate
-    u: U coordinates at which to interpolate
-    method: Interpolation method (config object or string)
-    bounds_error : If True, raise error for out-of-bounds coordinates
-    num_threads : Number of threads to use (0 = auto)
-    window_size_x : Window size for X axis (windowed methods only)
-    window_size_y : Window size for Y axis (windowed methods only)
-    boundary_mode : Boundary handling mode (windowed methods only)
-    third_axis : Interpolation method for Z axis (windowed methods only)
-    fourth_axis : Interpolation method for U axis (windowed methods only)
+        grid: The 4D grid to interpolate from
+        x: X coordinates at which to interpolate
+        y: Y coordinates at which to interpolate
+        z: Z coordinates at which to interpolate
+        u: U coordinates at which to interpolate
+        method: Interpolation method (config object or string)
+        bounds_error: If True, raise error for out-of-bounds coordinates
+        num_threads: Number of threads to use (0 = auto)
+        window_size_x: Window size for X axis (windowed methods only)
+        window_size_y: Window size for Y axis (windowed methods only)
+        boundary_mode: Boundary handling mode (windowed methods only)
+        third_axis: Interpolation method for Z axis (windowed methods only)
+        fourth_axis: Interpolation method for U axis (windowed methods only)
 
     Return:
         Interpolated values
@@ -530,30 +726,32 @@ def quadrivariate(
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
-            window_size_x,
-            window_size_y,
-            boundary_mode,
-            third_axis,
-            fourth_axis,
+            window_size_x=window_size_x,
+            window_size_y=window_size_y,
+            boundary_mode=boundary_mode,
+            third_axis=third_axis,
+            fourth_axis=fourth_axis,
         )
+        method = cast("GeometricMethods", method)
         config = _make_geometric_config(
-            method,  # type: ignore[arg-type]
+            method,
             geometric.Quadrivariate,
-            bounds_error,
-            num_threads,
+            bounds_error=bounds_error,
+            num_threads=num_threads,
         )
     else:
         # Windowed method
+        method = cast("WindowedMethods", method)
         config = _make_windowed_config(
-            method,  # type: ignore[arg-type]
+            method,
             windowed.Quadrivariate,
-            bounds_error,
-            num_threads,
-            window_size_x,
-            window_size_y,
-            boundary_mode,
-            third_axis,
-            fourth_axis,
+            bounds_error=bounds_error,
+            num_threads=num_threads,
+            window_size_x=window_size_x,
+            window_size_y=window_size_y,
+            boundary_mode=boundary_mode,
+            third_axis=third_axis,
+            fourth_axis=fourth_axis,
         )
 
     return core.quadrivariate(grid, x, y, z, u, config)

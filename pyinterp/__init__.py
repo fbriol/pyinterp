@@ -18,7 +18,12 @@ from .core import (
     geometry,
     period,
 )
-from .regular_grid_interpolator import bivariate, quadrivariate, trivariate
+from .regular_grid_interpolator import (
+    bivariate,
+    quadrivariate,
+    trivariate,
+    univariate,
+)
 from .rtree import (
     inverse_distance_weighting,
     kriging,
@@ -45,6 +50,7 @@ __all__ = [
     "query",
     "radial_basis_function",
     "trivariate",
+    "univariate",
     "window_function",
 ]
 
