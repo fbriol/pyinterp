@@ -11,8 +11,10 @@ from typing import (
 )
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..type_hints import (
+    FourDims,
     NDArray1DDateTime64,
     NDArray1DFloat32,
     NDArray1DFloat64,
@@ -22,6 +24,7 @@ from ..type_hints import (
     NDArray2DInt64,
     NDArray2DUInt64,
     OneDim,
+    ThreeDims,
     TwoDims,
 )
 from . import fill, geometry, period
@@ -56,6 +59,8 @@ __all__ = [
     "quadrivariate",
     "trivariate",
 ]
+
+_DType = TypeVar("_DType", bound=np.generic)
 
 # Type alias for temporal coordinate arrays
 TemporalArray: TypeAlias = NDArray1DDateTime64 | NDArray1DTimeDelta64
@@ -415,12 +420,12 @@ def TDigest(
 TDigestFloat32: TypeAlias = TDigestHolder[np.float32]
 TDigestFloat64: TypeAlias = TDigestHolder[np.float64]
 
-class GridHolder:
+class GridHolder(Generic[_DType]):
     def __getstate__(self) -> tuple: ...
     @property
-    def array(self) -> np.ndarray: ...
+    def array(self) -> NDArray[_DType]: ...
     @property
-    def dtype(self) -> np.dtype: ...
+    def dtype(self) -> np.dtype[_DType]: ...
     @property
     def has_temporal_axis(self) -> bool: ...
     @property
@@ -438,7 +443,11 @@ class GridHolder:
     @property
     def u(self) -> Axis | None: ...
 
-class Grid1D(GridHolder):
+class Grid1D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[OneDim, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> OneDim: ...
     @property
     def x(self) -> Axis: ...
     @property
@@ -448,7 +457,11 @@ class Grid1D(GridHolder):
     @property
     def u(self) -> None: ...
 
-class Grid2D(GridHolder):
+class Grid2D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[TwoDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> TwoDims: ...
     @property
     def x(self) -> Axis: ...
     @property
@@ -458,7 +471,11 @@ class Grid2D(GridHolder):
     @property
     def u(self) -> None: ...
 
-class Grid3D(GridHolder):
+class Grid3D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[ThreeDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> ThreeDims: ...
     @property
     def x(self) -> Axis: ...
     @property
@@ -468,7 +485,11 @@ class Grid3D(GridHolder):
     @property
     def u(self) -> None: ...
 
-class TemporalGrid3D(GridHolder):
+class TemporalGrid3D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[ThreeDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> ThreeDims: ...
     @property
     def x(self) -> Axis: ...
     @property
@@ -478,7 +499,11 @@ class TemporalGrid3D(GridHolder):
     @property
     def u(self) -> None: ...
 
-class Grid4D(GridHolder):
+class Grid4D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[FourDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> FourDims: ...
     @property
     def x(self) -> Axis: ...
     @property
@@ -488,7 +513,11 @@ class Grid4D(GridHolder):
     @property
     def u(self) -> Axis: ...
 
-class TemporalGrid4D(GridHolder):
+class TemporalGrid4D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[FourDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> FourDims: ...
     @property
     def x(self) -> Axis: ...
     @property
@@ -645,41 +674,41 @@ class TemporalAxis(Generic[_TemporalScalar, _TemporalArray]):
 @overload
 def Grid(
     x: Axis,
-    array: object,
-) -> Grid1D: ...
+    array: np.ndarray[OneDim, np.dtype[_DType]],
+) -> Grid1D[_DType]: ...
 @overload
 def Grid(
     x: Axis,
     y: Axis,
-    array: object,
-) -> Grid2D: ...
+    array: np.ndarray[TwoDims, np.dtype[_DType]],
+) -> Grid2D[_DType]: ...
 @overload
 def Grid(
     x: Axis,
     y: Axis,
     z: Axis,
-    array: object,
-) -> Grid3D: ...
+    array: np.ndarray[ThreeDims, np.dtype[_DType]],
+) -> Grid3D[_DType]: ...
 @overload
 def Grid(
     x: Axis,
     y: Axis,
     z: TemporalAxis,
-    array: object,
-) -> TemporalGrid3D: ...
+    array: np.ndarray[ThreeDims, np.dtype[_DType]],
+) -> TemporalGrid3D[_DType]: ...
 @overload
 def Grid(
     x: Axis,
     y: Axis,
     z: Axis,
     u: Axis,
-    array: object,
-) -> Grid4D: ...
+    array: np.ndarray[FourDims, np.dtype[_DType]],
+) -> Grid4D[_DType]: ...
 @overload
 def Grid(
     x: Axis,
     y: Axis,
     z: TemporalAxis,
     u: Axis,
-    array: object,
-) -> TemporalGrid4D: ...
+    array: np.ndarray[FourDims, np.dtype[_DType]],
+) -> TemporalGrid4D[_DType]: ...
