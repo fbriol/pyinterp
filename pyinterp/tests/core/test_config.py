@@ -290,6 +290,55 @@ class TestWindowed:
         assert isinstance(config_axis4, windowed.Quadrivariate)
         assert config_axis4 is not config
 
+    def test_univariate_class_methods(self) -> None:
+        """Test Univariate class methods return instances."""
+        methods = [
+            "akima",
+            "akima_periodic",
+            "c_spline",
+            "c_spline_not_a_knot",
+            "c_spline_periodic",
+            "linear",
+            "polynomial",
+            "steffen",
+        ]
+
+        for method in methods:
+            config = getattr(windowed.Univariate, method)()
+            assert isinstance(config, windowed.Univariate)
+
+    def test_univariate_instance_methods(self) -> None:
+        """Test Univariate instance methods."""
+        config = windowed.Univariate.linear()
+
+        # Test bounds_error
+        config_bounds = config.with_bounds_error(True)
+        assert isinstance(config_bounds, windowed.Univariate)
+        assert config_bounds is not config
+
+        config_bounds_false = config.with_bounds_error(False)
+        assert isinstance(config_bounds_false, windowed.Univariate)
+        assert config_bounds_false is not config
+
+        # Test num_threads
+        config_threads = config.with_num_threads(4)
+        assert isinstance(config_threads, windowed.Univariate)
+        assert config_threads is not config
+
+        # Test with_boundary_mode
+        config_boundary = config.with_boundary_mode(windowed.Boundary.WRAP)
+        assert isinstance(config_boundary, windowed.Univariate)
+        assert config_boundary is not config
+
+        config_boundary_sym = config.with_boundary_mode(windowed.Boundary.SYM)
+        assert isinstance(config_boundary_sym, windowed.Univariate)
+        assert config_boundary_sym is not config
+
+        # Test with_window_size
+        config_ws = config.with_window_size(5)
+        assert isinstance(config_ws, windowed.Univariate)
+        assert config_ws is not config
+
     def test_method_chaining(self) -> None:
         """Test that methods can be chained."""
         config = (
@@ -301,6 +350,16 @@ class TestWindowed:
             .with_window_size_y(8)
         )
         assert isinstance(config, windowed.Bivariate)
+
+        # Test univariate method chaining
+        univariate_config = (
+            windowed.Univariate.c_spline()
+            .with_num_threads(2)
+            .with_bounds_error(False)
+            .with_boundary_mode(windowed.Boundary.EXPAND)
+            .with_window_size(7)
+        )
+        assert isinstance(univariate_config, windowed.Univariate)
 
     def test_equality(self) -> None:
         """Test configuration equality (basic checks)."""

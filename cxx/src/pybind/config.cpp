@@ -157,12 +157,16 @@ auto bind(nb::module_& m) -> void {
                   nb::call_guard<nb::gil_scoped_release>());
 
   // Bind windowed Univariate configuration
-  add_common_attributes(add_windowed_methods(
-      nb::class_<Univariate>(m, "Univariate",
-                             "Parameters controlling univariate windowed "
-                             "interpolation on one-dimensional signals.")
-          .def(nb::init<>(), "Default constructor.",
-               nb::call_guard<nb::gil_scoped_release>())));
+  add_common_attributes(
+      add_windowed_methods(
+          nb::class_<Univariate>(m, "Univariate",
+                                 "Parameters controlling univariate windowed "
+                                 "interpolation on one-dimensional signals.")
+              .def(nb::init<>(), "Default constructor.",
+                   nb::call_guard<nb::gil_scoped_release>()))
+          .def("with_window_size", &Univariate::with_window_size,
+               "Update window size.", nb::arg("size"),
+               nb::call_guard<nb::gil_scoped_release>()));
 
   add_common_attributes(add_methods(
       nb::class_<Bivariate>(m, "Bivariate",
