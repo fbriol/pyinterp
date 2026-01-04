@@ -19,10 +19,14 @@ namespace pyinterp::pybind {
 namespace detail {
 
 /// @brief Helper to determine the result type for interpolation.
-/// Double produces double, everything else produces float.
+/// Double, int64_t, or uint64_t produces double, everything else produces
+/// float.
 template <typename DataType>
 using InterpolationResultType =
-    std::conditional_t<std::is_same_v<DataType, double>, double, float>;
+    std::conditional_t<std::is_same_v<DataType, double> ||
+                           std::is_same_v<DataType, int64_t> ||
+                           std::is_same_v<DataType, uint64_t>,
+                       double, float>;
 
 /// @brief Concept for checking if a grid is 1D.
 template <typename GridType>
