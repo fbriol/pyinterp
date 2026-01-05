@@ -100,7 +100,7 @@ constexpr void unravel_index(int64_t flat_idx, const VectorIndex& strides,
                                             const VectorIndex& strides) noexcept
     -> int64_t {
   int64_t offset = 0;
-  for (int64_t ix = 0; ix < indices.size(); ++ix) {
+  for (size_t ix = 0; ix < indices.size(); ++ix) {
     offset += indices[ix] * strides[ix];
   }
   return offset;
@@ -114,7 +114,7 @@ constexpr void increment_indices(VectorIndex& indices,
   const auto ndim = static_cast<int64_t>(shape.size());
   for (auto ix = ndim - 1; ix >= 0; --ix) {
     ++indices[ix];
-    if (indices[ix] < shape[ix]) {
+    if (indices[ix] < static_cast<int64_t>(shape[ix])) {
       return;
     }
     indices[ix] = 0;
@@ -136,9 +136,9 @@ inline auto validate_and_convert_axis(const VectorIndex& axis,
   for (auto ax : axis) {
     // Handle negative axis (Python convention)
     if (ax < 0) {
-      ax += ndim;
+      ax += static_cast<int64_t>(ndim);
     }
-    if (ax < 0 || ax >= ndim) {
+    if (ax < 0 || ax >= static_cast<int64_t>(ndim)) {
       throw std::out_of_range(std::format(
           "axis {} is out of bounds for array of dimension {}", ax, ndim));
     }
