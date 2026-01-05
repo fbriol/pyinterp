@@ -350,8 +350,8 @@ auto DescriptiveStatistics<T>::calculate_statistics(Args... args) const
   const auto n = size();
   Eigen::VectorX<ResultType> result(n);
 
-  for (int64_t ix = 0; ix < n; ++ix) {
-    result[ix] = (accumulators_[ix].*MemberFunc)(args...);
+  for (size_t ix = 0; ix < n; ++ix) {
+    result[static_cast<int64_t>(ix)] = (accumulators_[ix].*MemberFunc)(args...);
   }
   return result;
 }
