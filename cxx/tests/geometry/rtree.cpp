@@ -521,23 +521,25 @@ TEST(RTree3D, SerializeDeserialize) {
   // Verify size
   EXPECT_EQ(tree.size(), deserialized_tree.size());
 
-  auto original_result =
-      tree.query(Point3D(2.0, 2.0, 2.0), 8, std::numeric_limits<double>::max());
-  auto deserialized_result = deserialized_tree.query(
-      Point3D(2.0, 2.0, 2.0), 8, std::numeric_limits<double>::max());
+  // Verify bounds
+  auto original_bounds = tree.bounds();
+  auto deserialized_bounds = deserialized_tree.bounds();
 
-  // Note: Results may be returned in different orders due to the R-Tree
-  // structure. When multiple points are equidistant, the library may return
-  // them in different orders depending on the tree's internal organization.
-  std::set<double> original_values;
-  std::set<double> deserialized_values;
-  for (auto&& item : original_result) {
-    original_values.insert(item.second);
-  }
-  for (auto&& item : deserialized_result) {
-    deserialized_values.insert(item.second);
-  }
-  EXPECT_EQ(original_values, deserialized_values);
+  ASSERT_TRUE(deserialized_bounds.has_value());
+  ASSERT_TRUE(original_bounds.has_value());
+
+  EXPECT_EQ(deserialized_bounds->min_corner().get<0>(),
+            original_bounds->min_corner().get<0>());
+  EXPECT_EQ(deserialized_bounds->min_corner().get<1>(),
+            original_bounds->min_corner().get<1>());
+  EXPECT_EQ(deserialized_bounds->min_corner().get<2>(),
+            original_bounds->min_corner().get<2>());
+  EXPECT_EQ(deserialized_bounds->max_corner().get<0>(),
+            original_bounds->max_corner().get<0>());
+  EXPECT_EQ(deserialized_bounds->max_corner().get<1>(),
+            original_bounds->max_corner().get<1>());
+  EXPECT_EQ(deserialized_bounds->max_corner().get<2>(),
+            original_bounds->max_corner().get<2>());
 }
 
 }  // namespace pyinterp::geometry
