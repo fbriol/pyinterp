@@ -1,7 +1,7 @@
 import enum
 from typing import overload
 
-from ....type_hints import NDArray1DFloat64
+from ....type_hints import NDArray1DBool, NDArray1DFloat64
 from .. import cartesian
 from . import (
     Box,
@@ -641,6 +641,20 @@ def equals(geometry1: MultiPoint, geometry2: MultiPoint) -> bool: ...
 def equals(geometry1: MultiLineString, geometry2: MultiLineString) -> bool: ...
 @overload
 def equals(geometry1: MultiPolygon, geometry2: MultiPolygon) -> bool: ...
+def for_each_point_covered_by(
+    source: MultiPoint | LineString | Ring,
+    container: Box | Ring | Polygon | MultiPolygon,
+) -> NDArray1DBool: ...
+def for_each_point_distance(
+    source: MultiPoint | LineString | Ring,
+    container: Box | Ring | Polygon | MultiPolygon,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = ...,
+) -> NDArray1DFloat64: ...
+def for_each_point_within(
+    source: MultiPoint | LineString | Ring,
+    container: Box | Ring | Polygon | MultiPolygon,
+) -> NDArray1DBool: ...
 def from_geojson(
     geojson: str,
 ) -> (
