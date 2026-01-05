@@ -127,7 +127,7 @@ def _make_windowed_config(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size: int | None = None,
+    half_window_size: int | None = None,
     boundary_mode: BoundaryMode | None = None,
 ) -> windowed.Univariate: ...
 
@@ -139,8 +139,8 @@ def _make_windowed_config(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
 ) -> windowed.Bivariate: ...
 
@@ -152,8 +152,8 @@ def _make_windowed_config(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
 ) -> windowed.Trivariate: ...
@@ -166,8 +166,8 @@ def _make_windowed_config(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
     fourth_axis: AxisConfigStr | None = None,
@@ -180,9 +180,9 @@ def _make_windowed_config(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size: int | None = None,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
     fourth_axis: AxisConfigStr | None = None,
@@ -200,12 +200,12 @@ def _make_windowed_config(
 
     if boundary_mode is not None:
         config = config.with_boundary_mode(_BOUNDARY_MAP[boundary_mode])
-    if window_size is not None:
-        config = config.with_half_window_size(window_size)
-    if window_size_x is not None:
-        config = config.with_half_window_size_x(window_size_x)
-    if window_size_y is not None:
-        config = config.with_half_window_size_y(window_size_y)
+    if half_window_size is not None:
+        config = config.with_half_window_size(half_window_size)
+    if half_window_size_x is not None:
+        config = config.with_half_window_size_x(half_window_size_x)
+    if half_window_size_y is not None:
+        config = config.with_half_window_size_y(half_window_size_y)
     if third_axis is not None:
         config = config.with_third_axis(_AXIS_MAP[third_axis]())
     if fourth_axis is not None:
@@ -216,18 +216,18 @@ def _make_windowed_config(
 
 def _validate_no_windowed_options(
     method: str,
-    window_size: int | None = None,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
     fourth_axis: AxisConfigStr | None = None,
 ) -> None:
     """Validate that windowed options aren't used with geometric methods."""
     options = {
-        "window_size": window_size,
-        "window_size_x": window_size_x,
-        "window_size_y": window_size_y,
+        "half_window_size": half_window_size,
+        "half_window_size_x": half_window_size_x,
+        "half_window_size_y": half_window_size_y,
         "boundary_mode": boundary_mode,
         "third_axis": third_axis,
         "fourth_axis": fourth_axis,
@@ -261,7 +261,7 @@ def univariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size: int | None = None,
+    half_window_size: int | None = None,
     boundary_mode: BoundaryMode | None = None,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
@@ -273,7 +273,7 @@ def univariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size: int | None = None,
+    half_window_size: int | None = None,
     boundary_mode: BoundaryMode | None = None,
 ) -> NDArray1DFloat32 | NDArray1DFloat64:
     """Univariate interpolation.
@@ -284,7 +284,7 @@ def univariate(
         method: Interpolation method (config object or string)
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
-        window_size: Window size for the interpolation
+        half_window_size: Half window size for the interpolation
         boundary_mode: Boundary handling mode
 
     Return:
@@ -314,7 +314,7 @@ def univariate(
         windowed.Univariate,
         bounds_error=bounds_error,
         num_threads=num_threads,
-        window_size=window_size,
+        half_window_size=half_window_size,
         boundary_mode=boundary_mode,
     )
 
@@ -328,7 +328,7 @@ def univariate_derivative(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size: int | None = None,
+    half_window_size: int | None = None,
     boundary_mode: BoundaryMode | None = None,
 ) -> NDArray1DFloat32 | NDArray1DFloat64:
     """Calculate derivatives on a 1D grid.
@@ -339,7 +339,7 @@ def univariate_derivative(
         method: Interpolation method (config object or string)
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
-        window_size: Window size for the derivative calculation
+        half_window_size: Half window size for the derivative calculation
         boundary_mode: Boundary handling mode
 
     Return:
@@ -369,7 +369,7 @@ def univariate_derivative(
         windowed.Univariate,
         bounds_error=bounds_error,
         num_threads=num_threads,
-        window_size=window_size,
+        half_window_size=half_window_size,
         boundary_mode=boundary_mode,
     )
 
@@ -407,8 +407,8 @@ def bivariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
@@ -423,8 +423,8 @@ def bivariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
 ) -> NDArray1DFloat32 | NDArray1DFloat64:
     """Bivariate interpolation.
@@ -436,8 +436,8 @@ def bivariate(
         method: Interpolation method (config object or string)
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
-        window_size_x: Window size for X axis (windowed methods only)
-        window_size_y: Window size for Y axis (windowed methods only)
+        half_window_size_x: Half window size for X axis (windowed methods only)
+        half_window_size_y: Half window size for Y axis (windowed methods only)
         boundary_mode: Boundary handling mode (windowed methods only)
 
     Return:
@@ -467,8 +467,8 @@ def bivariate(
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
-            window_size_x=window_size_x,
-            window_size_y=window_size_y,
+            half_window_size_x=half_window_size_x,
+            half_window_size_y=half_window_size_y,
             boundary_mode=boundary_mode,
         )
         method = cast("GeometricMethods", method)
@@ -486,8 +486,8 @@ def bivariate(
             windowed.Bivariate,
             bounds_error=bounds_error,
             num_threads=num_threads,
-            window_size_x=window_size_x,
-            window_size_y=window_size_y,
+            half_window_size_x=half_window_size_x,
+            half_window_size_y=half_window_size_y,
             boundary_mode=boundary_mode,
         )
 
@@ -527,8 +527,8 @@ def trivariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
@@ -545,8 +545,8 @@ def trivariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
 ) -> NDArray1DFloat32 | NDArray1DFloat64:
@@ -560,8 +560,8 @@ def trivariate(
         method: Interpolation method (config object or string)
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
-        window_size_x: Window size for X axis (windowed methods only)
-        window_size_y: Window size for Y axis (windowed methods only)
+        half_window_size_x: Half window size for X axis (windowed methods only)
+        half_window_size_y: Half window size for Y axis (windowed methods only)
         boundary_mode: Boundary handling mode (windowed methods only)
         third_axis: Interpolation method for Z axis (windowed methods only)
 
@@ -587,8 +587,8 @@ def trivariate(
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
-            window_size_x=window_size_x,
-            window_size_y=window_size_y,
+            half_window_size_x=half_window_size_x,
+            half_window_size_y=half_window_size_y,
             boundary_mode=boundary_mode,
             third_axis=third_axis,
         )
@@ -607,8 +607,8 @@ def trivariate(
             windowed.Trivariate,
             bounds_error=bounds_error,
             num_threads=num_threads,
-            window_size_x=window_size_x,
-            window_size_y=window_size_y,
+            half_window_size_x=half_window_size_x,
+            half_window_size_y=half_window_size_y,
             boundary_mode=boundary_mode,
             third_axis=third_axis,
         )
@@ -652,8 +652,8 @@ def quadrivariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
     fourth_axis: AxisConfigStr | None = None,
@@ -672,8 +672,8 @@ def quadrivariate(
     *,
     bounds_error: bool = False,
     num_threads: int = 0,
-    window_size_x: int | None = None,
-    window_size_y: int | None = None,
+    half_window_size_x: int | None = None,
+    half_window_size_y: int | None = None,
     boundary_mode: BoundaryMode | None = None,
     third_axis: AxisConfigStr | None = None,
     fourth_axis: AxisConfigStr | None = None,
@@ -689,8 +689,8 @@ def quadrivariate(
         method: Interpolation method (config object or string)
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
-        window_size_x: Window size for X axis (windowed methods only)
-        window_size_y: Window size for Y axis (windowed methods only)
+        half_window_size_x: Half window size for X axis (windowed methods only)
+        half_window_size_y: Half window size for Y axis (windowed methods only)
         boundary_mode: Boundary handling mode (windowed methods only)
         third_axis: Interpolation method for Z axis (windowed methods only)
         fourth_axis: Interpolation method for U axis (windowed methods only)
@@ -726,8 +726,8 @@ def quadrivariate(
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
-            window_size_x=window_size_x,
-            window_size_y=window_size_y,
+            half_window_size_x=half_window_size_x,
+            half_window_size_y=half_window_size_y,
             boundary_mode=boundary_mode,
             third_axis=third_axis,
             fourth_axis=fourth_axis,
@@ -747,8 +747,8 @@ def quadrivariate(
             windowed.Quadrivariate,
             bounds_error=bounds_error,
             num_threads=num_threads,
-            window_size_x=window_size_x,
-            window_size_y=window_size_y,
+            half_window_size_x=half_window_size_x,
+            half_window_size_y=half_window_size_y,
             boundary_mode=boundary_mode,
             third_axis=third_axis,
             fourth_axis=fourth_axis,

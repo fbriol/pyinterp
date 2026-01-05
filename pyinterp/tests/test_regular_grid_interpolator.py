@@ -128,7 +128,7 @@ class TestMakeWindowedConfig:
             windowed.Bivariate,
             bounds_error=False,
             num_threads=0,
-            window_size_x=10,
+            half_window_size_x=10,
         )
         assert isinstance(config, windowed.Bivariate)
 
@@ -139,7 +139,7 @@ class TestMakeWindowedConfig:
             windowed.Bivariate,
             bounds_error=False,
             num_threads=0,
-            window_size_y=12,
+            half_window_size_y=12,
         )
         assert isinstance(config, windowed.Bivariate)
 
@@ -197,8 +197,8 @@ class TestValidateNoWindowedOptions:
         # Should not raise
         _validate_no_windowed_options(
             "bilinear",
-            window_size_x=None,
-            window_size_y=None,
+            half_window_size_x=None,
+            half_window_size_y=None,
             boundary_mode=None,
         )
 
@@ -207,8 +207,8 @@ class TestValidateNoWindowedOptions:
         with pytest.raises(TypeError, match="window_size_x"):
             _validate_no_windowed_options(
                 "bilinear",
-                window_size_x=10,
-                window_size_y=None,
+                half_window_size_x=10,
+                half_window_size_y=None,
                 boundary_mode=None,
             )
 
@@ -217,8 +217,8 @@ class TestValidateNoWindowedOptions:
         with pytest.raises(TypeError, match="window_size_y"):
             _validate_no_windowed_options(
                 "nearest",
-                window_size_x=None,
-                window_size_y=12,
+                half_window_size_x=None,
+                half_window_size_y=12,
                 boundary_mode=None,
             )
 
@@ -227,8 +227,8 @@ class TestValidateNoWindowedOptions:
         with pytest.raises(TypeError, match="boundary_mode"):
             _validate_no_windowed_options(
                 "idw",
-                window_size_x=None,
-                window_size_y=None,
+                half_window_size_x=None,
+                half_window_size_y=None,
                 boundary_mode="symmetric",
             )
 
@@ -237,8 +237,8 @@ class TestValidateNoWindowedOptions:
         with pytest.raises(TypeError, match="third_axis"):
             _validate_no_windowed_options(
                 "bilinear",
-                window_size_x=None,
-                window_size_y=None,
+                half_window_size_x=None,
+                half_window_size_y=None,
                 boundary_mode=None,
                 third_axis="linear",
             )
@@ -248,8 +248,8 @@ class TestValidateNoWindowedOptions:
         with pytest.raises(TypeError, match="fourth_axis"):
             _validate_no_windowed_options(
                 "nearest",
-                window_size_x=None,
-                window_size_y=None,
+                half_window_size_x=None,
+                half_window_size_y=None,
                 boundary_mode=None,
                 fourth_axis="nearest",
             )
@@ -259,8 +259,8 @@ class TestValidateNoWindowedOptions:
         with pytest.raises(TypeError) as exc_info:
             _validate_no_windowed_options(
                 "bilinear",
-                window_size_x=10,
-                window_size_y=12,
+                half_window_size_x=10,
+                half_window_size_y=12,
                 boundary_mode="wrap",
             )
         error_msg = str(exc_info.value)
@@ -289,7 +289,7 @@ class TestMakeWindowedConfigUnivariate:
             windowed.Univariate,
             bounds_error=False,
             num_threads=0,
-            window_size=10,
+            half_window_size=10,
         )
         assert isinstance(config, windowed.Univariate)
 
@@ -358,7 +358,7 @@ class TestUnivariateFunction:
         grid = self.create_test_grid()
         x = np.array([5.0])  # Test at center point to avoid edge issues
 
-        result = univariate(grid, x, "c_spline", window_size=7)
+        result = univariate(grid, x, "c_spline", half_window_size=7)
         assert result.shape == (1,)
         assert np.isfinite(result[0])
 
@@ -445,7 +445,7 @@ class TestUnivariateDerivativeFunction:
         grid = self.create_test_grid()
         x = np.array([5.0])
 
-        result = univariate_derivative(grid, x, "c_spline", window_size=9)
+        result = univariate_derivative(grid, x, "c_spline", half_window_size=9)
         assert result.shape == (1,)
         assert np.isfinite(result[0])
 
