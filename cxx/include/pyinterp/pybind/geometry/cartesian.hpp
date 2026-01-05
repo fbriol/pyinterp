@@ -204,6 +204,14 @@ auto init_geojson(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_within(nanobind::module_& m) -> void;
 
+/// @brief Initialize for_each_point algorithm bindings
+/// @param[in,out] m Python module
+auto init_for_each_point(nanobind::module_& m) -> void;
+
+/// @brief Initialize for_each_point_distance algorithm binding
+/// @param[in,out] m Python module
+auto init_for_each_point_distance(nanobind::module_& m) -> void;
+
 /// @brief Initialize all algorithm bindings
 /// @param[in,out] m Python module
 inline void init_algorithms(nanobind::module_& m) {
@@ -249,6 +257,8 @@ inline void init_algorithms(nanobind::module_& m) {
   init_wkt(m);
   init_geojson(m);
   init_within(m);
+  init_for_each_point(m);
+  init_for_each_point_distance(m);
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

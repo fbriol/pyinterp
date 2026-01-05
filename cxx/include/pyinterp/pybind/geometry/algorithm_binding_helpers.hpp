@@ -191,4 +191,65 @@ inline auto define_binary_predicate_with_strategy(nb::module_& m,
       std::pair<NS::MultiLineString, NS::MultiPolygon>,                  \
       std::pair<NS::MultiPolygon, NS::MultiPolygon>
 
+/// @brief Macro to create container geometry types for for_each_point
+/// algorithms. These are geometries that can contain points.
+/// @param NS Namespace containing the geometry types
+#define CONTAINER_TYPES(NS) NS::Box, NS::Ring, NS::Polygon, NS::MultiPolygon
+
+/// @brief Macro to create source geometry types for for_each_point algorithms
+/// These are geometries that have extractable points (vertices)
+/// @param NS Namespace containing the geometry types
+#define SOURCE_TYPES(NS) NS::MultiPoint, NS::LineString, NS::Ring
+
+/// @brief Helper to define for_each_point style algorithms for single source
+/// Applies an algorithm to each point in a source geometry against a container
+/// @tparam Algorithm Algorithm functor
+/// @tparam SourceGeometry Source geometry type (MultiPoint, LineString, Ring)
+/// @tparam Containers Container geometry types
+/// @param[in] m Python module
+/// @param[in] name Function name
+/// @param[in] doc Documentation string
+/// @param[in] alg Algorithm functor that takes (SourceGeometry, Container)
+template <typename Algorithm, typename SourceGeometry, typename... Containers>
+inline auto define_for_each_point_single_source(nanobind::module_& m,
+                                                const char* name,
+                                                const char* doc,
+                                                const Algorithm& alg) -> void {
+  // Fold expression to define binding for each container type
+  (..., m.def(
+            name,
+            [alg](const SourceGeometry& source, const Containers& container) {
+              return alg(source, container);
+            },
+            "source"_a, "container"_a, doc));
+}
+
+/// @brief Helper to define for_each_point algorithms with strategy support
+/// @tparam Algorithm Algorithm functor
+/// @tparam SourceGeometry Source geometry type (MultiPoint, LineString, Ring)
+/// @tparam Spheroid Spheroid type
+/// @tparam Strategy Strategy type
+/// @tparam Containers Container geometry types
+/// @param[in] m Python module
+/// @param[in] name Function name
+/// @param[in] doc Documentation string
+/// @param[in] alg Algorithm functor that takes (Source, Container, Spheroid,
+/// Strategy)
+template <typename Algorithm, typename SourceGeometry, typename Spheroid,
+          typename Strategy, typename... Containers>
+inline auto define_for_each_point_single_source_with_strategy(
+    nanobind::module_& m, const char* name, const char* doc,
+    const Algorithm& alg) -> void {
+  // Fold expression to define binding for each container type
+  (..., m.def(
+            name,
+            [alg](const SourceGeometry& source, const Containers& container,
+                  const std::optional<Spheroid>& spheroid,
+                  const Strategy& strategy) {
+              return alg(source, container, spheroid, strategy);
+            },
+            "source"_a, "target"_a, "spheroid"_a = std::nullopt,
+            "strategy"_a = Strategy{}, doc));
+}
+
 }  // namespace pyinterp::geometry::pybind
