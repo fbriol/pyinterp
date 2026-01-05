@@ -88,11 +88,16 @@ inline auto frame_index(const int64_t index, const int64_t size,
       // Otherwise, the symmetrical indexes are used if the indexes are outside
       // the domain definition.
       if (idx < 0 || idx >= size) {
-        auto where = math::remainder(idx, (size - 1) * 2);
-        if (where >= size) {
-          idx = size - 2 - math::remainder(where, size);
+        // Special case: if size == 1, all indices map to 0
+        if (size == 1) {
+          idx = 0;
         } else {
-          idx = math::remainder(where, size);
+          auto where = math::remainder(idx, (size - 1) * 2);
+          if (where >= size) {
+            idx = size - 2 - math::remainder(where, size);
+          } else {
+            idx = math::remainder(where, size);
+          }
         }
       }
     }
