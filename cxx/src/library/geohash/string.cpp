@@ -81,8 +81,8 @@ auto bounding_boxes_impl(const Geometry& geometry, uint32_t precision,
       .count = static_cast<size_t>(int64_hashes.size()),
   };
 
-  for (size_t ix = 0; ix < int64_hashes.size(); ++ix) {
-    Base32::encode(int64_hashes(ix), result.get(ix));
+  for (int64_t ix = 0; ix < int64_hashes.size(); ++ix) {
+    Base32::encode(int64_hashes(ix), result.get(static_cast<size_t>(ix)));
   }
   return result;
 }
