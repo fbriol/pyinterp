@@ -208,14 +208,14 @@ constexpr auto pow(const T &x) -> T {
 /// @brief Fast calculation of 2^n
 /// @param[in] exponent Exponent value
 /// @return 2 raised to the power of exponent
-constexpr auto power2(std::int32_t exponent) noexcept -> double {
+constexpr auto power2(int32_t exponent) noexcept -> double {
   return std::exp2(static_cast<double>(exponent));
 }
 
 /// @brief Fast calculation of 10^n using exponentiation by squaring
 /// @param[in] exponent Exponent value
 /// @return 10 raised to the power of exponent
-constexpr auto power10(std::int32_t exponent) noexcept -> double {
+constexpr auto power10(int32_t exponent) noexcept -> double {
   if (exponent == 0) {
     return 1.0;
   }
