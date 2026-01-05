@@ -2,8 +2,6 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/geometry/cartesian/algorithms/for_each_point_distance.hpp"
-
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 
@@ -24,6 +22,18 @@ Args:
 Returns:
     Array of distances in coordinate units.
 )doc";
+
+// Calculate distance from each point in source to target geometry
+template <typename SourceGeometry, typename TargetGeometry>
+[[nodiscard]] inline auto for_each_point_distance(const SourceGeometry& source,
+                                                  const TargetGeometry& target)
+    -> Eigen::VectorXd {
+  Eigen::VectorXd result(source.size());
+  for (auto [distance, item] : std::ranges::views::zip(result, source)) {
+    distance = boost::geometry::distance(item, target);
+  }
+  return result;
+}
 
 auto init_for_each_point_distance(nb::module_& m) -> void {
   auto distance_impl = [](const auto& source,
