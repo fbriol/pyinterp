@@ -468,7 +468,7 @@ class Grid {
     (
         [&] {
           const auto& ax = axis<Is>();
-          if (ax.size() != static_cast<size_t>(array_.shape(Is))) {
+          if (std::cmp_not_equal(ax.size(), array_.shape(Is))) {
             constexpr std::array<std::string_view, 4> labels{"x", "y", "z",
                                                              "u"};
             throw std::invalid_argument(std::format(
