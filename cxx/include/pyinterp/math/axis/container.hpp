@@ -368,12 +368,9 @@ class Irregular : public Abstract<T> {
 
   /// @copydoc Abstract::operator==(const Abstract&) const
   auto operator==(const Abstract<T> &rhs) const noexcept -> bool override {
-    if (typeid(*this) != typeid(rhs)) {
-      return false;
-    }
-    const auto &other = static_cast<const Irregular<T> &>(rhs);
-    return other.points_.size() == points_.size() &&
-           std::ranges::equal(points_, other.points_);
+    const auto *other = dynamic_cast<const Irregular<T> *>(&rhs);
+    return other != nullptr && other->points_.size() == points_.size() &&
+           std::ranges::equal(points_, other->points_);
   }
 
  private:
@@ -518,12 +515,9 @@ class AbstractRegular : public Abstract<T> {
 
   /// @copydoc Abstract::operator==(const Abstract&) const
   auto operator==(const Abstract<T> &rhs) const noexcept -> bool override {
-    if (typeid(*this) != typeid(rhs)) {
-      return false;
-    }
-    const auto &other = static_cast<const AbstractRegular<T> &>(rhs);
-    return other.step_ == step_ && other.start_ == start_ &&
-           other.size_ == size_;
+    const auto *other = dynamic_cast<const AbstractRegular<T> *>(&rhs);
+    return other != nullptr && other->step_ == step_ &&
+           other->start_ == start_ && other->size_ == size_;
   }
 
  protected:
