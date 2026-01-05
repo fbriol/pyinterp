@@ -9,7 +9,7 @@ For most use cases, you can simply pass a string method name:
 
 For advanced configuration, pass a config object:
 >>> from pyinterp.config import windowed
->>> config = windowed.Bivariate.bicubic().with_window_size_x(10)
+>>> config = windowed.Bivariate.bicubic().with_half_window_size_x(10)
 >>> result = bivariate(grid, x, y, config)
 """
 
@@ -201,11 +201,11 @@ def _make_windowed_config(
     if boundary_mode is not None:
         config = config.with_boundary_mode(_BOUNDARY_MAP[boundary_mode])
     if window_size is not None:
-        config = config.with_window_size(window_size)
+        config = config.with_half_window_size(window_size)
     if window_size_x is not None:
-        config = config.with_window_size_x(window_size_x)
+        config = config.with_half_window_size_x(window_size_x)
     if window_size_y is not None:
-        config = config.with_window_size_y(window_size_y)
+        config = config.with_half_window_size_y(window_size_y)
     if third_axis is not None:
         config = config.with_third_axis(_AXIS_MAP[third_axis]())
     if fourth_axis is not None:
@@ -299,7 +299,7 @@ def univariate(
         Advanced usage with config objects:
 
         >>> from pyinterp.core.config import windowed
-        >>> config = windowed.Univariate.c_spline().with_window_size(10)
+        >>> config = windowed.Univariate.c_spline().with_half_window_size(10)
         >>> result = univariate(grid, x, config)
 
     """
@@ -354,7 +354,7 @@ def univariate_derivative(
         Advanced usage with config objects:
 
         >>> from pyinterp.core.config import windowed
-        >>> config = windowed.Univariate.c_spline().with_window_size(10)
+        >>> config = windowed.Univariate.c_spline().with_half_window_size(10)
         >>> derivative = univariate_derivative(grid, x, config)
 
     """
@@ -452,7 +452,7 @@ def bivariate(
         Advanced usage with config objects:
 
         >>> from pyinterp.core.config import windowed
-        >>> config = windowed.Bivariate.bicubic().with_window_size_x(10)
+        >>> config = windowed.Bivariate.bicubic().with_half_window_size_x(10)
         >>> result = bivariate(grid, x, y, config)
 
     """

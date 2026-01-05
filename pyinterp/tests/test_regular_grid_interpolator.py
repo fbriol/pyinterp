@@ -348,7 +348,7 @@ class TestUnivariateFunction:
         grid = self.create_test_grid()
         x = np.array([5.0])  # Test at center point to avoid edge issues
 
-        config = windowed.Univariate.c_spline().with_window_size(7)
+        config = windowed.Univariate.c_spline().with_half_window_size(7)
         result = univariate(grid, x, config)
         assert result.shape == (1,)
         assert np.isfinite(result[0])
@@ -425,7 +425,7 @@ class TestUnivariateDerivativeFunction:
         grid = self.create_test_grid()
         x = np.array([5.0])  # Test at center point to avoid edge issues
 
-        config = windowed.Univariate.c_spline().with_window_size(7)
+        config = windowed.Univariate.c_spline().with_half_window_size(7)
         result = univariate_derivative(grid, x, config)
         assert result.shape == (1,)
         assert np.isfinite(result[0])

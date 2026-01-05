@@ -124,11 +124,11 @@ auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
       .def_static("bilinear", &Class::bilinear,
                   "Create a configuration for bilinear interpolation.",
                   nb::call_guard<nb::gil_scoped_release>())
-      .def("with_window_size_x", &Class::with_window_size_x,
-           "Update window size in x direction.", nb::arg("size"),
+      .def("with_half_window_size_x", &Class::with_half_window_size_x,
+           "Update half window size in x direction.", nb::arg("size"),
            nb::call_guard<nb::gil_scoped_release>())
-      .def("with_window_size_y", &Class::with_window_size_y,
-           "Update window size in y direction.", nb::arg("size"),
+      .def("with_half_window_size_y", &Class::with_half_window_size_y,
+           "Update half window size in y direction.", nb::arg("size"),
            nb::call_guard<nb::gil_scoped_release>());
   return pyclass;
 }
@@ -164,8 +164,8 @@ auto bind(nb::module_& m) -> void {
                                  "interpolation on one-dimensional signals.")
               .def(nb::init<>(), "Default constructor.",
                    nb::call_guard<nb::gil_scoped_release>()))
-          .def("with_window_size", &Univariate::with_window_size,
-               "Update window size.", nb::arg("size"),
+          .def("with_half_window_size", &Univariate::with_half_window_size,
+               "Update half window size.", nb::arg("size"),
                nb::call_guard<nb::gil_scoped_release>()));
 
   add_common_attributes(add_methods(

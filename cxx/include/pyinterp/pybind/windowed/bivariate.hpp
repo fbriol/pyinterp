@@ -87,8 +87,8 @@ template <typename DataType, typename ResultType>
       x.size(),
       [&](const int64_t start, const int64_t end) {
         // Create cache and interpolator for this thread
-        auto cache = InterpolationCache(cfg.spatial().window_size_x(),
-                                        cfg.spatial().window_size_y());
+        auto cache = InterpolationCache(cfg.spatial().half_window_size_x(),
+                                        cfg.spatial().half_window_size_y());
         auto interpolator = cfg.spatial().factory<double>();
 
         for (int64_t ix = start; ix < end; ++ix) {

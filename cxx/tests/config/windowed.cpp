@@ -137,8 +137,8 @@ TEST_F(WindowedSpatialTest, DefaultConstructor) {
   EXPECT_TRUE(std::holds_alternative<Bicubic>(config.method()));
   EXPECT_EQ(std::get<Bicubic>(config.method()), Bicubic::kBicubic);
   EXPECT_EQ(config.boundary_mode(), BoundaryMode::kUndef);
-  EXPECT_EQ(config.window_size_x(), 3);
-  EXPECT_EQ(config.window_size_y(), 3);
+  EXPECT_EQ(config.half_window_size_x(), 3);
+  EXPECT_EQ(config.half_window_size_y(), 3);
 }
 
 TEST_F(WindowedSpatialTest, ConstructorWithMethod) {
@@ -216,26 +216,26 @@ TEST_F(WindowedSpatialTest, WithBoundaryMode) {
 
 TEST_F(WindowedSpatialTest, WithWindowSizeX) {
   Spatial config;
-  auto updated = config.with_window_size_x(5);
-  EXPECT_EQ(updated.window_size_x(), 5);
-  EXPECT_EQ(config.window_size_x(), 3);
+  auto updated = config.with_half_window_size_x(5);
+  EXPECT_EQ(updated.half_window_size_x(), 5);
+  EXPECT_EQ(config.half_window_size_x(), 3);
 }
 
 TEST_F(WindowedSpatialTest, WithWindowSizeY) {
   Spatial config;
-  auto updated = config.with_window_size_y(7);
-  EXPECT_EQ(updated.window_size_y(), 7);
-  EXPECT_EQ(config.window_size_y(), 3);
+  auto updated = config.with_half_window_size_y(7);
+  EXPECT_EQ(updated.half_window_size_y(), 7);
+  EXPECT_EQ(config.half_window_size_y(), 3);
 }
 
 TEST_F(WindowedSpatialTest, MethodChaining) {
   Spatial config;
   auto updated = config.with_boundary_mode(BoundaryMode::kExpand)
-                     .with_window_size_x(4)
-                     .with_window_size_y(6);
+                     .with_half_window_size_x(4)
+                     .with_half_window_size_y(6);
   EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kExpand);
-  EXPECT_EQ(updated.window_size_x(), 4);
-  EXPECT_EQ(updated.window_size_y(), 6);
+  EXPECT_EQ(updated.half_window_size_x(), 4);
+  EXPECT_EQ(updated.half_window_size_y(), 6);
 }
 
 // ============================================================================
@@ -248,7 +248,7 @@ TEST_F(UnivariateMethodTest, DefaultConstructor) {
   UnivariateMethod config;
   EXPECT_EQ(config.method(), Spline::kLinear);
   EXPECT_EQ(config.boundary_mode(), BoundaryMode::kUndef);
-  EXPECT_EQ(config.window_size(), 3);
+  EXPECT_EQ(config.half_window_size(), 3);
 }
 
 TEST_F(UnivariateMethodTest, ConstructorWithMethod) {
@@ -305,17 +305,17 @@ TEST_F(UnivariateMethodTest, WithBoundaryMode) {
 
 TEST_F(UnivariateMethodTest, WithWindowSize) {
   UnivariateMethod config;
-  auto updated = config.with_window_size(5);
-  EXPECT_EQ(updated.window_size(), 5);
-  EXPECT_EQ(config.window_size(), 3);
+  auto updated = config.with_half_window_size(5);
+  EXPECT_EQ(updated.half_window_size(), 5);
+  EXPECT_EQ(config.half_window_size(), 3);
 }
 
 TEST_F(UnivariateMethodTest, MethodChaining) {
   UnivariateMethod config;
   auto updated =
-      config.with_boundary_mode(BoundaryMode::kWrap).with_window_size(7);
+      config.with_boundary_mode(BoundaryMode::kWrap).with_half_window_size(7);
   EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kWrap);
-  EXPECT_EQ(updated.window_size(), 7);
+  EXPECT_EQ(updated.half_window_size(), 7);
 }
 
 // ============================================================================
@@ -349,8 +349,8 @@ TEST_F(UnivariateTest, AkimaFactoryMethod) {
 
 TEST_F(UnivariateTest, WithWindowSize) {
   Univariate config;
-  auto updated = config.with_window_size(5);
-  EXPECT_EQ(updated.univariate().window_size(), 5);
+  auto updated = config.with_half_window_size(5);
+  EXPECT_EQ(updated.univariate().half_window_size(), 5);
 }
 
 TEST_F(UnivariateTest, WithBoundaryMode) {
@@ -373,11 +373,11 @@ TEST_F(UnivariateTest, WithNumThreads) {
 
 TEST_F(UnivariateTest, MethodChaining) {
   Univariate config;
-  auto updated = config.with_window_size(7)
+  auto updated = config.with_half_window_size(7)
                      .with_boundary_mode(BoundaryMode::kSym)
                      .with_bounds_error(true)
                      .with_num_threads(8);
-  EXPECT_EQ(updated.univariate().window_size(), 7);
+  EXPECT_EQ(updated.univariate().half_window_size(), 7);
   EXPECT_EQ(updated.univariate().boundary_mode(), BoundaryMode::kSym);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);
@@ -414,16 +414,16 @@ TEST_F(WindowedBivariateTest, LinearFactoryMethod) {
   EXPECT_EQ(std::get<Spline>(config.spatial().method()), Spline::kLinear);
 }
 
-TEST_F(WindowedBivariateTest, WithWindowSizeX) {
+TEST_F(WindowedBivariateTest, WithHalfWindowSizeX) {
   Bivariate config;
-  auto updated = config.with_window_size_x(5);
-  EXPECT_EQ(updated.spatial().window_size_x(), 5);
+  auto updated = config.with_half_window_size_x(5);
+  EXPECT_EQ(updated.spatial().half_window_size_x(), 5);
 }
 
-TEST_F(WindowedBivariateTest, WithWindowSizeY) {
+TEST_F(WindowedBivariateTest, WithHalfWindowSizeY) {
   Bivariate config;
-  auto updated = config.with_window_size_y(7);
-  EXPECT_EQ(updated.spatial().window_size_y(), 7);
+  auto updated = config.with_half_window_size_y(7);
+  EXPECT_EQ(updated.spatial().half_window_size_y(), 7);
 }
 
 TEST_F(WindowedBivariateTest, WithBoundaryMode) {
@@ -446,13 +446,13 @@ TEST_F(WindowedBivariateTest, WithNumThreads) {
 
 TEST_F(WindowedBivariateTest, MethodChaining) {
   Bivariate config;
-  auto updated = config.with_window_size_x(4)
-                     .with_window_size_y(6)
+  auto updated = config.with_half_window_size_x(4)
+                     .with_half_window_size_y(6)
                      .with_boundary_mode(BoundaryMode::kExpand)
                      .with_bounds_error(true)
                      .with_num_threads(8);
-  EXPECT_EQ(updated.spatial().window_size_x(), 4);
-  EXPECT_EQ(updated.spatial().window_size_y(), 6);
+  EXPECT_EQ(updated.spatial().half_window_size_x(), 4);
+  EXPECT_EQ(updated.spatial().half_window_size_y(), 6);
   EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kExpand);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);
@@ -489,16 +489,16 @@ TEST_F(WindowedTrivariateTest, WithThirdAxis) {
   EXPECT_EQ(updated.third_axis().method(), AxisMethod::kNearest);
 }
 
-TEST_F(WindowedTrivariateTest, WithWindowSizeX) {
+TEST_F(WindowedTrivariateTest, WithHalfWindowSizeX) {
   Trivariate config;
-  auto updated = config.with_window_size_x(5);
-  EXPECT_EQ(updated.spatial().window_size_x(), 5);
+  auto updated = config.with_half_window_size_x(5);
+  EXPECT_EQ(updated.spatial().half_window_size_x(), 5);
 }
 
-TEST_F(WindowedTrivariateTest, WithWindowSizeY) {
+TEST_F(WindowedTrivariateTest, WithHalfWindowSizeY) {
   Trivariate config;
-  auto updated = config.with_window_size_y(7);
-  EXPECT_EQ(updated.spatial().window_size_y(), 7);
+  auto updated = config.with_half_window_size_y(7);
+  EXPECT_EQ(updated.spatial().half_window_size_y(), 7);
 }
 
 TEST_F(WindowedTrivariateTest, WithBoundaryMode) {
@@ -522,14 +522,14 @@ TEST_F(WindowedTrivariateTest, WithNumThreads) {
 TEST_F(WindowedTrivariateTest, MethodChaining) {
   Trivariate config;
   auto updated = config.with_third_axis(AxisConfig::nearest())
-                     .with_window_size_x(4)
-                     .with_window_size_y(6)
+                     .with_half_window_size_x(4)
+                     .with_half_window_size_y(6)
                      .with_boundary_mode(BoundaryMode::kExpand)
                      .with_bounds_error(true)
                      .with_num_threads(8);
   EXPECT_EQ(updated.third_axis().method(), AxisMethod::kNearest);
-  EXPECT_EQ(updated.spatial().window_size_x(), 4);
-  EXPECT_EQ(updated.spatial().window_size_y(), 6);
+  EXPECT_EQ(updated.spatial().half_window_size_x(), 4);
+  EXPECT_EQ(updated.spatial().half_window_size_y(), 6);
   EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kExpand);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);
@@ -574,16 +574,16 @@ TEST_F(WindowedQuadrivariateTest, WithFourthAxis) {
   EXPECT_EQ(updated.fourth_axis().method(), AxisMethod::kNearest);
 }
 
-TEST_F(WindowedQuadrivariateTest, WithWindowSizeX) {
+TEST_F(WindowedQuadrivariateTest, WithHalfWindowSizeX) {
   Quadrivariate config;
-  auto updated = config.with_window_size_x(5);
-  EXPECT_EQ(updated.spatial().window_size_x(), 5);
+  auto updated = config.with_half_window_size_x(5);
+  EXPECT_EQ(updated.spatial().half_window_size_x(), 5);
 }
 
-TEST_F(WindowedQuadrivariateTest, WithWindowSizeY) {
+TEST_F(WindowedQuadrivariateTest, WithHalfWindowSizeY) {
   Quadrivariate config;
-  auto updated = config.with_window_size_y(7);
-  EXPECT_EQ(updated.spatial().window_size_y(), 7);
+  auto updated = config.with_half_window_size_y(7);
+  EXPECT_EQ(updated.spatial().half_window_size_y(), 7);
 }
 
 TEST_F(WindowedQuadrivariateTest, WithBoundaryMode) {
@@ -608,15 +608,15 @@ TEST_F(WindowedQuadrivariateTest, MethodChaining) {
   Quadrivariate config;
   auto updated = config.with_third_axis(AxisConfig::nearest())
                      .with_fourth_axis(AxisConfig::nearest())
-                     .with_window_size_x(4)
-                     .with_window_size_y(6)
+                     .with_half_window_size_x(4)
+                     .with_half_window_size_y(6)
                      .with_boundary_mode(BoundaryMode::kExpand)
                      .with_bounds_error(true)
                      .with_num_threads(8);
   EXPECT_EQ(updated.third_axis().method(), AxisMethod::kNearest);
   EXPECT_EQ(updated.fourth_axis().method(), AxisMethod::kNearest);
-  EXPECT_EQ(updated.spatial().window_size_x(), 4);
-  EXPECT_EQ(updated.spatial().window_size_y(), 6);
+  EXPECT_EQ(updated.spatial().half_window_size_x(), 4);
+  EXPECT_EQ(updated.spatial().half_window_size_y(), 6);
   EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kExpand);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);

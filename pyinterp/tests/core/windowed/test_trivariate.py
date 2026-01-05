@@ -68,9 +68,9 @@ class TestTrivariateWindowed:
 
         cfg = method().with_third_axis(third_axis).with_boundary_mode(boundary)
         if window_size_x is not None:
-            cfg = cfg.with_window_size_x(window_size_x)
+            cfg = cfg.with_half_window_size_x(window_size_x)
         if window_size_y is not None:
-            cfg = cfg.with_window_size_y(window_size_y)
+            cfg = cfg.with_half_window_size_y(window_size_y)
         return cfg
 
     def test_single_point_bilinear(self) -> None:
@@ -516,8 +516,8 @@ class TestTrivariateWindowed:
             .with_num_threads(4)
             .with_bounds_error(True)
             .with_boundary_mode(windowed.Boundary.WRAP)
-            .with_window_size_x(10)
-            .with_window_size_y(8)
+            .with_half_window_size_x(10)
+            .with_half_window_size_y(8)
         )
 
         assert isinstance(config, windowed.Trivariate)

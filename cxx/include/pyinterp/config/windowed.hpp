@@ -107,16 +107,16 @@ class Spatial {
     return boundary_mode_;
   }
 
-  /// @brief Get the window size in x direction.
-  /// @return Window size in x direction
-  [[nodiscard]] constexpr auto window_size_x() const -> int {
-    return window_size_x_;
+  /// @brief Get the half window size in x direction.
+  /// @return Half window size in x direction
+  [[nodiscard]] constexpr auto half_window_size_x() const -> int {
+    return half_window_size_x_;
   }
 
-  /// @brief Get the window size in y direction.
-  /// @return Window size in y direction
-  [[nodiscard]] constexpr auto window_size_y() const -> int {
-    return window_size_y_;
+  /// @brief Get the half window size in y direction.
+  /// @return Half window size in y direction
+  [[nodiscard]] constexpr auto half_window_size_y() const -> int {
+    return half_window_size_y_;
   }
 
   /// @brief Create the interpolator instance.
@@ -198,21 +198,21 @@ class Spatial {
     return self;
   }
 
-  /// @brief Update window size in the x direction.
-  /// @param[in] size New window size in x direction.
-  /// @return Updated `Spatial` instance with the new window size.
-  [[nodiscard]] constexpr auto with_window_size_x(this Spatial self, int size)
-      -> Spatial {
-    self.window_size_x_ = size;
+  /// @brief Update half window size in the x direction.
+  /// @param[in] size New half window size in x direction.
+  /// @return Updated `Spatial` instance with the new half window size.
+  [[nodiscard]] constexpr auto with_half_window_size_x(this Spatial self,
+                                                       int size) -> Spatial {
+    self.half_window_size_x_ = size;
     return self;
   }
 
-  /// @brief Update window size in the y direction.
-  /// @param[in] size New window size in y direction.
-  /// @return Updated `Spatial` instance with the new window size.
-  [[nodiscard]] constexpr auto with_window_size_y(this Spatial self, int size)
-      -> Spatial {
-    self.window_size_y_ = size;
+  /// @brief Update half window size in the y direction.
+  /// @param[in] size New half window size in y direction.
+  /// @return Updated `Spatial` instance with the new half window size.
+  [[nodiscard]] constexpr auto with_half_window_size_y(this Spatial self,
+                                                       int size) -> Spatial {
+    self.half_window_size_y_ = size;
     return self;
   }
 
@@ -224,10 +224,10 @@ class Spatial {
   BoundaryMode boundary_mode_{BoundaryMode::kUndef};
 
   /// Window size in x direction
-  int window_size_x_{3};
+  int half_window_size_x_{3};
 
   /// Window size in y direction
-  int window_size_y_{3};
+  int half_window_size_y_{3};
 };
 
 // Forward declarations
@@ -288,10 +288,10 @@ class UnivariateMethod {
     return boundary_mode_;
   }
 
-  /// @brief Get the window size.
-  /// @return Window size
-  [[nodiscard]] constexpr auto window_size() const -> int {
-    return window_size_;
+  /// @brief Get the half window size.
+  /// @return Half window size
+  [[nodiscard]] constexpr auto half_window_size() const -> int {
+    return half_window_size_;
   }
 
   /// @brief Create the interpolator instance.
@@ -354,12 +354,13 @@ class UnivariateMethod {
     return self;
   }
 
-  /// @brief Update window size.
-  /// @param[in] size New window size.
-  /// @return Updated instance with the new window size.
-  [[nodiscard]] constexpr auto with_window_size(this UnivariateMethod self,
-                                                int size) -> UnivariateMethod {
-    self.window_size_ = size;
+  /// @brief Update half window size.
+  /// @param[in] size New half window size.
+  /// @return Updated instance with the new half window size.
+  [[nodiscard]] constexpr auto with_half_window_size(this UnivariateMethod self,
+                                                     int size)
+      -> UnivariateMethod {
+    self.half_window_size_ = size;
     return self;
   }
 
@@ -371,7 +372,7 @@ class UnivariateMethod {
   BoundaryMode boundary_mode_{BoundaryMode::kUndef};
 
   /// Window size
-  int window_size_{3};
+  int half_window_size_{3};
 };
 
 /// @brief Mixin providing common configuration modifiers.
@@ -401,21 +402,21 @@ class CommonModifiers {
 template <typename Derived>
 class SpatialModifiers {
  public:
-  /// @brief Update the `window_size_x` setting on the derived config.
-  /// @param[in] size New window size for the x-axis.
+  /// @brief Update the `half_window_size_x` setting on the derived config.
+  /// @param[in] size New half window size for the x-axis.
   /// @return Updated derived configuration instance.
-  [[nodiscard]] constexpr auto with_window_size_x(this Derived self, int size)
-      -> Derived {
-    self.spatial_ = self.spatial_.with_window_size_x(size);
+  [[nodiscard]] constexpr auto with_half_window_size_x(this Derived self,
+                                                       int size) -> Derived {
+    self.spatial_ = self.spatial_.with_half_window_size_x(size);
     return self;
   }
 
-  /// @brief Update the `window_size_y` setting on the derived config.
-  /// @param[in] size New window size for the y-axis.
+  /// @brief Update the `half_window_size_y` setting on the derived config.
+  /// @param[in] size New half window size for the y-axis.
   /// @return Updated derived configuration instance.
-  [[nodiscard]] constexpr auto with_window_size_y(this Derived self, int size)
-      -> Derived {
-    self.spatial_ = self.spatial_.with_window_size_y(size);
+  [[nodiscard]] constexpr auto with_half_window_size_y(this Derived self,
+                                                       int size) -> Derived {
+    self.spatial_ = self.spatial_.with_half_window_size_y(size);
     return self;
   }
 
@@ -581,9 +582,9 @@ class Univariate : public CommonModifiers<Univariate> {
   /// @brief Update window size.
   /// @param[in] size New window size.
   /// @return Updated `Univariate` instance with the new window size.
-  [[nodiscard]] constexpr auto with_window_size(this Univariate self, int size)
-      -> Univariate {
-    self.univariate_ = self.univariate_.with_window_size(size);
+  [[nodiscard]] constexpr auto with_half_window_size(this Univariate self,
+                                                     int size) -> Univariate {
+    self.univariate_ = self.univariate_.with_half_window_size(size);
     return self;
   }
 

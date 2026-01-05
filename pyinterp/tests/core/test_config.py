@@ -163,12 +163,12 @@ class TestWindowed:
         assert config_threads2 is not config
 
         # Test with_window_size_x
-        config_wsx = config.with_window_size_x(5)
+        config_wsx = config.with_half_window_size_x(5)
         assert isinstance(config_wsx, windowed.Bivariate)
         assert config_wsx is not config
 
         # Test with_window_size_y
-        config_wsy = config.with_window_size_y(3)
+        config_wsy = config.with_half_window_size_y(3)
         assert isinstance(config_wsy, windowed.Bivariate)
         assert config_wsy is not config
 
@@ -215,11 +215,11 @@ class TestWindowed:
         assert isinstance(config_threads2, windowed.Trivariate)
         assert config_threads2 is not config
 
-        config_wsx = config.with_window_size_x(7)
+        config_wsx = config.with_half_window_size_x(7)
         assert isinstance(config_wsx, windowed.Trivariate)
         assert config_wsx is not config
 
-        config_wsy = config.with_window_size_y(5)
+        config_wsy = config.with_half_window_size_y(5)
         assert isinstance(config_wsy, windowed.Trivariate)
         assert config_wsy is not config
 
@@ -272,11 +272,11 @@ class TestWindowed:
         assert isinstance(config_threads2, windowed.Quadrivariate)
         assert config_threads2 is not config
 
-        config_wsx = config.with_window_size_x(9)
+        config_wsx = config.with_half_window_size_x(9)
         assert isinstance(config_wsx, windowed.Quadrivariate)
         assert config_wsx is not config
 
-        config_wsy = config.with_window_size_y(7)
+        config_wsy = config.with_half_window_size_y(7)
         assert isinstance(config_wsy, windowed.Quadrivariate)
         assert config_wsy is not config
 
@@ -335,7 +335,7 @@ class TestWindowed:
         assert config_boundary_sym is not config
 
         # Test with_window_size
-        config_ws = config.with_window_size(5)
+        config_ws = config.with_half_window_size(5)
         assert isinstance(config_ws, windowed.Univariate)
         assert config_ws is not config
 
@@ -346,8 +346,8 @@ class TestWindowed:
             .with_num_threads(4)
             .with_bounds_error(True)
             .with_boundary_mode(windowed.Boundary.WRAP)
-            .with_window_size_x(10)
-            .with_window_size_y(8)
+            .with_half_window_size_x(10)
+            .with_half_window_size_y(8)
         )
         assert isinstance(config, windowed.Bivariate)
 
@@ -357,7 +357,7 @@ class TestWindowed:
             .with_num_threads(2)
             .with_bounds_error(False)
             .with_boundary_mode(windowed.Boundary.EXPAND)
-            .with_window_size(7)
+            .with_half_window_size(7)
         )
         assert isinstance(univariate_config, windowed.Univariate)
 

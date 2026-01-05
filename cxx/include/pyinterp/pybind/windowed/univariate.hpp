@@ -123,7 +123,7 @@ template <typename DataType, typename ResultType>
         // Create cache and interpolator for this thread
         // For 1D, we only need window_size for the X dimension (Y dimension is
         // unused)
-        auto cache = UnivariateCache(cfg.univariate().window_size(),
+        auto cache = UnivariateCache(cfg.univariate().half_window_size(),
                                      1);  // Y dimension unused for 1D
         auto interpolator = cfg.univariate().factory<double>();
 
@@ -160,7 +160,7 @@ template <typename DataType, typename ResultType>
         // Create cache and interpolator for this thread
         // For 1D, we only need window_size for the X dimension (Y dimension is
         // unused)
-        auto cache = UnivariateCache(cfg.univariate().window_size(),
+        auto cache = UnivariateCache(cfg.univariate().half_window_size(),
                                      1);  // Y dimension unused for 1D
         auto interpolator = cfg.univariate().factory<double>();
 
