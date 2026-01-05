@@ -212,13 +212,17 @@ auto init_geojson(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_within(nanobind::module_& m) -> void;
 
-/// @brief Initialize for_each_point algorithm bindings
+/// @brief Initialize for_each_point_covered_by algorithm binding
 /// @param[in,out] m Python module
-auto init_for_each_point(nanobind::module_& m) -> void;
+auto init_for_each_point_covered_by(nanobind::module_& m) -> void;
 
 /// @brief Initialize for_each_point_distance algorithm binding
 /// @param[in,out] m Python module
 auto init_for_each_point_distance(nanobind::module_& m) -> void;
+
+/// @brief Initialize for_each_point_within algorithm binding
+/// @param[in,out] m Python module
+auto init_for_each_point_within(nanobind::module_& m) -> void;
 
 /// @brief Initialize all algorithm bindings
 /// @param[in,out] m Python module
@@ -249,6 +253,10 @@ inline void init_algorithms(nanobind::module_& m) {
   init_length(m);
   init_line_interpolate(m);
 
+  init_for_each_point_covered_by(m);
+  init_for_each_point_distance(m);
+  init_for_each_point_within(m);
+  init_geojson(m);
   init_num_geometries(m);
   init_num_interior_rings(m);
   init_num_points(m);
@@ -262,11 +270,8 @@ inline void init_algorithms(nanobind::module_& m) {
   init_touches(m);
   init_union(m);
   init_unique(m);
-  init_wkt(m);
-  init_geojson(m);
   init_within(m);
-  init_for_each_point(m);
-  init_for_each_point_distance(m);
+  init_wkt(m);
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind
