@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <optional>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 #include "pyinterp/eigen.hpp"
@@ -345,8 +346,8 @@ auto TDigest<T>::calculate_statistics(Args... args) const
   const auto n = size();
   Eigen::VectorX<ResultType> result(n);
 
-  for (int64_t ix = 0; ix < n; ++ix) {
-    result[ix] = (digests_[ix].*MemberFunc)(args...);
+  for (size_t ix = 0; ix < n; ++ix) {
+    result[static_cast<int64_t>(ix)] = (digests_[ix].*MemberFunc)(args...);
   }
   return result;
 }
@@ -360,9 +361,9 @@ auto TDigest<T>::quantile(const Eigen::Ref<const Eigen::VectorX<T>>& quantiles)
   const auto n_quantiles = quantiles.size();
   Eigen::MatrixX<T> result(n_digests, n_quantiles);
 
-  for (int64_t i = 0; i < n_digests; ++i) {
-    for (int64_t j = 0; j < n_quantiles; ++j) {
-      result(i, j) = digests_[i].quantile(quantiles[j]);
+  for (int64_t i = 0; std::cmp_less(i, n_digests); ++i) {
+    for (int64_t j = 0; std::cmp_less(j, n_quantiles); ++j) {
+      result(i, j) = digests_[static_cast<size_t>(i)].quantile(quantiles[j]);
     }
   }
   return result;
