@@ -103,8 +103,9 @@ TemporalAxis::TemporalAxis(const nb::object &points, const nb::object &epsilon,
   auto integer_period = convert_timedelta64("period", period, dtype);
   {
     nb::gil_scoped_release release;
-    new (static_cast<math::TemporalAxis *>(this)) math::TemporalAxis(
-        dtype, mapped_integer_values, integer_epsilon, integer_period);
+    auto self = math::TemporalAxis(dtype, mapped_integer_values,
+                                   integer_epsilon, integer_period);
+    new (this) TemporalAxis(std::move(self));
   }
 }
 
