@@ -72,7 +72,7 @@ class TestUnivariateWindowed:
         """Build a windowed univariate configuration with default values."""
         cfg = method().with_boundary_mode(boundary)
         if window_size is not None:
-            cfg = cfg.with_window_size(window_size)
+            cfg = cfg.with_half_window_size(window_size)
         return cfg
 
     def test_single_point_linear(self) -> None:
@@ -266,31 +266,74 @@ class TestUnivariateWindowed:
         np.testing.assert_allclose(result_large[0], expected, rtol=0.05)
 
     def test_boundary_modes(self) -> None:
-        """Test different boundary modes produce finite results."""
-        grid = self.create_analytical_grid1d(np.float64)
+        """Test different boundary modes with analytical functions."""
+        # Test with linear function: y = 2x + 3
+        # This should be exactly reproduced by linear interpolation
+        x_vals = np.linspace(0, 10, 51)  # 51 points for even spacing
+        x_axis = core.Axis(x_vals, period=None)
 
-        # Use interior point
-        x = np.array([1.5])
+        # Linear function: f(x) = 2x + 3
+        a, b = 2.0, 3.0
+        data_linear = (a * x_vals + b).astype(np.float64)
+        data_linear = np.ascontiguousarray(data_linear)
+        grid_linear = core.Grid(x_axis, data_linear)
 
-        # Test all boundary modes
+        # Test points in the interior [2, 8] with fine resolution
+        x_test = np.linspace(2.0, 8.0, 31)
+        expected_linear = a * x_test + b
+
+        # Test all boundary modes with linear function
         boundary_modes = [
             windowed.Boundary.EXPAND,
             windowed.Boundary.SYM,
             windowed.Boundary.WRAP,
         ]
 
-        results = []
         for boundary in boundary_modes:
             config = self.make_config(
                 windowed.Univariate.linear, boundary=boundary
             )
-            result = core.univariate(grid, x, config)
-            assert result.shape == (1,)
-            assert np.isfinite(result[0])
-            results.append(result[0])
+            result = core.univariate(grid_linear, x_test, config)
 
-        # All boundary modes should produce finite results
-        assert all(np.isfinite(results))
+            assert result.shape == x_test.shape
+            assert np.all(np.isfinite(result))
+            # Linear interpolation should exactly reproduce linear function
+            np.testing.assert_allclose(
+                result,
+                expected_linear,
+                rtol=1e-10,
+                err_msg=f"Linear function failed with boundary={boundary}",
+            )
+
+        # Test with sinusoidal function: y = sin(2πx/10)
+        # Period matches domain [0, 10] for WRAP mode testing
+        data_sin = np.sin(2 * np.pi * x_vals / 10).astype(np.float64)
+        data_sin = np.ascontiguousarray(data_sin)
+        grid_sin = core.Grid(x_axis, data_sin)
+
+        # Test points
+        x_test_sin = np.linspace(2.0, 8.0, 31)
+        expected_sin = np.sin(2 * np.pi * x_test_sin / 10)
+
+        results_sin = {}
+        for boundary in boundary_modes:
+            config = self.make_config(
+                windowed.Univariate.c_spline, boundary=boundary
+            )
+            result = core.univariate(grid_sin, x_test_sin, config)
+
+            assert result.shape == x_test_sin.shape
+            assert np.all(np.isfinite(result))
+            results_sin[boundary] = result
+
+            # Should be close to analytical values (cubic spline on smooth
+            # function)
+            np.testing.assert_allclose(
+                result,
+                expected_sin,
+                atol=1e-16,
+                err_msg=f"Sinusoidal function failed with boundary={boundary}",
+            )
 
     def test_nan_in_grid_data(self) -> None:
         """Test handling of NaN values in grid data."""
