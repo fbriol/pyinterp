@@ -110,7 +110,7 @@ static auto from_numpy(const nb::object& hash) -> EncodedHashesView {
         .count = info.shape[0],
     };
   } else if constexpr (NDIM == 2) {
-    if (info.strides[0] != info.shape[1] * info.strides[1]) {
+    if (std::cmp_not_equal(info.strides[0], info.shape[1] * info.strides[1])) {
       throw std::invalid_argument("hash must be an array of strings");
     }
     auto precision = static_cast<uint32_t>(info.shape[1]);
