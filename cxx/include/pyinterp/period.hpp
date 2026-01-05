@@ -6,7 +6,9 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "pyinterp/eigen.hpp"
@@ -287,8 +289,8 @@ auto PeriodList::merge(const PeriodList& other) -> void {
   auto periods = PeriodList();
   periods.reserve(size() + other.size());
 
-  int64_t ix = 0;
-  int64_t jx = 0;
+  size_t ix = 0;
+  size_t jx = 0;
 
   auto insert_or_merge = [&periods](const Period& period) -> void {
     if (periods.empty()) {
@@ -386,7 +388,6 @@ auto PeriodList::cross_a_period(
 
   // Index of the traversed date.
   int64_t ix = 0;
-
   // The last date processed.
   const auto last_date = dates[dates.size() - 1];
 
@@ -394,7 +395,7 @@ auto PeriodList::cross_a_period(
   auto lookup = [this](
                     const int64_t first_index,
                     const int64_t date) -> std::tuple<int64_t, const Period*> {
-    for (auto index = first_index; index < size(); ++index) {
+    for (auto index = first_index; std::cmp_less(index, size()); ++index) {
       const auto* period = &(*this)[index];
       if (period->contains(date) || period->is_after(date)) {
         return {index, period};
@@ -406,7 +407,7 @@ auto PeriodList::cross_a_period(
   // The index of the first period that is located after the last date
   // provided.
   auto [last_index, period] = lookup(0, last_date);
-  if (last_index != -1 && period->contains(last_date)) {
+  if (period != nullptr && period->contains(last_date)) {
     // If the last date processed belongs to a period, no other date can be
     // outside the periods.
     flags.setConstant(true);
@@ -417,7 +418,7 @@ auto PeriodList::cross_a_period(
     const auto date = dates(ix);
 
     std::tie(first_index, period) = lookup(first_index, date);
-    if (first_index == -1 || first_index == last_index) {
+    if (period == nullptr || first_index == last_index) {
       // If the date is not in any period, or if the period is the last one
       // after the last date processed, the inspection is over.
       break;
