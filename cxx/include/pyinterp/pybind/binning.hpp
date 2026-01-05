@@ -55,7 +55,7 @@ class Binning2D {
   ///
   /// @param[in] x Definition of the bin centers for the X axis of the grid.
   /// @param[in] y Definition of the bin centers for the Y axis of the grid.
-  /// @param[in] wgs Optional WGS system for geographic coordinates
+  /// @param[in] spheroid Optional WGS system for geographic coordinates
   Binning2D(
       Axis<double> x, Axis<double> y,
       std::optional<geometry::geographic::Spheroid> spheroid = std::nullopt)
@@ -232,14 +232,14 @@ class Binning2D {
     auto acc_view = std::get<2>(state);
     auto expected_size =
         x_axis.size() * y_axis.size() * sizeof(DescriptiveStatistics);
-    if (acc_view.size() != expected_size) {
+    if (std::cmp_not_equal(acc_view.size(), expected_size)) {
       throw std::invalid_argument("Invalid state.");
     }
-    Matrix<DescriptiveStatistics> acc(x_axis.size(), y_axis.size());
-    std::memcpy(acc.data(), acc_view.data(), expected_size);
     Binning2D binning(std::get<0>(state), std::get<1>(state),
                       std::get<3>(state));
-    binning.acc_ = std::move(acc);
+    auto* dst = binning.acc_.data();
+    auto* src = reinterpret_cast<const DescriptiveStatistics*>(acc_view.data());
+    std::uninitialized_copy_n(src, x_axis.size() * y_axis.size(), dst);
     return binning;
   }
 
@@ -547,14 +547,14 @@ class Binning1D : public Binning2D<T> {
     auto x_axis = std::get<0>(state);
     auto acc_view = std::get<1>(state);
     auto expected_size = x_axis.size() * sizeof(DescriptiveStatistics);
-    if (acc_view.size() != expected_size) {
+    if (std::cmp_not_equal(acc_view.size(), expected_size)) {
       throw std::invalid_argument("Invalid state.");
     }
-    auto acc = Matrix<DescriptiveStatistics>(x_axis.size(), 1);
-    std::memcpy(acc.data(), acc_view.data(), expected_size);
     Binning1D binning(x_axis, std::make_optional<std::tuple<double, double>>(
                                   std::get<3>(state), std::get<4>(state)));
-    binning.acc_ = std::move(acc);
+    auto* dst = binning.acc_.data();
+    auto* src = reinterpret_cast<const DescriptiveStatistics*>(acc_view.data());
+    std::uninitialized_copy_n(src, x_axis.size(), dst);
     return binning;
   }
 
