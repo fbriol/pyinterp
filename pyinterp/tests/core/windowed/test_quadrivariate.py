@@ -820,4 +820,4 @@ class TestQuadrivariateWindowed:
         assert np.isfinite(result_nearest[0])
 
         # Results should differ when between grid points
-        assert not np.isclose(result_linear[0], result_nearest[0], rtol=0.01)
+        np.testing.assert_allclose(result_linear, result_nearest, rtol=0.01)

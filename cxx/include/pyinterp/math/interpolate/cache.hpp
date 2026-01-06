@@ -81,7 +81,7 @@ class InterpolationCache {
     // Additional dimensions always use window_size=2 (4 points)
     if constexpr (kNDim > 2) {
       for (size_t i = 2; i < kNDim; ++i) {
-        points_per_dim_[i] = 4;  // Fixed: 2 points on each side
+        points_per_dim_[i] = 2;  // Fixed: 1 points on each side
       }
     }
 
@@ -223,7 +223,7 @@ class InterpolationCache {
     } else if constexpr (dim == 1) {
       return y_half_window_size_;
     } else {
-      return 2;
+      return 1;
     }
   }
 
@@ -328,18 +328,18 @@ class InterpolationCache {
       domains_[I].valid = false;
     } else {
       // Get window size for this dimension
-      size_t window_size;
+      size_t half_window_size;
       if constexpr (I == 0) {
-        window_size = x_half_window_size_;
+        half_window_size = x_half_window_size_;
       } else if constexpr (I == 1) {
-        window_size = y_half_window_size_;
+        half_window_size = y_half_window_size_;
       } else {
-        window_size = 2;  // Additional dimensions always use window=2
+        half_window_size = 1;  // Additional dimensions always use window=1
       }
 
       // Domain bounds are between the center points of the window
-      size_t mid_start = window_size - 1;
-      size_t mid_end = window_size;
+      size_t mid_start = half_window_size - 1;
+      size_t mid_end = half_window_size;
 
       // Safety check for small windows
       if (mid_end >= vec.size()) {

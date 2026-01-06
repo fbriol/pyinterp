@@ -85,13 +85,16 @@ class TestTrivariateWindowed:
 
         expected = np.sin(np.pi / 2) * np.cos(np.pi / 4) * np.exp(-5.0 / 10)
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            third_axis=windowed.AxisConfig.linear(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (1,)
         assert np.isfinite(result[0])
         # Bilinear should have reasonable accuracy for smooth functions
-        np.testing.assert_allclose(result[0], expected, rtol=0.05)
+        np.testing.assert_allclose(result[0], expected, rtol=0.04)
 
     def test_multiple_points_bilinear(self) -> None:
         """Test windowed bilinear interpolation at multiple points."""
@@ -110,14 +113,18 @@ class TestTrivariateWindowed:
             ]
         )
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            third_axis=windowed.AxisConfig.linear(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (3,)
         assert np.all(np.isfinite(result))
-        # Validate against analytical values (windowed interpolation may have
-        # slightly larger errors)
-        np.testing.assert_allclose(result, expected, rtol=0.15)
+        assert result[1] < 1e-16  # Middle point is zero due to cos(π/2)=0
+        result[1] = expected[1]
+        # Validate against analytical values
+        np.testing.assert_allclose(result, expected, rtol=0.04)
 
     def test_third_axis_linear_vs_nearest(self) -> None:
         """Test linear vs nearest neighbor interpolation on third axis."""
