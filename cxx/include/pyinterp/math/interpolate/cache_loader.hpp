@@ -27,6 +27,14 @@ namespace detail {
 /// @tparam DataType Type of data stored in the grid and cache
 /// @tparam GridType Type of the grid
 /// @tparam AxisTypes Types of the axes
+/// @param[in] grid The data grid to load from
+/// @param[in] query_coords The query coordinates
+/// @param[in] boundary Boundary handling mode (allowed mode here is only
+/// kUndef or kShrink otherwise the behavior is undefined)
+/// @param[in] bounds_error Whether to raise an error on out-of-bounds access
+/// @param[out] cache The interpolation cache to update
+/// @param[out] error_out Optional output for error description
+/// @return True if the cache was loaded successfully
 template <typename DataType, typename GridType, typename... AxisTypes>
 auto load_cache_generic(const GridType& grid,
                         const std::tuple<AxisTypes...>& query_coords,
@@ -37,6 +45,7 @@ auto load_cache_generic(const GridType& grid,
 
   // 1. Find indices for all axes
   std::array<std::vector<int64_t>, kNDim> grid_indices;
+  std::array<size_t, kNDim> points_per_dim;
   bool success = true;
 
   auto find_and_store_indices = [&]<size_t I>(
@@ -50,14 +59,16 @@ auto load_cache_generic(const GridType& grid,
         ax.find_indexes(val, cache.template half_window<I>(), boundary);
 
     if (indices.empty()) {
+      // Point is outside grid domain - cache loading fails to trigger
+      // extrapolation handling
       success = false;
-      // If bounds_error is requested, extract the formatted message from Grid
       if (bounds_error) {
         error_out = grid.template construct_bounds_error_description<I>(val);
       }
       return;
     }
     grid_indices[I] = std::move(indices);
+    points_per_dim[I] = grid_indices[I].size();
   };
 
   // Iterate 0..N-1
@@ -66,6 +77,18 @@ auto load_cache_generic(const GridType& grid,
   }(std::make_index_sequence<kNDim>{});
 
   if (!success) return false;
+
+  // Resize the cache if necessary
+  bool resized = false;
+  for (size_t i = 0; i < kNDim; ++i) {
+    if (points_per_dim[i] != cache.points_per_dim(i)) {
+      resized = true;
+      break;
+    }
+  }
+  if (resized) {
+    cache.resize(std::move(points_per_dim));
+  }
 
   // 2. Load Coordinates into Cache
   auto load_coords = [&]<size_t I>(std::integral_constant<size_t, I>) {

@@ -371,6 +371,170 @@ TEST(MatrixOps, AsymmetricOperations) {
   EXPECT_FLOAT_EQ(col1.sum(), 20.0f);  // 2+4+6+8
 }
 
+// ==================== Resize Tests ====================
+
+TEST(Resize, 1DCache) {
+  InterpolationCache<float, double> cache(2, 2);
+  EXPECT_EQ(cache.x_points(), 4);
+
+  // Resize to different size
+  cache.resize({6});
+  EXPECT_EQ(cache.x_points(), 6);
+  EXPECT_EQ(cache.points_per_dim(0), 6);
+  EXPECT_EQ(cache.values_flat().size(), 6);
+
+  // Verify coordinates are resized
+  for (size_t i = 0; i < 6; ++i) {
+    cache.set_coord<0>(i, static_cast<double>(i) * 10.0);
+  }
+  EXPECT_DOUBLE_EQ(cache.coord<0>(5), 50.0);
+
+  // Verify values can be set
+  for (size_t i = 0; i < 6; ++i) {
+    cache[i] = static_cast<float>(i);
+  }
+  expect_float_eq(cache[5], 5.0f);
+}
+
+TEST(Resize, 2DCache) {
+  InterpolationCache<float, double, double> cache(2, 1);
+  EXPECT_EQ(cache.x_points(), 4);
+  EXPECT_EQ(cache.y_points(), 2);
+  EXPECT_EQ(cache.values_flat().size(), 8);
+
+  // Resize to different dimensions
+  cache.resize({3, 5});
+  EXPECT_EQ(cache.x_points(), 3);
+  EXPECT_EQ(cache.y_points(), 5);
+  EXPECT_EQ(cache.points_per_dim(0), 3);
+  EXPECT_EQ(cache.points_per_dim(1), 5);
+  EXPECT_EQ(cache.values_flat().size(), 15);  // 3×5
+
+  // Verify coordinates are resized
+  for (size_t i = 0; i < 3; ++i) {
+    cache.set_coord<0>(i, static_cast<double>(i) * 10.0);
+  }
+  for (size_t j = 0; j < 5; ++j) {
+    cache.set_coord<1>(j, static_cast<double>(j) * 100.0);
+  }
+
+  EXPECT_DOUBLE_EQ(cache.coord<0>(2), 20.0);
+  EXPECT_DOUBLE_EQ(cache.coord<1>(4), 400.0);
+
+  // Verify values can be set and accessed
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 5; ++j) {
+      cache[i, j] = static_cast<float>(i * 10 + j);
+    }
+  }
+
+  expect_float_eq(cache[0, 0], 0.0f);
+  expect_float_eq(cache[2, 4], 24.0f);
+
+  // Verify matrix view
+  auto mat = cache.matrix();
+  EXPECT_EQ(mat.rows(), 3);
+  EXPECT_EQ(mat.cols(), 5);
+  EXPECT_FLOAT_EQ(mat(1, 3), 13.0f);
+}
+
+TEST(Resize, 3DCache) {
+  InterpolationCache<float, double, double, double> cache(2, 1);
+  EXPECT_EQ(cache.values_flat().size(), 16);  // 4×2×2
+
+  // Resize to different dimensions
+  cache.resize({5, 3, 4});
+  EXPECT_EQ(cache.x_points(), 5);
+  EXPECT_EQ(cache.y_points(), 3);
+  EXPECT_EQ(cache.points_per_dim(0), 5);
+  EXPECT_EQ(cache.points_per_dim(1), 3);
+  EXPECT_EQ(cache.points_per_dim(2), 4);
+  EXPECT_EQ(cache.values_flat().size(), 60);  // 5×3×4
+
+  // Verify values can be set and accessed
+  cache[2, 1, 3] = 42.0f;
+  expect_float_eq(cache[2, 1, 3], 42.0f);
+
+  // Verify matrix slice
+  for (size_t i = 0; i < 5; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
+      cache[i, j, 2] = static_cast<float>(i + j);
+    }
+  }
+
+  auto mat = cache.matrix(2);
+  EXPECT_EQ(mat.rows(), 5);
+  EXPECT_EQ(mat.cols(), 3);
+  EXPECT_FLOAT_EQ(mat(3, 1), 4.0f);  // 3+1=4
+}
+
+TEST(Resize, 4DCache) {
+  InterpolationCache<float, double, double, double, double> cache(2, 1);
+  EXPECT_EQ(cache.values_flat().size(), 32);  // 4×2×2×2
+
+  // Resize to different dimensions
+  cache.resize({2, 3, 4, 5});
+  EXPECT_EQ(cache.x_points(), 2);
+  EXPECT_EQ(cache.y_points(), 3);
+  EXPECT_EQ(cache.points_per_dim(2), 4);
+  EXPECT_EQ(cache.points_per_dim(3), 5);
+  EXPECT_EQ(cache.values_flat().size(), 120);  // 2×3×4×5
+
+  // Verify values can be set and accessed
+  cache[1, 2, 3, 4] = 99.0f;
+  expect_float_eq(cache[1, 2, 3, 4], 99.0f);
+}
+
+TEST(Resize, MultipleResizes) {
+  InterpolationCache<float, double, double> cache(2, 1);
+
+  // First resize
+  cache.resize({3, 3});
+  EXPECT_EQ(cache.values_flat().size(), 9);
+
+  // Fill with values
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
+      cache[i, j] = static_cast<float>(i * 3 + j);
+    }
+  }
+  expect_float_eq(cache[2, 2], 8.0f);
+
+  // Second resize - smaller
+  cache.resize({2, 2});
+  EXPECT_EQ(cache.values_flat().size(), 4);
+
+  // Third resize - larger
+  cache.resize({5, 4});
+  EXPECT_EQ(cache.values_flat().size(), 20);
+  EXPECT_EQ(cache.x_points(), 5);
+  EXPECT_EQ(cache.y_points(), 4);
+
+  // Verify new size works
+  cache[4, 3] = 123.0f;
+  expect_float_eq(cache[4, 3], 123.0f);
+}
+
+TEST(Resize, PreservesStrides) {
+  InterpolationCache<float, double, double, double> cache(1, 1);
+
+  cache.resize({3, 4, 2});
+
+  // Fill with sequential values
+  auto& flat = cache.values_flat();
+  for (size_t i = 0; i < flat.size(); ++i) {
+    flat[i] = static_cast<float>(i);
+  }
+
+  // Verify strides are correct (3×4×2 layout)
+  // Strides should be [8, 2, 1]
+  expect_float_eq(cache[0, 0, 0], 0.0f);   // 0*8 + 0*2 + 0*1 = 0
+  expect_float_eq(cache[0, 0, 1], 1.0f);   // 0*8 + 0*2 + 1*1 = 1
+  expect_float_eq(cache[0, 1, 0], 2.0f);   // 0*8 + 1*2 + 0*1 = 2
+  expect_float_eq(cache[1, 0, 0], 8.0f);   // 1*8 + 0*2 + 0*1 = 8
+  expect_float_eq(cache[2, 3, 1], 23.0f);  // 2*8 + 3*2 + 1*1 = 23
+}
+
 // ==================== Performance Tests ====================
 
 TEST(Performance, AsymmetricCache) {

@@ -64,49 +64,7 @@ class InterpolationCache {
   /// @param[in] half_x_window_size The half window size for X axis
   /// @param[in] half_y_window_size The half window size for Y axis
   explicit InterpolationCache(size_t half_x_window_size,
-                              size_t half_y_window_size)
-      : x_half_window_size_(half_x_window_size),
-        y_half_window_size_(half_y_window_size),
-        x_points_(half_x_window_size * 2),
-        y_points_(half_y_window_size * 2) {
-    static_assert(kNDim >= 1, "Cache must have at least 1 dimension");
-    if (half_x_window_size < 1 || half_y_window_size < 1) {
-      throw std::invalid_argument("Half window sizes must be at least 1");
-    }
-
-    // Set up points per dimension array
-    if constexpr (kNDim >= 1) {
-      points_per_dim_[0] = x_points_;
-    }
-    if constexpr (kNDim >= 2) {
-      points_per_dim_[1] = y_points_;
-    }
-    // Additional dimensions always use window_size=2 (4 points)
-    if constexpr (kNDim > 2) {
-      for (size_t i = 2; i < kNDim; ++i) {
-        points_per_dim_[i] = 2;  // Fixed: 1 points on each side
-      }
-    }
-
-    // Resize coordinate vectors
-    resize_coords(std::index_sequence_for<AxisTypes...>{});
-
-    // Calculate total elements
-    size_t total_elements = 1;
-    for (size_t i = 0; i < kNDim; ++i) {
-      total_elements *= points_per_dim_[i];
-    }
-
-    // Allocate flat value buffer
-    values_.resize(total_elements);
-
-    // Initialize strides for C-style (Row-Major) layout
-    size_t stride = 1;
-    for (int i = kNDim - 1; i >= 0; --i) {
-      strides_[i] = stride;
-      stride *= points_per_dim_[i];
-    }
-  }
+                              size_t half_y_window_size);
 
   /// Access value at coordinates [i, j, k...]
   /// @tparam Indices Index types
@@ -252,6 +210,10 @@ class InterpolationCache {
     return VectorMap(values_.data(), points_per_dim_[0]);
   }
 
+  /// Resize the cache to the specified dimensions
+  /// @param[in] points_per_dim Number of points for each dimension
+  void resize(std::array<size_t, kNDim>&& points_per_dim);
+
   /// Get a MatrixMap view of the X-Y plane at specified higher-dim indices
   /// @tparam RestIndices Types for higher-dimension indices
   /// @param[in] indices Indices for higher dimensions (if any)
@@ -325,25 +287,7 @@ class InterpolationCache {
 
   // Update domain bounds for a specific dimension I
   template <size_t I>
-  void update_domain_for_axis() {
-    const auto& vec = std::get<I>(coords_);
-    const auto window_size = vec.size();
-    // The constructor ensures window_size >= 2
-    assert(window_size >= 2);
-
-    auto mid_start = (window_size / 2) - 1;
-    auto mid_end = mid_start + 1;
-
-    // Safety check for small windows
-    if (mid_end >= window_size) {
-      domains_[I].valid = false;
-      return;
-    }
-
-    domains_[I].min = static_cast<double>(vec[mid_start]);
-    domains_[I].max = static_cast<double>(vec[mid_end]);
-    domains_[I].valid = true;
-  }
+  void update_domain_for_axis();
 
   // Helper to calculate offset starting from Dimension 'StartDim'
   template <size_t StartDim, typename... Indices>
@@ -356,5 +300,112 @@ class InterpolationCache {
     return offset;
   }
 };
+
+// ============================================================================
+// Implementation
+// ============================================================================
+template <Numeric DataType, typename... AxisTypes>
+InterpolationCache<DataType, AxisTypes...>::InterpolationCache(
+    size_t half_x_window_size, size_t half_y_window_size)
+    : x_half_window_size_(half_x_window_size),
+      y_half_window_size_(half_y_window_size),
+      x_points_(half_x_window_size * 2),
+      y_points_(half_y_window_size * 2) {
+  static_assert(kNDim >= 1, "Cache must have at least 1 dimension");
+  if (half_x_window_size < 1 || half_y_window_size < 1) {
+    throw std::invalid_argument("Half window sizes must be at least 1");
+  }
+
+  // Set up points per dimension array
+  if constexpr (kNDim >= 1) {
+    points_per_dim_[0] = x_points_;
+  }
+  if constexpr (kNDim >= 2) {
+    points_per_dim_[1] = y_points_;
+  }
+  // Additional dimensions always use window_size=2 (4 points)
+  if constexpr (kNDim > 2) {
+    for (size_t i = 2; i < kNDim; ++i) {
+      points_per_dim_[i] = 2;  // 1 points on each side, total 2 points
+    }
+  }
+
+  // Resize coordinate vectors
+  resize_coords(std::index_sequence_for<AxisTypes...>{});
+
+  // Calculate total elements
+  size_t total_elements = 1;
+  for (size_t i = 0; i < kNDim; ++i) {
+    total_elements *= points_per_dim_[i];
+  }
+
+  // Allocate flat value buffer
+  values_.resize(total_elements);
+
+  // Initialize strides for C-style (Row-Major) layout
+  size_t stride = 1;
+  for (int i = kNDim - 1; i >= 0; --i) {
+    strides_[i] = stride;
+    stride *= points_per_dim_[i];
+  }
+}
+
+// ============================================================================
+
+template <Numeric DataType, typename... AxisTypes>
+template <size_t I>
+void InterpolationCache<DataType, AxisTypes...>::update_domain_for_axis() {
+  const auto& vec = std::get<I>(coords_);
+  const auto window_size = vec.size();
+  // The constructor ensures window_size >= 2
+  assert(window_size >= 2);
+
+  auto mid_start = (window_size / 2) - 1;
+  auto mid_end = mid_start + 1;
+
+  // Safety check for small windows
+  if (mid_end >= window_size) {
+    domains_[I].valid = false;
+    return;
+  }
+
+  domains_[I].min = static_cast<double>(vec[mid_start]);
+  domains_[I].max = static_cast<double>(vec[mid_end]);
+  domains_[I].valid = true;
+}
+
+// ============================================================================
+
+template <Numeric DataType, typename... AxisTypes>
+void InterpolationCache<DataType, AxisTypes...>::resize(
+    std::array<size_t, kNDim>&& points_per_dim) {
+  points_per_dim_ = std::move(points_per_dim);
+
+  if constexpr (kNDim >= 1) {
+    x_points_ = points_per_dim_[0];
+  }
+  if constexpr (kNDim >= 2) {
+    y_points_ = points_per_dim_[1];
+  }
+
+  // Resize coordinate vectors
+  resize_coords(std::index_sequence_for<AxisTypes...>{});
+
+  // Calculate total elements
+  size_t total_elements = 1;
+  for (size_t i = 0; i < kNDim; ++i) {
+    total_elements *= points_per_dim_[i];
+  }
+
+  // Allocate flat value buffer
+  values_.resize(total_elements);
+
+  // Initialize strides for C-style (Row-Major) layout
+  size_t stride = 1;
+  for (int i = kNDim - 1; i >= 0; --i) {
+    strides_[i] = stride;
+    stride *= points_per_dim_[i];
+  }
+}
 
 }  // namespace pyinterp::math::interpolate
