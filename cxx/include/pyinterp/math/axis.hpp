@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <format>
 #include <limits>
 #include <memory>
@@ -26,9 +27,10 @@ namespace axis {
 /// Type of boundary handling on an Axis.
 enum Boundary : uint8_t {
   kExpand,  //!< Expand the boundary as a constant.
-  kWrap,    //!< Circular boundary conditions.
+  kShrink,  //!< Shrink the boundary to fit the data.
   kSym,     //!< Symmetrical boundary conditions.
   kUndef,   //!< Boundary violation is not defined.
+  kWrap,    //!< Circular boundary conditions.
 };
 
 }  // namespace  axis
@@ -795,9 +797,10 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
   const auto handle_boundary =
       Axis<T>::make_boundary_handler(boundary, is_periodic_);
 
-  // Setup result vector with initial indexes found
-  auto result = std::vector<int64_t>(half_window_size << 1U);
-  std::tie(result[half_window_size - 1], result[half_window_size]) = *indexes;
+  // Use a deque to efficiently push to the front and back
+  auto result = std::deque<int64_t>();
+  result.push_back(std::get<0>(*indexes));
+  result.push_back(std::get<1>(*indexes));
 
   // Offset in relation to the first indexes found
   size_t shift = 1;
@@ -807,24 +810,27 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
     int64_t before = std::get<0>(*indexes) - shift;
     if (before < 0) {
       before = handle_boundary(before, container_size);
-      if (before < 0) {
-        // Boundary violation cannot be handled. Return an empty result.
-        return {};
-      }
     }
+    if (before >= 0) {
+      result.push_front(before);
+    } else if (boundary != axis::kShrink) {
+      // Boundary violation cannot be handled. Return an empty result.
+      return {};
+    }
+
     int64_t after = std::get<1>(*indexes) + shift;
     if (after >= container_size) {
       after = handle_boundary(after, container_size);
-      if (after < 0) {
-        // Boundary violation cannot be handled. Return an empty result.
-        return {};
-      }
     }
-    result[half_window_size - shift - 1] = before;
-    result[half_window_size + shift] = after;
+    if (after >= 0) {
+      result.push_back(after);
+    } else if (boundary != axis::kShrink) {
+      // Boundary violation cannot be handled. Return an empty result.
+      return {};
+    }
     ++shift;
   }
-  return result;
+  return {result.begin(), result.end()};
 }
 
 // ============================================================================

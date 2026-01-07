@@ -380,6 +380,10 @@ TYPED_TEST(AxisTestSuite, SearchWindowBoundaryModes) {
   // Expand mode
   indexes = axis->find_indexes(1, 4, math::axis::kExpand);
   ExpectIndexVector(indexes, {0, 0, 0, 1, 2, 3, 4, 5});
+
+  // Shrink mode
+  indexes = axis->find_indexes(1, 4, math::axis::kShrink);
+  ExpectIndexVector(indexes, {0, 1, 2, 3, 4, 5});
 }
 
 // =============================================================================
