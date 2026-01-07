@@ -67,12 +67,12 @@ class TestUnivariateWindowed:
         method: Callable[[], windowed.Univariate],
         *,
         boundary: windowed.Boundary = windowed.Boundary.EXPAND,
-        window_size: int | None = 5,
+        half_window_size: int | None = 5,
     ) -> windowed.Univariate:
         """Build a windowed univariate configuration with default values."""
         cfg = method().with_boundary_mode(boundary)
-        if window_size is not None:
-            cfg = cfg.with_half_window_size(window_size)
+        if half_window_size is not None:
+            cfg = cfg.with_half_window_size(half_window_size)
         return cfg
 
     def test_single_point_linear(self) -> None:
@@ -246,13 +246,13 @@ class TestUnivariateWindowed:
 
         # Test with small window
         config_small = self.make_config(
-            windowed.Univariate.linear, window_size=3
+            windowed.Univariate.linear, half_window_size=3
         )
         result_small = core.univariate(grid, x, config_small)
 
         # Test with larger window
         config_large = self.make_config(
-            windowed.Univariate.linear, window_size=9
+            windowed.Univariate.linear, half_window_size=9
         )
         result_large = core.univariate(grid, x, config_large)
 

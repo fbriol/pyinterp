@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <concepts>
 #include <cstddef>
@@ -59,17 +60,19 @@ class InterpolationCache {
   InterpolationCache() = delete;
 
   /// Constructor with independent X and Y window sizes
-  /// Additional dimensions (if any) always use window_size=2 (4 points)
-  /// @param[in] x_window_size The half-window size for X axis (e.g., 2 for
-  /// cubic, 1 for linear)
-  /// @param[in] y_window_size The half-window size for Y axis (e.g., 2 for
-  /// cubic, 1 for linear)
-  explicit InterpolationCache(size_t x_window_size, size_t y_window_size)
-      : x_half_window_size_(x_window_size),
-        y_half_window_size_(y_window_size),
-        x_points_(x_window_size * 2),
-        y_points_(y_window_size * 2) {
+  /// Additional dimensions (if any) always use half_window_size=1 (2 points)
+  /// @param[in] half_x_window_size The half window size for X axis
+  /// @param[in] half_y_window_size The half window size for Y axis
+  explicit InterpolationCache(size_t half_x_window_size,
+                              size_t half_y_window_size)
+      : x_half_window_size_(half_x_window_size),
+        y_half_window_size_(half_y_window_size),
+        x_points_(half_x_window_size * 2),
+        y_points_(half_y_window_size * 2) {
     static_assert(kNDim >= 1, "Cache must have at least 1 dimension");
+    if (half_x_window_size < 1 || half_y_window_size < 1) {
+      throw std::invalid_argument("Half window sizes must be at least 1");
+    }
 
     // Set up points per dimension array
     if constexpr (kNDim >= 1) {
@@ -201,23 +204,11 @@ class InterpolationCache {
     return true;
   }
 
-  /// Get half-window size for X axis
-  /// @return Half-window size for X axis
-  [[nodiscard]] auto x_half_window() const noexcept -> size_t {
-    return x_half_window_size_;
-  }
-
-  /// Get half-window size for Y axis
-  /// @return Half-window size for Y axis
-  [[nodiscard]] auto y_half_window() const noexcept -> size_t {
-    return y_half_window_size_;
-  }
-
   /// Get half-window size for specified dimension
   /// @param[in] dim Dimension index
   /// @return Half-window size for the specified dimension
   template <size_t dim>
-  [[nodiscard]] auto half_window() const noexcept -> size_t {
+  [[nodiscard]] constexpr auto half_window() const noexcept -> size_t {
     if constexpr (dim == 0) {
       return x_half_window_size_;
     } else if constexpr (dim == 1) {
@@ -225,6 +216,18 @@ class InterpolationCache {
     } else {
       return 1;
     }
+  }
+
+  /// Get half-window size for X axis
+  /// @return Half-window size for X axis
+  [[nodiscard]] constexpr auto x_half_window() const noexcept -> size_t {
+    return half_window<0>();
+  }
+
+  /// Get half-window size for Y axis
+  /// @return Half-window size for Y axis
+  [[nodiscard]] constexpr auto y_half_window() const noexcept -> size_t {
+    return half_window<1>();
   }
 
   // Get number of points along X axis
@@ -324,33 +327,22 @@ class InterpolationCache {
   template <size_t I>
   void update_domain_for_axis() {
     const auto& vec = std::get<I>(coords_);
-    if (vec.size() < 2) {
+    const auto window_size = vec.size();
+    // The constructor ensures window_size >= 2
+    assert(window_size >= 2);
+
+    auto mid_start = (window_size / 2) - 1;
+    auto mid_end = mid_start + 1;
+
+    // Safety check for small windows
+    if (mid_end >= window_size) {
       domains_[I].valid = false;
-    } else {
-      // Get window size for this dimension
-      size_t half_window_size;
-      if constexpr (I == 0) {
-        half_window_size = x_half_window_size_;
-      } else if constexpr (I == 1) {
-        half_window_size = y_half_window_size_;
-      } else {
-        half_window_size = 1;  // Additional dimensions always use window=1
-      }
-
-      // Domain bounds are between the center points of the window
-      size_t mid_start = half_window_size - 1;
-      size_t mid_end = half_window_size;
-
-      // Safety check for small windows
-      if (mid_end >= vec.size()) {
-        domains_[I].valid = false;
-        return;
-      }
-
-      domains_[I].min = static_cast<double>(vec[mid_start]);
-      domains_[I].max = static_cast<double>(vec[mid_end]);
-      domains_[I].valid = true;
+      return;
     }
+
+    domains_[I].min = static_cast<double>(vec[mid_start]);
+    domains_[I].max = static_cast<double>(vec[mid_end]);
+    domains_[I].valid = true;
   }
 
   // Helper to calculate offset starting from Dimension 'StartDim'

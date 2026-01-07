@@ -53,15 +53,15 @@ class TestBivariateWindowed:
         method: Callable[[], windowed.Bivariate],
         *,
         boundary: windowed.Boundary = windowed.Boundary.EXPAND,
-        window_size_x: int | None = 5,
-        window_size_y: int | None = 5,
+        half_window_size_x: int | None = 3,
+        half_window_size_y: int | None = 3,
     ) -> windowed.Bivariate:
         """Build a windowed bivariate configuration with standard parameters."""
         cfg = method().with_boundary_mode(boundary)
-        if window_size_x is not None:
-            cfg = cfg.with_half_window_size_x(window_size_x)
-        if window_size_y is not None:
-            cfg = cfg.with_half_window_size_y(window_size_y)
+        if half_window_size_x is not None:
+            cfg = cfg.with_half_window_size_x(half_window_size_x)
+        if half_window_size_y is not None:
+            cfg = cfg.with_half_window_size_y(half_window_size_y)
         return cfg
 
     def test_single_point_bilinear(self) -> None:
@@ -176,13 +176,17 @@ class TestBivariateWindowed:
 
         # Test with small window
         config_small = self.make_config(
-            windowed.Bivariate.bilinear, window_size_x=3, window_size_y=3
+            windowed.Bivariate.bilinear,
+            half_window_size_x=3,
+            half_window_size_y=3,
         )
         result_small = core.bivariate(grid, x, y, config_small)
 
         # Test with larger window
         config_large = self.make_config(
-            windowed.Bivariate.bilinear, window_size_x=9, window_size_y=9
+            windowed.Bivariate.bilinear,
+            half_window_size_x=9,
+            half_window_size_y=9,
         )
         result_large = core.bivariate(grid, x, y, config_large)
 

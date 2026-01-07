@@ -65,8 +65,8 @@ class TestQuadrivariateWindowed:
         method: Callable[[], windowed.Quadrivariate],
         *,
         boundary: windowed.Boundary = windowed.Boundary.EXPAND,
-        window_size_x: int | None = 5,
-        window_size_y: int | None = 5,
+        half_window_size_x: int | None = 5,
+        half_window_size_y: int | None = 5,
         third_axis: windowed.AxisConfig | None = None,
         fourth_axis: windowed.AxisConfig | None = None,
     ) -> windowed.Quadrivariate:
@@ -80,10 +80,10 @@ class TestQuadrivariateWindowed:
             .with_fourth_axis(fourth_axis)
             .with_boundary_mode(boundary)
         )
-        if window_size_x is not None:
-            cfg = cfg.with_half_window_size_x(window_size_x)
-        if window_size_y is not None:
-            cfg = cfg.with_half_window_size_y(window_size_y)
+        if half_window_size_x is not None:
+            cfg = cfg.with_half_window_size_x(half_window_size_x)
+        if half_window_size_y is not None:
+            cfg = cfg.with_half_window_size_y(half_window_size_y)
         return cfg
 
     def test_single_point_bilinear(self) -> None:
@@ -251,13 +251,17 @@ class TestQuadrivariateWindowed:
 
         # Test with small window
         config_small = self.make_config(
-            windowed.Quadrivariate.bilinear, window_size_x=3, window_size_y=3
+            windowed.Quadrivariate.bilinear,
+            half_window_size_x=3,
+            half_window_size_y=3,
         )
         result_small = core.quadrivariate(grid, x, y, z, u, config_small)
 
         # Test with larger window
         config_large = self.make_config(
-            windowed.Quadrivariate.bilinear, window_size_x=7, window_size_y=7
+            windowed.Quadrivariate.bilinear,
+            half_window_size_x=7,
+            half_window_size_y=7,
         )
         result_large = core.quadrivariate(grid, x, y, z, u, config_large)
 
