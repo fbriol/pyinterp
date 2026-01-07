@@ -13,40 +13,25 @@
 namespace pyinterp::config::windowed {
 
 // ============================================================================
-// BoundaryMode Tests
+// BoundaryConfig Tests
 // ============================================================================
 
-class BoundaryModeTest : public ::testing::Test {};
+class BoundaryConfigTest : public ::testing::Test {};
 
-TEST_F(BoundaryModeTest, ParseBoundaryModeExpand) {
-  auto mode = parse_boundary_mode("expand");
-  EXPECT_EQ(mode, BoundaryMode::kExpand);
+TEST_F(BoundaryConfigTest, DefaultConstructor) {
+  BoundaryConfig config;
+  // Default should be kUndef
+  EXPECT_EQ(config.mode(), BoundaryMode::kUndef);
 }
 
-TEST_F(BoundaryModeTest, ParseBoundaryModeWrap) {
-  auto mode = parse_boundary_mode("wrap");
-  EXPECT_EQ(mode, BoundaryMode::kWrap);
+TEST_F(BoundaryConfigTest, ConstructorWithMode) {
+  BoundaryConfig config(BoundaryMode::kShrink);
+  EXPECT_EQ(config.mode(), BoundaryMode::kShrink);
 }
 
-TEST_F(BoundaryModeTest, ParseBoundaryModeSym) {
-  auto mode = parse_boundary_mode("sym");
-  EXPECT_EQ(mode, BoundaryMode::kSym);
-}
-
-TEST_F(BoundaryModeTest, ParseBoundaryModeUndef) {
-  auto mode = parse_boundary_mode("undef");
-  EXPECT_EQ(mode, BoundaryMode::kUndef);
-}
-
-TEST_F(BoundaryModeTest, ParseBoundaryModeUnknownThrows) {
-  EXPECT_THROW(static_cast<void>(parse_boundary_mode("invalid")),
-               std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(parse_boundary_mode("")),
-               std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(parse_boundary_mode("Expand")),
-               std::invalid_argument);  // case-sensitive
-  EXPECT_THROW(static_cast<void>(parse_boundary_mode("WRAP")),
-               std::invalid_argument);
+TEST_F(BoundaryConfigTest, UndefFactoryMethod) {
+  auto config = BoundaryConfig::undef();
+  EXPECT_EQ(config.mode(), BoundaryMode::kUndef);
 }
 
 // ============================================================================
@@ -209,8 +194,8 @@ TEST_F(WindowedSpatialTest, PolynomialFactoryMethod) {
 
 TEST_F(WindowedSpatialTest, WithBoundaryMode) {
   Spatial config;
-  auto updated = config.with_boundary_mode(BoundaryMode::kWrap);
-  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kWrap);
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink());
+  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kShrink);
   EXPECT_EQ(config.boundary_mode(), BoundaryMode::kUndef);
 }
 
@@ -230,10 +215,10 @@ TEST_F(WindowedSpatialTest, WithWindowSizeY) {
 
 TEST_F(WindowedSpatialTest, MethodChaining) {
   Spatial config;
-  auto updated = config.with_boundary_mode(BoundaryMode::kExpand)
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink())
                      .with_half_window_size_x(4)
                      .with_half_window_size_y(6);
-  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kExpand);
+  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kShrink);
   EXPECT_EQ(updated.half_window_size_x(), 4);
   EXPECT_EQ(updated.half_window_size_y(), 6);
 }
@@ -298,8 +283,8 @@ TEST_F(UnivariateMethodTest, PolynomialFactoryMethod) {
 
 TEST_F(UnivariateMethodTest, WithBoundaryMode) {
   UnivariateMethod config;
-  auto updated = config.with_boundary_mode(BoundaryMode::kSym);
-  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kSym);
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink());
+  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kShrink);
   EXPECT_EQ(config.boundary_mode(), BoundaryMode::kUndef);
 }
 
@@ -312,9 +297,9 @@ TEST_F(UnivariateMethodTest, WithWindowSize) {
 
 TEST_F(UnivariateMethodTest, MethodChaining) {
   UnivariateMethod config;
-  auto updated =
-      config.with_boundary_mode(BoundaryMode::kWrap).with_half_window_size(7);
-  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kWrap);
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink())
+                     .with_half_window_size(7);
+  EXPECT_EQ(updated.boundary_mode(), BoundaryMode::kShrink);
   EXPECT_EQ(updated.half_window_size(), 7);
 }
 
@@ -355,8 +340,8 @@ TEST_F(UnivariateTest, WithWindowSize) {
 
 TEST_F(UnivariateTest, WithBoundaryMode) {
   Univariate config;
-  auto updated = config.with_boundary_mode(BoundaryMode::kExpand);
-  EXPECT_EQ(updated.univariate().boundary_mode(), BoundaryMode::kExpand);
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink());
+  EXPECT_EQ(updated.univariate().boundary_mode(), BoundaryMode::kShrink);
 }
 
 TEST_F(UnivariateTest, WithBoundsError) {
@@ -374,11 +359,11 @@ TEST_F(UnivariateTest, WithNumThreads) {
 TEST_F(UnivariateTest, MethodChaining) {
   Univariate config;
   auto updated = config.with_half_window_size(7)
-                     .with_boundary_mode(BoundaryMode::kSym)
+                     .with_boundary_mode(BoundaryConfig::shrink())
                      .with_bounds_error(true)
                      .with_num_threads(8);
   EXPECT_EQ(updated.univariate().half_window_size(), 7);
-  EXPECT_EQ(updated.univariate().boundary_mode(), BoundaryMode::kSym);
+  EXPECT_EQ(updated.univariate().boundary_mode(), BoundaryMode::kShrink);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);
 }
@@ -428,8 +413,8 @@ TEST_F(WindowedBivariateTest, WithHalfWindowSizeY) {
 
 TEST_F(WindowedBivariateTest, WithBoundaryMode) {
   Bivariate config;
-  auto updated = config.with_boundary_mode(BoundaryMode::kWrap);
-  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kWrap);
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink());
+  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kShrink);
 }
 
 TEST_F(WindowedBivariateTest, WithBoundsError) {
@@ -448,12 +433,12 @@ TEST_F(WindowedBivariateTest, MethodChaining) {
   Bivariate config;
   auto updated = config.with_half_window_size_x(4)
                      .with_half_window_size_y(6)
-                     .with_boundary_mode(BoundaryMode::kExpand)
+                     .with_boundary_mode(BoundaryConfig::shrink())
                      .with_bounds_error(true)
                      .with_num_threads(8);
   EXPECT_EQ(updated.spatial().half_window_size_x(), 4);
   EXPECT_EQ(updated.spatial().half_window_size_y(), 6);
-  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kExpand);
+  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kShrink);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);
 }
@@ -503,8 +488,8 @@ TEST_F(WindowedTrivariateTest, WithHalfWindowSizeY) {
 
 TEST_F(WindowedTrivariateTest, WithBoundaryMode) {
   Trivariate config;
-  auto updated = config.with_boundary_mode(BoundaryMode::kSym);
-  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kSym);
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink());
+  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kShrink);
 }
 
 TEST_F(WindowedTrivariateTest, WithBoundsError) {
@@ -524,13 +509,13 @@ TEST_F(WindowedTrivariateTest, MethodChaining) {
   auto updated = config.with_third_axis(AxisConfig::nearest())
                      .with_half_window_size_x(4)
                      .with_half_window_size_y(6)
-                     .with_boundary_mode(BoundaryMode::kExpand)
+                     .with_boundary_mode(BoundaryConfig::shrink())
                      .with_bounds_error(true)
                      .with_num_threads(8);
   EXPECT_EQ(updated.third_axis().method(), AxisMethod::kNearest);
   EXPECT_EQ(updated.spatial().half_window_size_x(), 4);
   EXPECT_EQ(updated.spatial().half_window_size_y(), 6);
-  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kExpand);
+  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kShrink);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);
 }
@@ -588,8 +573,8 @@ TEST_F(WindowedQuadrivariateTest, WithHalfWindowSizeY) {
 
 TEST_F(WindowedQuadrivariateTest, WithBoundaryMode) {
   Quadrivariate config;
-  auto updated = config.with_boundary_mode(BoundaryMode::kWrap);
-  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kWrap);
+  auto updated = config.with_boundary_mode(BoundaryConfig::shrink());
+  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kShrink);
 }
 
 TEST_F(WindowedQuadrivariateTest, WithBoundsError) {
@@ -610,14 +595,14 @@ TEST_F(WindowedQuadrivariateTest, MethodChaining) {
                      .with_fourth_axis(AxisConfig::nearest())
                      .with_half_window_size_x(4)
                      .with_half_window_size_y(6)
-                     .with_boundary_mode(BoundaryMode::kExpand)
+                     .with_boundary_mode(BoundaryConfig::shrink())
                      .with_bounds_error(true)
                      .with_num_threads(8);
   EXPECT_EQ(updated.third_axis().method(), AxisMethod::kNearest);
   EXPECT_EQ(updated.fourth_axis().method(), AxisMethod::kNearest);
   EXPECT_EQ(updated.spatial().half_window_size_x(), 4);
   EXPECT_EQ(updated.spatial().half_window_size_y(), 6);
-  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kExpand);
+  EXPECT_EQ(updated.spatial().boundary_mode(), BoundaryMode::kShrink);
   EXPECT_TRUE(updated.common().bounds_error());
   EXPECT_EQ(updated.common().num_threads(), 8);
 }

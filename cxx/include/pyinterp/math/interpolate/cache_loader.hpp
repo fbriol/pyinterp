@@ -34,7 +34,10 @@ namespace detail {
 /// @param[in] bounds_error Whether to raise an error on out-of-bounds access
 /// @param[out] cache The interpolation cache to update
 /// @param[out] error_out Optional output for error description
-/// @return True if the cache was loaded successfully
+/// @return True if the cache was loaded; false otherwise. On failure, error_out
+/// may contain an error description when bounds_error is true and the requested
+/// coordinates are out of bounds; otherwise the failure occurred because the
+/// interpolation window extends beyond the grid bounds.
 template <typename DataType, typename GridType, typename... AxisTypes>
 auto load_cache_generic(const GridType& grid,
                         const std::tuple<AxisTypes...>& query_coords,
@@ -59,10 +62,13 @@ auto load_cache_generic(const GridType& grid,
         ax.find_indexes(val, cache.template half_window<I>(), boundary);
 
     if (indices.empty()) {
-      // Point is outside grid domain - cache loading fails to trigger
-      // extrapolation handling
+      // Indices may be empty for two reasons:
+      // - The query coordinate is outside the axis domain: set success = false;
+      //   if bounds_error is true, set error_out.
+      // - The interpolation window extends beyond the axis bounds:
+      //   set success = false and leave error_out unset.
       success = false;
-      if (bounds_error) {
+      if (bounds_error && !ax.contains(val)) {
         error_out = grid.template construct_bounds_error_description<I>(val);
       }
       return;

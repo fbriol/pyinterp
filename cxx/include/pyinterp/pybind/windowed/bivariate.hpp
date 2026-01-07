@@ -48,11 +48,14 @@ template <typename DataType, typename ResultType>
       cache, grid, std::make_tuple(x, y), cfg.spatial().boundary_mode(),
       cfg.common().bounds_error());
   if (!cache_load_result.success) {
-    // Point is out of bounds. If bounds_error is enabled, the cache loader
-    // has recorded an error message that will be raised below.
+    // The cache could not be loaded. If an error message is provided and
+    // bounds_error is true, that means the requested coordinate is outside
+    // the grid domain.
     if (cache_load_result.error_message.has_value()) {
       throw std::out_of_range(cache_load_result.error_message.value());
     }
+    // Otherwise, the interpolation window cannot be constructed because part
+    // of it is out of bounds.
     return {};
   }
   if (!cache.is_valid()) {

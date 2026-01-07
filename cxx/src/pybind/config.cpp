@@ -109,7 +109,7 @@ auto add_windowed_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
                   "interpolation.",
                   nb::call_guard<nb::gil_scoped_release>())
       .def("with_boundary_mode", &Class::with_boundary_mode,
-           "Update boundary mode.", nb::arg("mode"),
+           "Update boundary mode.", nb::arg("config"),
            nb::call_guard<nb::gil_scoped_release>());
   return pyclass;
 }
@@ -134,17 +134,6 @@ auto add_methods(nb::class_<Class>& pyclass) -> nb::class_<Class>& {
 }
 
 auto bind(nb::module_& m) -> void {
-  nb::enum_<math::axis::Boundary>(m, "Boundary",
-                                  "Type of boundary handling on an Axis.")
-      .value("EXPAND", math::axis::Boundary::kExpand,
-             "Expand the boundary as a constant.")
-      .value("WRAP", math::axis::Boundary::kWrap,
-             "Circular boundary conditions.")
-      .value("SYM", math::axis::Boundary::kSym,
-             "Symmetrical boundary conditions.")
-      .value("UNDEF", math::axis::Boundary::kUndef,
-             "Boundary violation is not defined.");
-
   nb::class_<AxisConfig>(m, "AxisConfig",
                          "Configuration for a single-axis interpolation.")
       .def(nb::init<>(), "Default constructor.",
@@ -154,6 +143,17 @@ auto bind(nb::module_& m) -> void {
                   nb::call_guard<nb::gil_scoped_release>())
       .def_static("nearest", &AxisConfig::nearest,
                   "Create a configuration for nearest-neighbor interpolation.",
+                  nb::call_guard<nb::gil_scoped_release>());
+
+  nb::class_<BoundaryConfig>(
+      m, "BoundaryConfig",
+      "Configuration for boundary handling in windowed interpolation.")
+      .def_static("shrink", &BoundaryConfig::shrink,
+                  "Create a configuration to shrink the window at the "
+                  "boundaries.",
+                  nb::call_guard<nb::gil_scoped_release>())
+      .def_static("undef", &BoundaryConfig::undef,
+                  "Create a configuration with undefined boundary mode.",
                   nb::call_guard<nb::gil_scoped_release>());
 
   // Bind windowed Univariate configuration

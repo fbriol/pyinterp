@@ -6,36 +6,9 @@
 
 #include <gtest/gtest.h>
 
-#include <stdexcept>
 #include <thread>
 
 namespace pyinterp::config {
-
-// ============================================================================
-// AxisMethod Tests
-// ============================================================================
-
-class AxisMethodTest : public ::testing::Test {};
-
-TEST_F(AxisMethodTest, ParseAxisMethodNearest) {
-  auto method = parse_axis_method("nearest");
-  EXPECT_EQ(method, AxisMethod::kNearest);
-}
-
-TEST_F(AxisMethodTest, ParseAxisMethodLinear) {
-  auto method = parse_axis_method("linear");
-  EXPECT_EQ(method, AxisMethod::kLinear);
-}
-
-TEST_F(AxisMethodTest, ParseAxisMethodUnknownThrows) {
-  EXPECT_THROW(static_cast<void>(parse_axis_method("invalid")),
-               std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(parse_axis_method("")), std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(parse_axis_method("Linear")),
-               std::invalid_argument);  // case-sensitive
-  EXPECT_THROW(static_cast<void>(parse_axis_method("NEAREST")),
-               std::invalid_argument);
-}
 
 // ============================================================================
 // AxisConfig Tests

@@ -377,6 +377,23 @@ class Axis {
   /// an unrecognized container type identifier
   [[nodiscard]] static auto unpack(serialization::Reader& state) -> Axis<T>;
 
+  /// @brief Check if that coordinate is within the axis bounds.
+  ///
+  /// @param[in] coordinate Position in this coordinate system
+  /// @return True if the coordinate is within the axis bounds
+  [[nodiscard]] constexpr auto contains(const T coordinate) const noexcept
+      -> bool {
+    if (Fill<T>::is_fill_value(coordinate)) {
+      return false;
+    }
+
+    // If periodic, all coordinates are considered within bounds
+    if (is_periodic_) {
+      return true;
+    }
+    return coordinate >= min_value() && coordinate <= max_value();
+  }
+
  protected:
   /// @brief Get the axis container.
   ///

@@ -1,9 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <stdexcept>
-#include <string>
-#include <string_view>
 #include <thread>
 
 namespace pyinterp::config {
@@ -15,22 +12,6 @@ enum class AxisMethod : uint8_t {
   /// Linear interpolation
   kLinear,
 };
-
-/// @brief Parser for an axis interpolation method name.
-/// @param[in] method_name Name of the interpolation method (case-sensitive)
-/// @return Corresponding AxisMethod enum value
-/// @throws std::invalid_argument if the method name is unknown
-[[nodiscard]] inline auto parse_axis_method(std::string_view method_name)
-    -> AxisMethod {
-  if (method_name == "nearest") {
-    return AxisMethod::kNearest;
-  }
-  if (method_name == "linear") {
-    return AxisMethod::kLinear;
-  }
-  throw std::invalid_argument("Unknown axis interpolation method: " +
-                              std::string(method_name));
-}
 
 /// @brief Configuration for a single-axis interpolation.
 class AxisConfig {

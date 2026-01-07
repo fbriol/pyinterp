@@ -23,28 +23,6 @@ using Bicubic = math::interpolate::bivariate::Method;
 /// @brief Known fitting models
 using SpatialMethod = std::variant<Spline, Bicubic>;
 
-/// @brief Parser for a boundary mode name.
-/// @param[in] boundary_name Name of the boundary mode (case-sensitive)
-/// @return Corresponding `BoundaryMode` enum value.
-/// @throws std::invalid_argument if the boundary name is unknown.
-[[nodiscard]] inline auto parse_boundary_mode(std::string_view boundary_name)
-    -> BoundaryMode {
-  if (boundary_name == "expand") {
-    return BoundaryMode::kExpand;
-  }
-  if (boundary_name == "wrap") {
-    return BoundaryMode::kWrap;
-  }
-  if (boundary_name == "sym") {
-    return BoundaryMode::kSym;
-  }
-  if (boundary_name == "undef") {
-    return BoundaryMode::kUndef;
-  }
-  throw std::invalid_argument("Unknown boundary mode: " +
-                              std::string(boundary_name));
-}
-
 /// @brief Parser for a fitting model name.
 /// @param[in] model_name Name of the fitting model (case-sensitive)
 /// @return Corresponding `SpatialMethod` variant value.
@@ -84,6 +62,41 @@ using SpatialMethod = std::variant<Spline, Bicubic>;
   throw std::invalid_argument("Unknown fitting model: " +
                               std::string(model_name));
 }
+
+/// @brief Configuration for boundary handling
+///
+/// Because only a limited set of boundary modes is supported, we expose
+/// `BoundaryConfig` helpers rather than the raw `math::axis::Boundary` enum
+/// to prevent invalid inputs.
+class BoundaryConfig {
+  public:
+    /// @brief Default constructor
+    constexpr BoundaryConfig() = default;
+  
+    /// @brief Constructor with an explicit boundary mode
+    /// @param[in] mode Boundary mode to use
+    constexpr explicit BoundaryConfig(BoundaryMode mode) : mode_(mode) {}
+  
+    /// @brief Get the boundary mode.
+    /// @return Boundary mode
+    [[nodiscard]] constexpr auto mode() const -> BoundaryMode { return mode_; }
+
+    /// @brief Create a configuration for undefined boundary mode.
+    /// @return `BoundaryConfig` configured with the undefined boundary mode
+    [[nodiscard]] static constexpr auto undef() -> BoundaryConfig {
+      return BoundaryConfig{BoundaryMode::kUndef};
+    }
+
+    /// @brief Create a configuration for shrink boundary mode.
+    /// @return `BoundaryConfig` configured with the shrink boundary mode
+    [[nodiscard]] static constexpr auto shrink() -> BoundaryConfig {
+      return BoundaryConfig{BoundaryMode::kShrink};
+    }
+  
+  private:
+    /// Boundary mode
+    BoundaryMode mode_{BoundaryMode::kUndef};
+};
 
 /// @brief Configuration for 2D spatial interpolation.
 class Spatial {
@@ -189,12 +202,12 @@ class Spatial {
   }
 
   /// @brief Update the `boundary_mode` setting.
-  /// @param[in] mode New boundary mode.
+  /// @param[in] config New boundary mode.
   /// @return Updated `Spatial` instance with the new setting.
   [[nodiscard]] constexpr auto with_boundary_mode(this Spatial self,
-                                                  BoundaryMode mode)
+                                                  BoundaryConfig config)
       -> Spatial {
-    self.boundary_mode_ = mode;
+    self.boundary_mode_ = config.mode();
     return self;
   }
 
@@ -345,12 +358,12 @@ class UnivariateMethod {
   }
 
   /// @brief Update the `boundary_mode` setting.
-  /// @param[in] mode New boundary mode.
+  /// @param[in] config New boundary mode.
   /// @return Updated instance with the new setting.
   [[nodiscard]] constexpr auto with_boundary_mode(this UnivariateMethod self,
-                                                  BoundaryMode mode)
+                                                  BoundaryConfig config)
       -> UnivariateMethod {
-    self.boundary_mode_ = mode;
+    self.boundary_mode_ = config.mode();
     return self;
   }
 
@@ -421,12 +434,12 @@ class SpatialModifiers {
   }
 
   /// @brief Update the `boundary_mode` setting on the derived config.
-  /// @param[in] mode New boundary mode.
+  /// @param[in] config New boundary mode.
   /// @return Updated derived configuration instance.
   [[nodiscard]] constexpr auto with_boundary_mode(this Derived self,
-                                                  BoundaryMode mode)
+                                                  BoundaryConfig config)
       -> Derived {
-    self.spatial_ = self.spatial_.with_boundary_mode(mode);
+    self.spatial_ = self.spatial_.with_boundary_mode(config);
     return self;
   }
 };
@@ -589,12 +602,12 @@ class Univariate : public CommonModifiers<Univariate> {
   }
 
   /// @brief Update the `boundary_mode` setting.
-  /// @param[in] mode New boundary mode.
+  /// @param[in] config New boundary mode.
   /// @return Updated `Univariate` instance with the new setting.
   [[nodiscard]] constexpr auto with_boundary_mode(this Univariate self,
-                                                  BoundaryMode mode)
+                                                  BoundaryConfig config)
       -> Univariate {
-    self.univariate_ = self.univariate_.with_boundary_mode(mode);
+    self.univariate_ = self.univariate_.with_boundary_mode(config);
     return self;
   }
 
