@@ -9,6 +9,7 @@
 #include "pyinterp/pybind/temporal_axis.hpp"
 
 namespace nb = nanobind;
+using nb::literals::operator""_a;
 
 namespace pyinterp::pybind {
 
@@ -188,14 +189,14 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
           [](const Axis &self, size_t index) -> auto {
             return self.coordinate_value(index);
           },
-          nb::arg("index"))
+          "index"_a)
 
       .def(
           "__getitem__",
           [](const Axis &self, const nb::slice &axis_slice) -> auto {
             return self.coordinate_values(axis_slice);
           },
-          nb::arg("axis_slice"))
+          "axis_slice"_a)
 
       .def(
           "__len__", [](const Axis &self) -> int64_t { return self.size(); },
@@ -219,7 +220,7 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
             result.flip();
             return result;
           },
-          nb::arg("inplace") = false, kFlipDoc,
+          "inplace"_a = false, kFlipDoc,
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
@@ -233,15 +234,13 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
           [](const Axis &self, const Axis &rhs) -> bool {
             return self.operator==(rhs);
           },
-          nb::arg("other"),
-          "Override the default behavior of the ``==`` operator.",
+          "other"_a, "Override the default behavior of the ``==`` operator.",
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "__ne__",
           [](const Axis &self, const Axis &rhs) -> bool { return self != rhs; },
-          nb::arg("other"),
-          "Override the default behavior of the ``!=`` operator.",
+          "other"_a, "Override the default behavior of the ``!=`` operator.",
           nb::call_guard<nb::gil_scoped_release>())
 
       .def("__getstate__", &Axis::getstate, "Get the state for pickling.")
@@ -250,7 +249,7 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
           [](Axis &self, nanobind::tuple &state) -> void {
             new (&self) Axis(std::move(Axis::setstate(state)));
           },
-          nb::arg("state"), "Set the state for unpickling.");
+          "state"_a, "Set the state for unpickling.");
 }
 
 template <typename T>
@@ -259,8 +258,7 @@ void init_axis(nb::module_ &m) {
 
   axis.def(nb::init<const Eigen::Ref<const Vector<T>> &, const T,
                     const std::optional<T> &>(),
-           nb::arg("values"), nb::arg("epsilon") = 1e-6,
-           nb::arg("period") = std::nullopt,
+           "values"_a, "epsilon"_a = 1e-6, "period"_a = std::nullopt,
            "Initialize the axis with the given values, tolerance, and period.",
            nb::call_guard<nb::gil_scoped_release>())
 
@@ -301,7 +299,7 @@ void init_axis(nb::module_ &m) {
              const bool bounded) -> Vector<int64_t> {
             return self.find_index(coordinates, bounded);
           },
-          nb::arg("coordinates"), nb::arg("bounded"), kFindIndexDoc,
+          "coordinates"_a, "bounded"_a = true, kFindIndexDoc,
           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
@@ -311,7 +309,7 @@ void init_axis(nb::module_ &m) {
               -> Eigen::Matrix<int64_t, Eigen::Dynamic, 2, Eigen::RowMajor> {
             return self.find_indexes(coordinates);
           },
-          nb::arg("coordinates"), kFindIndexesDoc,
+          "coordinates"_a, kFindIndexesDoc,
           nb::call_guard<nb::gil_scoped_release>());
   implement_axis<Axis<T>>(axis, "Axis");
 }
@@ -323,8 +321,8 @@ inline void init_temporal_axis(nb::module_ &m) {
   temporal_axis
       .def(nb::init<const nb::object &, const nb::object &,
                     const nb::object &>(),
-           nb::arg("points"), nb::arg("epsilon") = nb::none(),
-           nb::arg("period") = nb::none(), kTemporalAxisDoc)
+           "points"_a, "epsilon"_a = nb::none(), "period"_a = nb::none(),
+           kTemporalAxisDoc)
 
       .def_prop_ro("dtype", &TemporalAxis::dtype,
                    "Get the numpy dtype of this axis.")
@@ -351,7 +349,7 @@ inline void init_temporal_axis(nb::module_ &m) {
              const bool bounded) -> Vector<int64_t> {
             return self.find_index(coordinates, bounded);
           },
-          nb::arg("coordinates"), nb::arg("bounded"), kFindIndexDoc)
+          "coordinates"_a, "bounded"_a = true, kFindIndexDoc)
 
       .def(
           "find_indexes",
@@ -359,10 +357,10 @@ inline void init_temporal_axis(nb::module_ &m) {
               -> Eigen::Matrix<int64_t, Eigen::Dynamic, 2, Eigen::RowMajor> {
             return self.find_indexes(coordinates);
           },
-          nb::arg("coordinates"), kFindIndexesDoc)
+          "coordinates"_a, kFindIndexesDoc)
 
       .def("cast_to_temporal_axis", &TemporalAxis::cast_to_temporal_axis,
-           nb::arg("array"), kSafeCastDoc);
+           "array"_a, kSafeCastDoc);
 
   implement_axis<TemporalAxis>(temporal_axis, "TemporalAxis");
 }
