@@ -29,8 +29,8 @@ namespace detail {
 /// @tparam AxisTypes Types of the axes
 /// @param[in] grid The data grid to load from
 /// @param[in] query_coords The query coordinates
-/// @param[in] boundary Boundary handling mode (allowed mode here is only
-/// kUndef or kShrink otherwise the behavior is undefined)
+/// @param[in] boundary Boundary handling mode (allowed modes: kUndef or kShrink
+/// only; other modes have undefined behavior)
 /// @param[in] bounds_error Whether to raise an error on out-of-bounds access
 /// @param[out] cache The interpolation cache to update
 /// @param[out] error_out Optional output for error description
