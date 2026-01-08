@@ -23,7 +23,7 @@ class CSplinePeriodic : public CSplineBase<T> {
   /// @brief Returns the minimum number of points required for the
   /// interpolation.
   /// @return Minimum number of points
-  [[nodiscard]] constexpr auto min_size() const -> int64_t final { return 2; }
+  [[nodiscard]] constexpr auto min_size() const -> int64_t final { return 4; }
 
  private:
   /// @brief Compute the coefficients of the interpolation
