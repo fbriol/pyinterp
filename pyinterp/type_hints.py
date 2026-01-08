@@ -61,6 +61,10 @@ if TYPE_CHECKING:
         OneDim,
         np.dtype[np.uint8],
     ]
+    NDArray2DBool: TypeAlias = np.ndarray[
+        TwoDims,
+        np.dtype[np.bool],
+    ]
     NDArray2DFloat32: TypeAlias = np.ndarray[
         TwoDims,
         np.dtype[np.float32],
@@ -140,6 +144,10 @@ else:
     NDArray1DUInt8 = GenericAlias(
         np.ndarray,
         (OneDim, _DType[np.uint8]),
+    )
+    NDArray2DBool = GenericAlias(
+        np.ndarray,
+        (TwoDims, _DType[np.bool]),
     )
     NDArray2DFloat32 = GenericAlias(
         np.ndarray,

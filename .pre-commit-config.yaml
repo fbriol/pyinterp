@@ -22,6 +22,8 @@ repos:
     hooks:
       - id: flake8
         exclude: tests
+        args:
+          - --extend-ignore=E203
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.10
     hooks:
