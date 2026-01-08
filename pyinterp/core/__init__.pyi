@@ -15,6 +15,7 @@ from numpy.typing import NDArray
 
 from ..type_hints import (
     FourDims,
+    NDArray1DNumeric,
     NDArray1DDateTime64,
     NDArray1DFloat32,
     NDArray1DFloat64,
@@ -96,7 +97,7 @@ def quadrivariate(
 class Axis:
     def __init__(
         self,
-        values: NDArray1DFloat64,
+        values: NDArray1DNumeric,
         epsilon: float = ...,
         period: float | None = ...,
     ) -> None: ...
@@ -105,7 +106,7 @@ class Axis:
         self, coordinates: NDArray1DFloat64, bounded: bool = ...
     ) -> NDArray1DInt64: ...
     def find_indexes(
-        self, coordinates: NDArray1DFloat64
+        self, coordinates: NDArray1DNumeric
     ) -> NDArray2DInt64: ...
     def flip(self, inplace: bool = ...) -> Axis: ...
     def front(self) -> float: ...

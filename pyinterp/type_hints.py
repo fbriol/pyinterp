@@ -16,6 +16,10 @@ if TYPE_CHECKING:
         OneDim,
         np.dtype[Any],
     ]
+    NDArray1DNumeric: TypeAlias = np.ndarray[
+        OneDim,
+        np.dtype[np.integer[Any] | np.floating[Any]],
+    ]
     NDArray1DUInt8: TypeAlias = np.ndarray[
         OneDim,
         np.dtype[np.uint8],
