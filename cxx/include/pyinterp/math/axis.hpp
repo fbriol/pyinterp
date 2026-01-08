@@ -56,6 +56,10 @@ class Axis {
   /// Type of values stored in this axis.
   using value_type = T;
 
+  /// Type of the vector that represents the framed axis values.
+  using IndexesResultType = std::optional<
+      std::pair<std::vector<int64_t>, std::pair<int64_t, int64_t>>>;
+
   /// @brief Default constructor
   Axis() = default;
 
@@ -337,11 +341,16 @@ class Axis {
   /// of the coordinate; result size is (2*half_window_size)
   /// @param[in] boundary Type of boundary handling (Expand, Wrap, Sym, or
   /// Undef)
-  /// @return Vector of indexes (size = 2*half_window_size), or empty vector if
-  /// boundary cannot be satisfied
+  /// @return An optional pair if the boundary constraints can be satisfied:
+  ///   - Vector of indexes (size = 2*half_window_size), or empty if boundary
+  ///     constraints cannot be satisfied
+  ///   - Pair of (lower_index, upper_index) bracketing the coordinate at the
+  ///     window center. For 'Shrink' boundary mode, these may differ from
+  ///     (half_window_size - 1, half_window_size); otherwise they equal those
+  ///     values
   [[nodiscard]] auto find_indexes(T coordinate, size_t half_window_size,
                                   axis::Boundary boundary) const
-      -> std::vector<int64_t>;
+      -> IndexesResultType;
 
   /// @brief Get a string representation of a coordinate handled by this axis.
   ///
@@ -793,19 +802,20 @@ constexpr auto Axis<T>::make_boundary_handler(axis::Boundary boundary,
 template <typename T>
   requires std::is_arithmetic_v<T>
 auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
-                           axis::Boundary boundary) const
-    -> std::vector<int64_t> {
+                           axis::Boundary boundary) const -> IndexesResultType {
   if (half_window_size == 0) {
-    return {};
+    return std::nullopt;
   }
   auto indexes = find_indexes(coordinate);
   if (!indexes) {
     // If the requested coordinate cannot be framed, check if the axis is a
     // singleton. For a singleton axis, the result is valid only if the
     // requested coordinate matches the single value stored in the axis.
-    return half_window_size == 1 && coordinate == (*this)(0)
-               ? std::vector<int64_t>(half_window_size << 1U, 0)
-               : std::vector<int64_t>{};
+    if (this->size() != 1) {
+      return std::nullopt;
+    }
+    return std::make_pair(std::vector<int64_t>(half_window_size << 1U, 0),
+                          std::make_pair(0, 0));
   }
   // Length of the axis
   const auto container_size = this->size();
@@ -847,7 +857,8 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
     }
     ++shift;
   }
-  return {result.begin(), result.end()};
+  return std::make_pair(std::vector<int64_t>(result.begin(), result.end()),
+                        *indexes);
 }
 
 // ============================================================================

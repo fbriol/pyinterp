@@ -59,19 +59,26 @@ TYPED_TEST_SUITE(AxisTestSuite, NumericTypes);
 // =============================================================================
 
 template <typename T>
-void ExpectIndexPair(const std::optional<std::tuple<int64_t, int64_t>>& result,
-                     int64_t expected_first, int64_t expected_second) {
+void expect_index_pair(
+    const std::optional<std::tuple<int64_t, int64_t>>& result,
+    int64_t expected_first, int64_t expected_second) {
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(std::get<0>(*result), expected_first);
   EXPECT_EQ(std::get<1>(*result), expected_second);
 }
 
-void ExpectIndexVector(const std::vector<int64_t>& actual,
-                       const std::vector<int64_t>& expected) {
-  ASSERT_EQ(actual.size(), expected.size());
-  for (size_t i = 0; i < expected.size(); ++i) {
-    EXPECT_EQ(actual[i], expected[i]) << "Mismatch at index " << i;
+template <typename T>
+void expect_index_vector(
+    const typename math::Axis<T>::IndexesResultType& actual,
+    const std::pair<std::vector<int64_t>, std::pair<int64_t, int64_t>>&
+        expected) {
+  ASSERT_TRUE(actual.has_value());
+  ASSERT_EQ(actual->first.size(), expected.first.size());
+  for (size_t i = 0; i < expected.first.size(); ++i) {
+    EXPECT_EQ(actual->first[i], expected.first[i]) << "Mismatch at index " << i;
   }
+  expect_index_pair<T>(std::make_optional(actual->second),
+                       expected.second.first, expected.second.second);
 }
 
 // =============================================================================
@@ -175,8 +182,8 @@ TYPED_TEST(AxisTestSuite, BinaryAxisFindIndexesBoundary) {
   this->CreateRegularAxis(0, 1, 2);
   auto* axis = this->axis();
 
-  ExpectIndexPair<TypeParam>(axis->find_indexes(0), 0, 1);
-  ExpectIndexPair<TypeParam>(axis->find_indexes(1), 0, 1);
+  expect_index_pair<TypeParam>(axis->find_indexes(0), 0, 1);
+  expect_index_pair<TypeParam>(axis->find_indexes(1), 0, 1);
 }
 
 TYPED_TEST(AxisTestSuite, BinaryAxisFindIndexesFloat) {
@@ -186,10 +193,10 @@ TYPED_TEST(AxisTestSuite, BinaryAxisFindIndexesFloat) {
 
     EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(-0.1)));
     EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(1.1)));
-    ExpectIndexPair<TypeParam>(axis->find_indexes(static_cast<TypeParam>(0.4)),
-                               0, 1);
-    ExpectIndexPair<TypeParam>(axis->find_indexes(static_cast<TypeParam>(0.6)),
-                               0, 1);
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(0.4)), 0, 1);
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(0.6)), 0, 1);
   }
 }
 
@@ -200,7 +207,7 @@ TYPED_TEST(AxisTestSuite, BinaryAxisFindIndexesInteger) {
 
     EXPECT_FALSE(axis->find_indexes(-1));
     EXPECT_FALSE(axis->find_indexes(2));
-    ExpectIndexPair<TypeParam>(axis->find_indexes(0), 0, 1);
+    expect_index_pair<TypeParam>(axis->find_indexes(0), 0, 1);
   }
 }
 
@@ -236,8 +243,8 @@ TYPED_TEST(AxisTestSuite, PeriodicAxis0To359WrapBehavior) {
   EXPECT_EQ(axis->find_index(360, true), 0);
   EXPECT_EQ(axis->find_index(360, false), 0);
 
-  ExpectIndexPair<TypeParam>(axis->find_indexes(360), 0, 1);
-  ExpectIndexPair<TypeParam>(axis->find_indexes(370), 10, 11);
+  expect_index_pair<TypeParam>(axis->find_indexes(360), 0, 1);
+  expect_index_pair<TypeParam>(axis->find_indexes(370), 10, 11);
 }
 
 TYPED_TEST(AxisTestSuite, PeriodicAxis0To359NegativeWrap) {
@@ -245,13 +252,13 @@ TYPED_TEST(AxisTestSuite, PeriodicAxis0To359NegativeWrap) {
     this->CreateRegularAxis(0, 359, 360, true);
     auto* axis = this->axis();
 
-    ExpectIndexPair<TypeParam>(axis->find_indexes(static_cast<TypeParam>(-9.5)),
-                               350, 351);
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(-9.5)), 350, 351);
   } else {
     this->CreateRegularAxis(0, 359, 360, true);
     auto* axis = this->axis();
 
-    ExpectIndexPair<TypeParam>(axis->find_indexes(-10), 350, 351);
+    expect_index_pair<TypeParam>(axis->find_indexes(-10), 350, 351);
   }
 }
 
@@ -358,11 +365,13 @@ TYPED_TEST(AxisTestSuite, SearchWindowPeriodicAxis) {
   auto* axis = this->axis();
 
   auto indexes = axis->find_indexes(0, 5, math::axis::kUndef);
-  ExpectIndexVector(indexes,
-                    {176, 177, 178, 179, 180, 181, 182, 183, 184, 185});
+  expect_index_vector<TypeParam>(
+      indexes,
+      {{176, 177, 178, 179, 180, 181, 182, 183, 184, 185}, {180, 181}});
 
   indexes = axis->find_indexes(-180, 5, math::axis::kUndef);
-  ExpectIndexVector(indexes, {356, 357, 358, 359, 0, 1, 2, 3, 4, 5});
+  expect_index_vector<TypeParam>(
+      indexes, {{356, 357, 358, 359, 0, 1, 2, 3, 4, 5}, {0, 1}});
 }
 
 TYPED_TEST(AxisTestSuite, SearchWindowBoundaryModes) {
@@ -371,19 +380,18 @@ TYPED_TEST(AxisTestSuite, SearchWindowBoundaryModes) {
 
   // Symmetric mode
   auto indexes = axis->find_indexes(1, 4, math::axis::kSym);
-  ExpectIndexVector(indexes, {2, 1, 0, 1, 2, 3, 4, 5});
+  expect_index_vector<TypeParam>(indexes, {{2, 1, 0, 1, 2, 3, 4, 5}, {1, 2}});
 
   // Wrap mode
   indexes = axis->find_indexes(1, 4, math::axis::kWrap);
-  ExpectIndexVector(indexes, {8, 9, 0, 1, 2, 3, 4, 5});
-
+  expect_index_vector<TypeParam>(indexes, {{8, 9, 0, 1, 2, 3, 4, 5}, {1, 2}});
   // Expand mode
   indexes = axis->find_indexes(1, 4, math::axis::kExpand);
-  ExpectIndexVector(indexes, {0, 0, 0, 1, 2, 3, 4, 5});
+  expect_index_vector<TypeParam>(indexes, {{0, 0, 0, 1, 2, 3, 4, 5}, {1, 2}});
 
   // Shrink mode
   indexes = axis->find_indexes(1, 4, math::axis::kShrink);
-  ExpectIndexVector(indexes, {0, 1, 2, 3, 4, 5});
+  expect_index_vector<TypeParam>(indexes, {{0, 1, 2, 3, 4, 5}, {1, 2}});
 }
 
 // =============================================================================
