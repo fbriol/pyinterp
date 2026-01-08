@@ -69,15 +69,16 @@ void expect_index_pair(
 
 template <typename T>
 void expect_index_vector(
-    const typename math::Axis<T>::IndexesResultType& actual,
+    const std::optional<math::axis::IndexWindow>& actual,
     const std::pair<std::vector<int64_t>, std::pair<int64_t, int64_t>>&
         expected) {
   ASSERT_TRUE(actual.has_value());
-  ASSERT_EQ(actual->first.size(), expected.first.size());
+  auto [indexes, center_indexes] = *actual;
+  ASSERT_EQ(indexes.size(), expected.first.size());
   for (size_t i = 0; i < expected.first.size(); ++i) {
-    EXPECT_EQ(actual->first[i], expected.first[i]) << "Mismatch at index " << i;
+    EXPECT_EQ(indexes[i], expected.first[i]) << "Mismatch at index " << i;
   }
-  expect_index_pair<T>(std::make_optional(actual->second),
+  expect_index_pair<T>(std::make_optional(center_indexes),
                        expected.second.first, expected.second.second);
 }
 
@@ -366,12 +367,11 @@ TYPED_TEST(AxisTestSuite, SearchWindowPeriodicAxis) {
 
   auto indexes = axis->find_indexes(0, 5, math::axis::kUndef);
   expect_index_vector<TypeParam>(
-      indexes,
-      {{176, 177, 178, 179, 180, 181, 182, 183, 184, 185}, {180, 181}});
+      indexes, {{176, 177, 178, 179, 180, 181, 182, 183, 184, 185}, {4, 5}});
 
   indexes = axis->find_indexes(-180, 5, math::axis::kUndef);
   expect_index_vector<TypeParam>(
-      indexes, {{356, 357, 358, 359, 0, 1, 2, 3, 4, 5}, {0, 1}});
+      indexes, {{356, 357, 358, 359, 0, 1, 2, 3, 4, 5}, {4, 5}});
 }
 
 TYPED_TEST(AxisTestSuite, SearchWindowBoundaryModes) {
@@ -380,14 +380,14 @@ TYPED_TEST(AxisTestSuite, SearchWindowBoundaryModes) {
 
   // Symmetric mode
   auto indexes = axis->find_indexes(1, 4, math::axis::kSym);
-  expect_index_vector<TypeParam>(indexes, {{2, 1, 0, 1, 2, 3, 4, 5}, {1, 2}});
+  expect_index_vector<TypeParam>(indexes, {{2, 1, 0, 1, 2, 3, 4, 5}, {3, 4}});
 
   // Wrap mode
   indexes = axis->find_indexes(1, 4, math::axis::kWrap);
-  expect_index_vector<TypeParam>(indexes, {{8, 9, 0, 1, 2, 3, 4, 5}, {1, 2}});
+  expect_index_vector<TypeParam>(indexes, {{8, 9, 0, 1, 2, 3, 4, 5}, {3, 4}});
   // Expand mode
   indexes = axis->find_indexes(1, 4, math::axis::kExpand);
-  expect_index_vector<TypeParam>(indexes, {{0, 0, 0, 1, 2, 3, 4, 5}, {1, 2}});
+  expect_index_vector<TypeParam>(indexes, {{0, 0, 0, 1, 2, 3, 4, 5}, {3, 4}});
 
   // Shrink mode
   indexes = axis->find_indexes(1, 4, math::axis::kShrink);

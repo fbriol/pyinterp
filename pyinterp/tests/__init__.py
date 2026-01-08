@@ -83,3 +83,8 @@ def load_grid4d() -> xr.Dataset:
     ds["pressure"] = ds["pressure"].astype("float32")
     ds["temperature"] = ds["temperature"].astype("float32")
     return ds
+
+
+def ephemeris_path() -> pathlib.Path:
+    """Return the path to the ephemeris test file."""
+    return ROOT / "ephemeris.txt"

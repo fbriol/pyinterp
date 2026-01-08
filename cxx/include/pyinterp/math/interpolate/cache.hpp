@@ -8,6 +8,7 @@
 #include <concepts>
 #include <cstddef>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace pyinterp::math::interpolate {
@@ -150,7 +151,10 @@ class InterpolationCache {
   }
 
   /// Finalize the cache by updating domain bounds
-  void finalize() { update_domains(std::index_sequence_for<AxisTypes...>{}); }
+  void finalize(const std::array<std::pair<int64_t, int64_t>, kNDim>&
+                    bracketing_indices) {
+    update_domains(bracketing_indices, std::index_sequence_for<AxisTypes...>{});
+  }
 
   /// Check if all values are valid (non-NaN for floating-point types)
   /// @return True if all values are valid
@@ -281,13 +285,16 @@ class InterpolationCache {
 
   // Update domain bounds for all dimensions
   template <size_t... Is>
-  void update_domains(std::index_sequence<Is...>) {
-    (update_domain_for_axis<Is>(), ...);
+  void update_domains(
+      const std::array<std::pair<int64_t, int64_t>, kNDim>& bracketing_indices,
+      std::index_sequence<Is...>) {
+    (update_domain_for_axis<Is>(bracketing_indices[Is]), ...);
   }
 
   // Update domain bounds for a specific dimension I
   template <size_t I>
-  void update_domain_for_axis();
+  void update_domain_for_axis(
+      const std::pair<int64_t, int64_t>& bracketing_indices);
 
   // Helper to calculate offset starting from Dimension 'StartDim'
   template <size_t StartDim, typename... Indices>
@@ -354,24 +361,23 @@ InterpolationCache<DataType, AxisTypes...>::InterpolationCache(
 
 template <Numeric DataType, typename... AxisTypes>
 template <size_t I>
-void InterpolationCache<DataType, AxisTypes...>::update_domain_for_axis() {
+void InterpolationCache<DataType, AxisTypes...>::update_domain_for_axis(
+    const std::pair<int64_t, int64_t>& bracketing_indices) {
   const auto& vec = std::get<I>(coords_);
   const auto window_size = vec.size();
-  // The constructor ensures window_size >= 2
   assert(window_size >= 2);
 
-  auto mid_start = (window_size / 2) - 1;
-  auto mid_end = mid_start + 1;
+  const auto& [left_idx, right_idx] = bracketing_indices;
 
-  // Safety check for small windows
-  if (mid_end >= window_size) {
-    domains_[I].valid = false;
+  domains_[I].valid = left_idx >= 0 && right_idx >= 0 &&
+                      std::cmp_less(left_idx, window_size) &&
+                      std::cmp_less(right_idx, window_size);
+  if (!domains_[I].valid) {
     return;
   }
 
-  domains_[I].min = static_cast<double>(vec[mid_start]);
-  domains_[I].max = static_cast<double>(vec[mid_end]);
-  domains_[I].valid = true;
+  domains_[I].min = static_cast<double>(vec[left_idx]);
+  domains_[I].max = static_cast<double>(vec[right_idx]);
 }
 
 // ============================================================================

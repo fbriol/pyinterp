@@ -150,7 +150,7 @@ class TestMakeWindowedConfig:
             windowed.Bivariate,
             bounds_error=False,
             num_threads=0,
-            boundary_mode="symmetric",
+            boundary_mode="undef",
         )
         assert isinstance(config, windowed.Bivariate)
 
@@ -161,7 +161,7 @@ class TestMakeWindowedConfig:
             windowed.Bivariate,
             bounds_error=False,
             num_threads=0,
-            boundary_mode="wrap",
+            boundary_mode="undef",
         )
         assert isinstance(config, windowed.Bivariate)
 
@@ -229,7 +229,7 @@ class TestValidateNoWindowedOptions:
                 "idw",
                 half_window_size_x=None,
                 half_window_size_y=None,
-                boundary_mode="symmetric",
+                boundary_mode="undef",
             )
 
     def test_third_axis_error(self) -> None:
@@ -261,7 +261,7 @@ class TestValidateNoWindowedOptions:
                 "bilinear",
                 half_window_size_x=10,
                 half_window_size_y=12,
-                boundary_mode="wrap",
+                boundary_mode="shrink",
             )
         error_msg = str(exc_info.value)
         assert "window_size_x" in error_msg
@@ -300,7 +300,7 @@ class TestMakeWindowedConfigUnivariate:
             windowed.Univariate,
             bounds_error=False,
             num_threads=0,
-            boundary_mode="symmetric",
+            boundary_mode="undef",
         )
         assert isinstance(config, windowed.Univariate)
 
@@ -367,7 +367,7 @@ class TestUnivariateFunction:
         grid = self.create_test_grid()
         x = np.array([2.5, 5.0, 7.5])
 
-        result = univariate(grid, x, "linear", boundary_mode="symmetric")
+        result = univariate(grid, x, "linear", boundary_mode="undef")
         assert result.shape == (3,)
         assert np.all(np.isfinite(result))
 

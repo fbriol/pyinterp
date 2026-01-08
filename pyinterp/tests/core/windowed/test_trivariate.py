@@ -58,12 +58,13 @@ class TestTrivariateWindowed:
     def make_config(
         method: Callable[[], windowed.Trivariate],
         *,
-        boundary: windowed.Boundary = windowed.Boundary.EXPAND,
+        boundary: windowed.BoundaryConfig | None = None,
         half_window_size_x: int | None = 3,
         half_window_size_y: int | None = 3,
         third_axis: windowed.AxisConfig | None = None,
     ) -> windowed.Trivariate:
         """Build a windowed trivariate configuration with sensible defaults."""
+        boundary = boundary or windowed.BoundaryConfig.undef()
         third_axis = third_axis or windowed.AxisConfig.nearest()
 
         cfg = method().with_third_axis(third_axis).with_boundary_mode(boundary)
@@ -115,6 +116,7 @@ class TestTrivariateWindowed:
 
         config = self.make_config(
             windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
             third_axis=windowed.AxisConfig.linear(),
         )
         result = core.trivariate(grid, x, y, z, config)
@@ -220,6 +222,7 @@ class TestTrivariateWindowed:
         # Test with small window
         config_small = self.make_config(
             windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
             half_window_size_x=3,
             half_window_size_y=3,
         )
@@ -228,6 +231,7 @@ class TestTrivariateWindowed:
         # Test with larger window
         config_large = self.make_config(
             windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
             half_window_size_x=7,
             half_window_size_y=7,
         )
@@ -250,7 +254,7 @@ class TestTrivariateWindowed:
             rtol=0.05,
         )
 
-    def test_boundary_modes(self) -> None:
+    def test_boundary_config(self) -> None:
         """Test different boundary modes produce finite results."""
         grid = self.create_analytical_grid3d(np.float64)
         x = np.array([np.pi / 2])
@@ -258,9 +262,8 @@ class TestTrivariateWindowed:
         z = np.array([5.0])
 
         boundary_modes = [
-            windowed.Boundary.EXPAND,
-            windowed.Boundary.SYM,
-            windowed.Boundary.WRAP,
+            windowed.BoundaryConfig.shrink(),
+            windowed.BoundaryConfig.undef(),
         ]
 
         results = []
@@ -321,6 +324,7 @@ class TestTrivariateWindowed:
 
         config = self.make_config(
             windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
             half_window_size_x=3,
             half_window_size_y=3,
         )
@@ -338,7 +342,10 @@ class TestTrivariateWindowed:
         y = np.array([np.pi / 4, 0.5, np.pi / 3])
         z = np.array([5.0, 5.0, 3.0])
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (3,)
@@ -384,7 +391,10 @@ class TestTrivariateWindowed:
         y = np.array([np.pi / 4])
         z = np.array([5.0])
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.dtype == np.float32
@@ -452,7 +462,10 @@ class TestTrivariateWindowed:
         y = np.array([y_val])
         z = np.array([z_val])
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         expected = grid.array[1, 1, 1]
@@ -476,11 +489,17 @@ class TestTrivariateWindowed:
         z = np.array([1.0, 2.0, 3.0, 4.0, 7.0])
 
         # Test with bilinear
-        config_bilinear = self.make_config(windowed.Trivariate.bilinear)
+        config_bilinear = self.make_config(
+            windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_bilinear = core.trivariate(grid, x, y, z, config_bilinear)
 
         # Test with bicubic (should be more accurate)
-        config_bicubic = self.make_config(windowed.Trivariate.bicubic)
+        config_bicubic = self.make_config(
+            windowed.Trivariate.bicubic,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_bicubic = core.trivariate(grid, x, y, z, config_bicubic)
 
         # Compare with analytical values
@@ -515,12 +534,15 @@ class TestTrivariateWindowed:
         y = rng.uniform(0.1, np.pi - 0.1, n_points)
         z = rng.uniform(0.1, 9.9, n_points)
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (n_points,)
         # Most values should be finite
-        assert np.sum(np.isfinite(result)) > n_points * 0.99
+        assert np.sum(np.isfinite(result)) == n_points
 
     def test_method_chaining(self) -> None:
         """Test that windowed methods can be chained."""
@@ -528,7 +550,7 @@ class TestTrivariateWindowed:
             windowed.Trivariate.bicubic()
             .with_num_threads(4)
             .with_bounds_error(True)
-            .with_boundary_mode(windowed.Boundary.WRAP)
+            .with_boundary_mode(windowed.BoundaryConfig.shrink())
             .with_half_window_size_x(10)
             .with_half_window_size_y(8)
         )
@@ -641,7 +663,10 @@ class TestTrivariateWindowed:
         # Use a datetime64 value for z
         z = np.array([np.datetime64("2020-01-03")])
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (1,)
@@ -665,7 +690,10 @@ class TestTrivariateWindowed:
             ]
         )
 
-        config = self.make_config(windowed.Trivariate.bilinear)
+        config = self.make_config(
+            windowed.Trivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.trivariate(grid, x, y, z, config)
 
         assert result.shape == (3,)

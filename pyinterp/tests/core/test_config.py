@@ -90,21 +90,13 @@ class TestGeometric:
 class TestWindowed:
     """Test windowed interpolation configurations."""
 
-    def test_boundary_enum(self) -> None:
-        """Test Boundary enum values."""
-        assert windowed.Boundary.EXPAND
-        assert windowed.Boundary.SYM
-        assert windowed.Boundary.UNDEF
-        assert windowed.Boundary.WRAP
+    def test_boundary_config_class_methods(self) -> None:
+        """Test BoundaryConfig class methods."""
+        shrink = windowed.BoundaryConfig.shrink()
+        assert isinstance(shrink, windowed.BoundaryConfig)
 
-        # Test that enum values are unique
-        values = [
-            windowed.Boundary.EXPAND,
-            windowed.Boundary.SYM,
-            windowed.Boundary.UNDEF,
-            windowed.Boundary.WRAP,
-        ]
-        assert len(set(values)) == 4
+        undef = windowed.BoundaryConfig.undef()
+        assert isinstance(undef, windowed.BoundaryConfig)
 
     def test_axis_config_class_methods(self) -> None:
         """Test AxisConfig class methods."""
@@ -148,7 +140,9 @@ class TestWindowed:
         assert config_threads is not config
 
         # Test with_boundary_mode
-        config_boundary = config.with_boundary_mode(windowed.Boundary.WRAP)
+        config_boundary = config.with_boundary_mode(
+            windowed.BoundaryConfig.shrink()
+        )
         assert isinstance(config_boundary, windowed.Bivariate)
         assert config_boundary is not config
 
@@ -203,7 +197,9 @@ class TestWindowed:
         assert isinstance(config_threads, windowed.Trivariate)
         assert config_threads is not config
 
-        config_boundary = config.with_boundary_mode(windowed.Boundary.SYM)
+        config_boundary = config.with_boundary_mode(
+            windowed.BoundaryConfig.shrink()
+        )
         assert isinstance(config_boundary, windowed.Trivariate)
         assert config_boundary is not config
 
@@ -260,7 +256,9 @@ class TestWindowed:
         assert isinstance(config_threads, windowed.Quadrivariate)
         assert config_threads is not config
 
-        config_boundary = config.with_boundary_mode(windowed.Boundary.EXPAND)
+        config_boundary = config.with_boundary_mode(
+            windowed.BoundaryConfig.shrink()
+        )
         assert isinstance(config_boundary, windowed.Quadrivariate)
         assert config_boundary is not config
 
@@ -326,11 +324,15 @@ class TestWindowed:
         assert config_threads is not config
 
         # Test with_boundary_mode
-        config_boundary = config.with_boundary_mode(windowed.Boundary.WRAP)
+        config_boundary = config.with_boundary_mode(
+            windowed.BoundaryConfig.shrink()
+        )
         assert isinstance(config_boundary, windowed.Univariate)
         assert config_boundary is not config
 
-        config_boundary_sym = config.with_boundary_mode(windowed.Boundary.SYM)
+        config_boundary_sym = config.with_boundary_mode(
+            windowed.BoundaryConfig.shrink()
+        )
         assert isinstance(config_boundary_sym, windowed.Univariate)
         assert config_boundary_sym is not config
 
@@ -345,7 +347,7 @@ class TestWindowed:
             windowed.Bivariate.bicubic()
             .with_num_threads(4)
             .with_bounds_error(True)
-            .with_boundary_mode(windowed.Boundary.WRAP)
+            .with_boundary_mode(windowed.BoundaryConfig.shrink())
             .with_half_window_size_x(10)
             .with_half_window_size_y(8)
         )
@@ -356,7 +358,7 @@ class TestWindowed:
             windowed.Univariate.c_spline()
             .with_num_threads(2)
             .with_bounds_error(False)
-            .with_boundary_mode(windowed.Boundary.EXPAND)
+            .with_boundary_mode(windowed.BoundaryConfig.shrink())
             .with_half_window_size(7)
         )
         assert isinstance(univariate_config, windowed.Univariate)

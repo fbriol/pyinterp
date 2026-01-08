@@ -64,13 +64,14 @@ class TestQuadrivariateWindowed:
     def make_config(
         method: Callable[[], windowed.Quadrivariate],
         *,
-        boundary: windowed.Boundary = windowed.Boundary.EXPAND,
+        boundary: windowed.BoundaryConfig | None = None,
         half_window_size_x: int | None = 5,
         half_window_size_y: int | None = 5,
         third_axis: windowed.AxisConfig | None = None,
         fourth_axis: windowed.AxisConfig | None = None,
     ) -> windowed.Quadrivariate:
         """Build a windowed quadrivariate interpolation configuration."""
+        boundary = boundary or windowed.BoundaryConfig.undef()
         third_axis = third_axis or windowed.AxisConfig.nearest()
         fourth_axis = fourth_axis or windowed.AxisConfig.nearest()
 
@@ -131,7 +132,10 @@ class TestQuadrivariateWindowed:
             ]
         )
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
         assert result.shape == (3,)
@@ -201,7 +205,9 @@ class TestQuadrivariateWindowed:
 
         results = {}
         for name, method in methods.items():
-            config = self.make_config(method)
+            config = self.make_config(
+                method, boundary=windowed.BoundaryConfig.shrink()
+            )
             result = core.quadrivariate(grid, x, y, z, u, config)
             assert np.isfinite(result[0]), f"Method {name} produced NaN"
             results[name] = result[0]
@@ -252,6 +258,7 @@ class TestQuadrivariateWindowed:
         # Test with small window
         config_small = self.make_config(
             windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
             half_window_size_x=3,
             half_window_size_y=3,
         )
@@ -260,6 +267,7 @@ class TestQuadrivariateWindowed:
         # Test with larger window
         config_large = self.make_config(
             windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
             half_window_size_x=7,
             half_window_size_y=7,
         )
@@ -284,10 +292,11 @@ class TestQuadrivariateWindowed:
         z = np.array([2.0])
         u = np.array([1.5])
 
-        # Test primary boundary mode (EXPAND)
+        # Test primary boundary mode (undef)
         # Other modes may not be fully supported for 4D windowed interpolation
         config = self.make_config(
-            windowed.Quadrivariate.bilinear, boundary=windowed.Boundary.EXPAND
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.undef(),
         )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
@@ -324,7 +333,10 @@ class TestQuadrivariateWindowed:
         z = np.array([2.0, 2.0, 1.0])
         u = np.array([1.0, 1.0, 1.5])
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
         assert result.shape == (3,)
@@ -377,7 +389,10 @@ class TestQuadrivariateWindowed:
             ]
         )
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
         assert result.shape == (3,)
@@ -393,7 +408,10 @@ class TestQuadrivariateWindowed:
         z = np.array([2.0])
         u = np.array([np.pi / 6])
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
         assert result.dtype == np.float32
@@ -438,7 +456,10 @@ class TestQuadrivariateWindowed:
         z = np.linspace(1.0, 2.0, n_points)
         u = np.linspace(1.0, 1.5, n_points)
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         results = core.quadrivariate(grid, x, y, z, u, config)
 
         # Check that differences between consecutive points are small
@@ -468,11 +489,17 @@ class TestQuadrivariateWindowed:
         u = np.array([0.8, 1.2, 1.5, 1.8, 2.2])
 
         # Test with bilinear
-        config_bilinear = self.make_config(windowed.Quadrivariate.bilinear)
+        config_bilinear = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_bilinear = core.quadrivariate(grid, x, y, z, u, config_bilinear)
 
         # Test with linear (should be faster, slightly less accurate)
-        config_linear = self.make_config(windowed.Quadrivariate.linear)
+        config_linear = self.make_config(
+            windowed.Quadrivariate.linear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_linear = core.quadrivariate(grid, x, y, z, u, config_linear)
 
         # Compare with analytical values
@@ -510,12 +537,15 @@ class TestQuadrivariateWindowed:
         z = rng.uniform(0.1, 4.9, n_points)
         u = rng.uniform(0.1, np.pi - 0.1, n_points)
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
         assert result.shape == (n_points,)
         # Most values should be finite
-        assert np.sum(np.isfinite(result)) > n_points * 0.99
+        assert np.sum(np.isfinite(result)) == n_points
 
     def test_method_chaining(self) -> None:
         """Test that windowed methods can be chained."""
@@ -523,7 +553,7 @@ class TestQuadrivariateWindowed:
             windowed.Quadrivariate.bicubic()
             .with_num_threads(4)
             .with_bounds_error(True)
-            .with_boundary_mode(windowed.Boundary.WRAP)
+            .with_boundary_mode(windowed.BoundaryConfig.undef())
             .with_half_window_size_x(10)
             .with_half_window_size_y(8)
         )
@@ -686,7 +716,10 @@ class TestQuadrivariateWindowed:
         z = np.array([np.datetime64("2020-01-03")])
         u = np.array([np.pi / 4])
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
         assert result.shape == (1,)
@@ -717,7 +750,10 @@ class TestQuadrivariateWindowed:
         )
         u = np.array([np.pi / 4, np.pi / 3, np.pi / 2])
 
-        config = self.make_config(windowed.Quadrivariate.bilinear)
+        config = self.make_config(
+            windowed.Quadrivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.quadrivariate(grid, x, y, z, u, config)
 
         assert result.shape == (3,)

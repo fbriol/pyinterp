@@ -58,7 +58,7 @@ WindowedMethods = Literal[
 InterpolationMethods = GeometricMethods | WindowedMethods
 
 #: Boundary mode strings
-BoundaryMode = Literal["expand", "symmetric", "undefined", "wrap"]
+BoundaryMode = Literal["shrink", "undef"]
 
 #: Axis configuration strings
 AxisConfigStr = Literal["linear", "nearest"]
@@ -69,10 +69,8 @@ _WINDOWED_METHODS = get_args(WindowedMethods)
 
 # Boundary mode string to enum mapping
 _BOUNDARY_MAP = {
-    "expand": windowed.Boundary.EXPAND,
-    "symmetric": windowed.Boundary.SYM,
-    "undefined": windowed.Boundary.UNDEF,
-    "wrap": windowed.Boundary.WRAP,
+    "undef": windowed.BoundaryConfig.undef,
+    "shrink": windowed.BoundaryConfig.shrink,
 }
 
 _AXIS_MAP = {
@@ -193,22 +191,27 @@ def _make_windowed_config(
             f"Valid: {', '.join(_WINDOWED_METHODS)}"
         )
 
-    config = getattr(class_type, method)()
+    config: _WindowedConfig = getattr(class_type, method)()
     config = config.with_bounds_error(bounds_error).with_num_threads(
         num_threads
     )
 
     if boundary_mode is not None:
-        config = config.with_boundary_mode(_BOUNDARY_MAP[boundary_mode])
+        config = config.with_boundary_mode(_BOUNDARY_MAP[boundary_mode]())
     if half_window_size is not None:
+        assert isinstance(config, windowed.Univariate)
         config = config.with_half_window_size(half_window_size)
     if half_window_size_x is not None:
+        assert not isinstance(config, windowed.Univariate)
         config = config.with_half_window_size_x(half_window_size_x)
     if half_window_size_y is not None:
+        assert not isinstance(config, windowed.Univariate)
         config = config.with_half_window_size_y(half_window_size_y)
     if third_axis is not None:
+        assert isinstance(config, windowed.Trivariate | windowed.Quadrivariate)
         config = config.with_third_axis(_AXIS_MAP[third_axis]())
     if fourth_axis is not None:
+        assert isinstance(config, windowed.Quadrivariate)
         config = config.with_fourth_axis(_AXIS_MAP[fourth_axis]())
 
     return config

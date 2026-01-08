@@ -33,6 +33,18 @@ enum Boundary : uint8_t {
   kWrap,    //!< Circular boundary conditions.
 };
 
+/// Result type for windowed index searches.
+///
+/// Contains a vector of indexes surrounding a coordinate and the pair of
+/// indexes that bracket the coordinate at the window center.
+/// - First element: Vector of indexes (size = 2*half_window_size), or empty
+///   if boundary constraints cannot be satisfied
+/// - Second element: Pair of (lower_index, upper_index) that bracket the
+///   coordinate, where indices are relative to the window (range [0,
+///   window_size-1])
+using IndexWindow =
+    std::pair<std::vector<int64_t>, std::pair<int64_t, int64_t>>;
+
 }  // namespace  axis
 
 /// A coordinate axis specifies one of the coordinates of a variable's values.
@@ -55,10 +67,6 @@ class Axis {
  public:
   /// Type of values stored in this axis.
   using value_type = T;
-
-  /// Type of the vector that represents the framed axis values.
-  using IndexesResultType = std::optional<
-      std::pair<std::vector<int64_t>, std::pair<int64_t, int64_t>>>;
 
   /// @brief Default constructor
   Axis() = default;
@@ -350,7 +358,7 @@ class Axis {
   ///     values
   [[nodiscard]] auto find_indexes(T coordinate, size_t half_window_size,
                                   axis::Boundary boundary) const
-      -> IndexesResultType;
+      -> std::optional<axis::IndexWindow>;
 
   /// @brief Get a string representation of a coordinate handled by this axis.
   ///
@@ -802,9 +810,10 @@ constexpr auto Axis<T>::make_boundary_handler(axis::Boundary boundary,
 template <typename T>
   requires std::is_arithmetic_v<T>
 auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
-                           axis::Boundary boundary) const -> IndexesResultType {
+                           axis::Boundary boundary) const
+    -> std::optional<axis::IndexWindow> {
   if (half_window_size == 0) {
-    return std::nullopt;
+    return {};
   }
   auto indexes = find_indexes(coordinate);
   if (!indexes) {
@@ -812,7 +821,7 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
     // singleton. For a singleton axis, the result is valid only if the
     // requested coordinate matches the single value stored in the axis.
     if (this->size() != 1) {
-      return std::nullopt;
+      return {};
     }
     return std::make_pair(std::vector<int64_t>(half_window_size << 1U, 0),
                           std::make_pair(0, 0));
@@ -829,6 +838,9 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
   result.push_back(std::get<0>(*indexes));
   result.push_back(std::get<1>(*indexes));
 
+  // Center indexes in the result window
+  auto center_indexes = std::pair<int64_t, int64_t>(0, 1);
+
   // Offset in relation to the first indexes found
   size_t shift = 1;
 
@@ -840,6 +852,9 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
     }
     if (before >= 0) {
       result.push_front(before);
+      // Shift center indexes to the right
+      center_indexes.first++;
+      center_indexes.second++;
     } else if (boundary != axis::kShrink) {
       // Boundary violation cannot be handled. Return an empty result.
       return {};
@@ -858,7 +873,7 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
     ++shift;
   }
   return std::make_pair(std::vector<int64_t>(result.begin(), result.end()),
-                        *indexes);
+                        center_indexes);
 }
 
 // ============================================================================

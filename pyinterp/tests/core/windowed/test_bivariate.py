@@ -52,11 +52,12 @@ class TestBivariateWindowed:
     def make_config(
         method: Callable[[], windowed.Bivariate],
         *,
-        boundary: windowed.Boundary = windowed.Boundary.EXPAND,
+        boundary: windowed.BoundaryConfig | None = None,
         half_window_size_x: int | None = 3,
         half_window_size_y: int | None = 3,
     ) -> windowed.Bivariate:
         """Build a windowed bivariate configuration with standard parameters."""
+        boundary = boundary or windowed.BoundaryConfig.undef()
         cfg = method().with_boundary_mode(boundary)
         if half_window_size_x is not None:
             cfg = cfg.with_half_window_size_x(half_window_size_x)
@@ -185,6 +186,7 @@ class TestBivariateWindowed:
         # Test with larger window
         config_large = self.make_config(
             windowed.Bivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
             half_window_size_x=9,
             half_window_size_y=9,
         )
@@ -199,7 +201,7 @@ class TestBivariateWindowed:
         np.testing.assert_allclose(result_small[0], expected, rtol=0.05)
         np.testing.assert_allclose(result_large[0], expected, rtol=0.05)
 
-    def test_boundary_modes(self) -> None:
+    def test_boundary_config(self) -> None:
         """Test different boundary modes produce finite results."""
         grid = self.create_analytical_grid2d(np.float64)
 
@@ -208,14 +210,13 @@ class TestBivariateWindowed:
         y = np.array([1.2])
 
         # Test all boundary modes
-        boundary_modes = [
-            windowed.Boundary.EXPAND,
-            windowed.Boundary.SYM,
-            windowed.Boundary.WRAP,
+        boundary_configs = [
+            windowed.BoundaryConfig.shrink(),
+            windowed.BoundaryConfig.undef(),
         ]
 
         results = []
-        for boundary in boundary_modes:
+        for boundary in boundary_configs:
             config = self.make_config(
                 windowed.Bivariate.bilinear, boundary=boundary
             )
@@ -370,11 +371,17 @@ class TestBivariateWindowed:
         y = np.array([0.5, 1.0, 1.5, 2.0, 2.5])
 
         # Test with bilinear
-        config_bilinear = self.make_config(windowed.Bivariate.bilinear)
+        config_bilinear = self.make_config(
+            windowed.Bivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_bilinear = core.bivariate(grid, x, y, config_bilinear)
 
         # Test with bicubic (should be more accurate)
-        config_bicubic = self.make_config(windowed.Bivariate.bicubic)
+        config_bicubic = self.make_config(
+            windowed.Bivariate.bicubic,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_bicubic = core.bivariate(grid, x, y, config_bicubic)
 
         # Compare with analytical values
@@ -413,12 +420,15 @@ class TestBivariateWindowed:
         x = rng.uniform(0.1, 2 * np.pi - 0.1, n_points)
         y = rng.uniform(0.1, np.pi - 0.1, n_points)
 
-        config = self.make_config(windowed.Bivariate.bilinear)
+        config = self.make_config(
+            windowed.Bivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.bivariate(grid, x, y, config)
 
         assert result.shape == (n_points,)
         # Most values should be finite
-        assert np.sum(np.isfinite(result)) > n_points * 0.99
+        assert np.sum(np.isfinite(result)) == n_points
 
     def test_method_chaining(self) -> None:
         """Test that windowed methods can be chained."""
@@ -426,7 +436,7 @@ class TestBivariateWindowed:
             windowed.Bivariate.bicubic()
             .with_num_threads(4)
             .with_bounds_error(True)
-            .with_boundary_mode(windowed.Boundary.WRAP)
+            .with_boundary_mode(windowed.BoundaryConfig.undef())
             .with_half_window_size_x(10)
             .with_half_window_size_y(8)
         )
@@ -470,7 +480,10 @@ class TestBivariateWindowed:
         x = np.array([grid.x[1]])
         y = np.array([grid.y[1]])
 
-        config = self.make_config(windowed.Bivariate.bilinear)
+        config = self.make_config(
+            windowed.Bivariate.bilinear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.bivariate(grid, x, y, config)
 
         assert result.shape == (1,)
@@ -488,9 +501,8 @@ class TestBivariateWindowed:
         y_edge = np.array([y_axis_vals[4], y_axis_vals[-5]])
 
         for boundary in [
-            windowed.Boundary.EXPAND,
-            windowed.Boundary.SYM,
-            windowed.Boundary.WRAP,
+            windowed.BoundaryConfig.shrink(),
+            windowed.BoundaryConfig.undef(),
         ]:
             config = self.make_config(
                 windowed.Bivariate.bilinear, boundary=boundary

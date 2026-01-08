@@ -69,33 +69,33 @@ using SpatialMethod = std::variant<Spline, Bicubic>;
 /// `BoundaryConfig` helpers rather than the raw `math::axis::Boundary` enum
 /// to prevent invalid inputs.
 class BoundaryConfig {
-  public:
-    /// @brief Default constructor
-    constexpr BoundaryConfig() = default;
-  
-    /// @brief Constructor with an explicit boundary mode
-    /// @param[in] mode Boundary mode to use
-    constexpr explicit BoundaryConfig(BoundaryMode mode) : mode_(mode) {}
-  
-    /// @brief Get the boundary mode.
-    /// @return Boundary mode
-    [[nodiscard]] constexpr auto mode() const -> BoundaryMode { return mode_; }
+ public:
+  /// @brief Default constructor
+  constexpr BoundaryConfig() = default;
 
-    /// @brief Create a configuration for undefined boundary mode.
-    /// @return `BoundaryConfig` configured with the undefined boundary mode
-    [[nodiscard]] static constexpr auto undef() -> BoundaryConfig {
-      return BoundaryConfig{BoundaryMode::kUndef};
-    }
+  /// @brief Constructor with an explicit boundary mode
+  /// @param[in] mode Boundary mode to use
+  constexpr explicit BoundaryConfig(BoundaryMode mode) : mode_(mode) {}
 
-    /// @brief Create a configuration for shrink boundary mode.
-    /// @return `BoundaryConfig` configured with the shrink boundary mode
-    [[nodiscard]] static constexpr auto shrink() -> BoundaryConfig {
-      return BoundaryConfig{BoundaryMode::kShrink};
-    }
-  
-  private:
-    /// Boundary mode
-    BoundaryMode mode_{BoundaryMode::kUndef};
+  /// @brief Get the boundary mode.
+  /// @return Boundary mode
+  [[nodiscard]] constexpr auto mode() const -> BoundaryMode { return mode_; }
+
+  /// @brief Create a configuration for undefined boundary mode.
+  /// @return `BoundaryConfig` configured with the undefined boundary mode
+  [[nodiscard]] static constexpr auto undef() -> BoundaryConfig {
+    return BoundaryConfig{BoundaryMode::kUndef};
+  }
+
+  /// @brief Create a configuration for shrink boundary mode.
+  /// @return `BoundaryConfig` configured with the shrink boundary mode
+  [[nodiscard]] static constexpr auto shrink() -> BoundaryConfig {
+    return BoundaryConfig{BoundaryMode::kShrink};
+  }
+
+ private:
+  /// Boundary mode
+  BoundaryMode mode_{BoundaryMode::kUndef};
 };
 
 /// @brief Configuration for 2D spatial interpolation.

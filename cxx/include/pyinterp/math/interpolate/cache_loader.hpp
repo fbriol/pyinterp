@@ -48,6 +48,7 @@ auto load_cache_generic(const GridType& grid,
 
   // 1. Find indices for all axes
   std::array<std::vector<int64_t>, kNDim> grid_indices;
+  std::array<std::pair<int64_t, int64_t>, kNDim> bracketing_indices;
   std::array<size_t, kNDim> points_per_dim;
   bool success = true;
 
@@ -61,8 +62,8 @@ auto load_cache_generic(const GridType& grid,
     auto indices =
         ax.find_indexes(val, cache.template half_window<I>(), boundary);
 
-    if (indices.empty()) {
-      // Indices may be empty for two reasons:
+    if (!indices) {
+      // Indices may be not found for two reasons:
       // - The query coordinate is outside the axis domain: set success = false;
       //   if bounds_error is true, set error_out.
       // - The interpolation window extends beyond the axis bounds:
@@ -73,7 +74,8 @@ auto load_cache_generic(const GridType& grid,
       }
       return;
     }
-    grid_indices[I] = std::move(indices);
+    grid_indices[I] = std::move(indices->first);
+    bracketing_indices[I] = std::move(indices->second);
     points_per_dim[I] = grid_indices[I].size();
   };
 
@@ -161,7 +163,7 @@ auto load_cache_generic(const GridType& grid,
 
   recursive_copy(0);
 
-  cache.finalize();
+  cache.finalize(bracketing_indices);
   return cache.is_valid();
 }
 

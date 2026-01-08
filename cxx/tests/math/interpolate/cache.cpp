@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <cmath>
+#include <utility>
 
 #include "pyinterp/math/interpolate/cache.hpp"
 
@@ -119,7 +119,7 @@ TEST(IndependentCache2D, DomainTrackingAsymmetric) {
     cache.set_coord<1>(j, static_cast<double>(j) * 100.0);
   }
 
-  cache.finalize();
+  cache.finalize({std::make_pair(1, 2), std::make_pair(0, 1)});
 
   EXPECT_TRUE(cache.has_domain());
 
@@ -186,7 +186,9 @@ TEST(IndependentCache3D, DomainTracking) {
     cache.set_coord<2>(k, static_cast<double>(k) * 5.0);  // Z: [0,5]
   }
 
-  cache.finalize();
+  cache.finalize({std::make_pair(1, 2),    // X: [10,20]
+                  std::make_pair(0, 1),    // Y: [0,100]
+                  std::make_pair(0, 1)});  // Z: [0,5]
 
   EXPECT_TRUE(cache.has_domain());
 

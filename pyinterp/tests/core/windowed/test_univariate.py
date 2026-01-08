@@ -66,10 +66,11 @@ class TestUnivariateWindowed:
     def make_config(
         method: Callable[[], windowed.Univariate],
         *,
-        boundary: windowed.Boundary = windowed.Boundary.EXPAND,
+        boundary: windowed.BoundaryConfig | None = None,
         half_window_size: int | None = 5,
     ) -> windowed.Univariate:
         """Build a windowed univariate configuration with default values."""
+        boundary = boundary or windowed.BoundaryConfig.undef()
         cfg = method().with_boundary_mode(boundary)
         if half_window_size is not None:
             cfg = cfg.with_half_window_size(half_window_size)
@@ -265,7 +266,7 @@ class TestUnivariateWindowed:
         np.testing.assert_allclose(result_small[0], expected, rtol=0.05)
         np.testing.assert_allclose(result_large[0], expected, rtol=0.05)
 
-    def test_boundary_modes(self) -> None:
+    def test_boundary_config(self) -> None:
         """Test different boundary modes with analytical functions."""
         # Test with linear function: y = 2x + 3
         # This should be exactly reproduced by linear interpolation
@@ -283,13 +284,12 @@ class TestUnivariateWindowed:
         expected_linear = a * x_test + b
 
         # Test all boundary modes with linear function
-        boundary_modes = [
-            windowed.Boundary.EXPAND,
-            windowed.Boundary.SYM,
-            windowed.Boundary.WRAP,
+        boundary_configs = [
+            windowed.BoundaryConfig.shrink(),
+            windowed.BoundaryConfig.undef(),
         ]
 
-        for boundary in boundary_modes:
+        for boundary in boundary_configs:
             config = self.make_config(
                 windowed.Univariate.linear, boundary=boundary
             )
@@ -316,7 +316,7 @@ class TestUnivariateWindowed:
         expected_sin = np.sin(2 * np.pi * x_test_sin / 10)
 
         results_sin = {}
-        for boundary in boundary_modes:
+        for boundary in boundary_configs:
             config = self.make_config(
                 windowed.Univariate.c_spline, boundary=boundary
             )
@@ -469,11 +469,17 @@ class TestUnivariateWindowed:
         x = np.array([0.5, 1.0, 1.5, 2.0, 3.5])
 
         # Test with linear
-        config_linear = self.make_config(windowed.Univariate.linear)
+        config_linear = self.make_config(
+            windowed.Univariate.linear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_linear = core.univariate(grid, x, config_linear)
 
         # Test with cubic spline (should be more accurate)
-        config_cubic = self.make_config(windowed.Univariate.c_spline)
+        config_cubic = self.make_config(
+            windowed.Univariate.c_spline,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result_cubic = core.univariate(grid, x, config_cubic)
 
         # Compare with analytical values
@@ -509,12 +515,15 @@ class TestUnivariateWindowed:
         rng = np.random.Generator(np.random.PCG64(seed=42))
         x = rng.uniform(0.1, 2 * np.pi - 0.1, n_points)
 
-        config = self.make_config(windowed.Univariate.linear)
+        config = self.make_config(
+            windowed.Univariate.linear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.univariate(grid, x, config)
 
         assert result.shape == (n_points,)
         # Most values should be finite
-        assert np.sum(np.isfinite(result)) > n_points * 0.99
+        assert np.sum(np.isfinite(result)) == n_points
 
     def test_large_array_derivative(self) -> None:
         """Test derivative calculation with large arrays."""
@@ -525,12 +534,15 @@ class TestUnivariateWindowed:
         rng = np.random.Generator(np.random.PCG64(seed=42))
         x = rng.uniform(0.5, 9.5, n_points)
 
-        config = self.make_config(windowed.Univariate.linear)
+        config = self.make_config(
+            windowed.Univariate.linear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.univariate_derivative(grid, x, config)
 
         assert result.shape == (n_points,)
         # Most values should be finite
-        assert np.sum(np.isfinite(result)) > n_points * 0.99
+        assert np.sum(np.isfinite(result)) == n_points
 
     def test_reproducibility(self) -> None:
         """Test that repeated calls produce identical results."""
@@ -571,7 +583,10 @@ class TestUnivariateWindowed:
         # Use a point near (but not exactly at) the edge
         x = np.array([grid.x[1]])
 
-        config = self.make_config(windowed.Univariate.linear)
+        config = self.make_config(
+            windowed.Univariate.linear,
+            boundary=windowed.BoundaryConfig.shrink(),
+        )
         result = core.univariate(grid, x, config)
 
         assert result.shape == (1,)
@@ -586,9 +601,8 @@ class TestUnivariateWindowed:
         x_edge = np.array([x_axis_vals[4], x_axis_vals[-5]])
 
         for boundary in [
-            windowed.Boundary.EXPAND,
-            windowed.Boundary.SYM,
-            windowed.Boundary.WRAP,
+            windowed.BoundaryConfig.shrink(),
+            windowed.BoundaryConfig.undef(),
         ]:
             config = self.make_config(
                 windowed.Univariate.linear, boundary=boundary
