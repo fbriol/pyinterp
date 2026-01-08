@@ -28,7 +28,13 @@ if TYPE_CHECKING:
 
     import xarray as xr
 
-    from ..type_hints import NDArray1D, NDArray1DDateTime64, NDArray1DFloat64
+    from ..type_hints import (
+        NDArray1D,
+        NDArray1DDateTime64,
+        NDArray1DFloat64,
+        NDArray1DNumeric,
+        NDArray1DNumericWithTime,
+    )
 
 __all__ = ["Grid2D", "Grid3D", "Grid4D"]
 
@@ -311,6 +317,9 @@ class _GridHolder:
         """Delegate attribute access to the underlying grid instance."""
         return getattr(self._instance, name)
 
+    def __repr__(self) -> str:
+        return repr(self._instance)
+
 
 class Grid2D(_GridHolder):
     """Build a Grid2D from Xarray data.
@@ -340,7 +349,7 @@ class Grid2D(_GridHolder):
 
     def bivariate(
         self,
-        coords: dict[Hashable, NDArray1DFloat64],
+        coords: dict[Hashable, NDArray1DNumeric],
         method: InterpolationMethods = "bilinear",
         **kwargs: Any,  # noqa: ANN401
     ) -> np.ndarray:
@@ -411,7 +420,7 @@ class Grid3D(_GridHolder):
 
     def trivariate(
         self,
-        coords: dict[Hashable, NDArray1DFloat64 | NDArray1DDateTime64],
+        coords: dict[Hashable, NDArray1DNumericWithTime],
         method: InterpolationMethods = "bilinear",
         **kwargs: Any,  # noqa: ANN401
     ) -> np.ndarray:
@@ -488,7 +497,7 @@ class Grid4D(_GridHolder):
 
     def quadrivariate(
         self,
-        coords: dict[Hashable, NDArray1DFloat64 | NDArray1DDateTime64],
+        coords: dict[Hashable, NDArray1DNumericWithTime],
         method: InterpolationMethods = "bilinear",
         **kwargs: Any,  # noqa: ANN401
     ) -> np.ndarray:

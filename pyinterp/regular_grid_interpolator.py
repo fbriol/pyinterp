@@ -24,9 +24,10 @@ from .core.config import geometric, windowed
 if TYPE_CHECKING:
     from .core import GridHolder
     from .type_hints import (
-        NDArray1DDateTime64,
         NDArray1DFloat32,
         NDArray1DFloat64,
+        NDArray1DNumeric,
+        NDArray1DNumericWithTime,
     )
 
 __all__ = [
@@ -251,7 +252,7 @@ def _validate_no_windowed_options(
 @overload
 def univariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
+    x: NDArray1DNumeric,
     method: windowed.Univariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
@@ -259,7 +260,7 @@ def univariate(
 @overload
 def univariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
+    x: NDArray1DNumeric,
     method: WindowedMethods = "linear",
     *,
     bounds_error: bool = False,
@@ -271,7 +272,7 @@ def univariate(
 
 def univariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
+    x: NDArray1DNumeric,
     method: windowed.Univariate | WindowedMethods = "linear",
     *,
     bounds_error: bool = False,
@@ -326,7 +327,7 @@ def univariate(
 
 def univariate_derivative(
     grid: GridHolder,
-    x: NDArray1DFloat64,
+    x: NDArray1DNumeric,
     method: windowed.Univariate | WindowedMethods = "linear",
     *,
     bounds_error: bool = False,
@@ -383,8 +384,8 @@ def univariate_derivative(
 @overload
 def bivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
     method: geometric.Bivariate | windowed.Bivariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
@@ -392,8 +393,8 @@ def bivariate(
 @overload
 def bivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
     method: GeometricMethods = "bilinear",
     *,
     bounds_error: bool = False,
@@ -404,8 +405,8 @@ def bivariate(
 @overload
 def bivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
     method: WindowedMethods,
     *,
     bounds_error: bool = False,
@@ -418,8 +419,8 @@ def bivariate(
 
 def bivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
     method: geometric.Bivariate
     | windowed.Bivariate
     | InterpolationMethods = "bilinear",
@@ -500,9 +501,9 @@ def bivariate(
 @overload
 def trivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
     method: geometric.Trivariate | windowed.Trivariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
@@ -510,9 +511,9 @@ def trivariate(
 @overload
 def trivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
     method: GeometricMethods = "bilinear",
     *,
     bounds_error: bool = False,
@@ -523,9 +524,9 @@ def trivariate(
 @overload
 def trivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
     method: WindowedMethods,
     *,
     bounds_error: bool = False,
@@ -539,9 +540,9 @@ def trivariate(
 
 def trivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
     method: geometric.Trivariate
     | windowed.Trivariate
     | InterpolationMethods = "bilinear",
@@ -622,10 +623,10 @@ def trivariate(
 @overload
 def quadrivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
-    u: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    u: NDArray1DNumeric,
     method: geometric.Quadrivariate | windowed.Quadrivariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
@@ -633,10 +634,10 @@ def quadrivariate(
 @overload
 def quadrivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
-    u: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    u: NDArray1DNumeric,
     method: GeometricMethods = "bilinear",
     *,
     bounds_error: bool = False,
@@ -647,10 +648,10 @@ def quadrivariate(
 @overload
 def quadrivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
-    u: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    u: NDArray1DNumeric,
     method: WindowedMethods,
     *,
     bounds_error: bool = False,
@@ -665,10 +666,10 @@ def quadrivariate(
 
 def quadrivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | NDArray1DDateTime64,
-    u: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    u: NDArray1DNumeric,
     method: geometric.Quadrivariate
     | windowed.Quadrivariate
     | InterpolationMethods = "bilinear",

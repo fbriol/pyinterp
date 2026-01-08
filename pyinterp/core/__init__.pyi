@@ -20,6 +20,7 @@ from ..type_hints import (
     NDArray1DFloat32,
     NDArray1DFloat64,
     NDArray1DInt64,
+    NDArray1DNumericWithTime,
     NDArray1DTimeDelta64,
     NDArray1DUInt32,
     NDArray2DInt64,
@@ -67,30 +68,30 @@ _DType = TypeVar("_DType", bound=np.generic)
 TemporalArray: TypeAlias = NDArray1DDateTime64 | NDArray1DTimeDelta64
 
 def univariate(
-    grid: GridHolder, x: NDArray1DFloat64, config: windowed.Univariate
+    grid: GridHolder, x: NDArray1DNumeric, config: windowed.Univariate
 ) -> NDArray1DFloat64 | NDArray1DFloat32: ...
 def univariate_derivative(
-    grid: GridHolder, x: NDArray1DFloat64, config: windowed.Univariate
+    grid: GridHolder, x: NDArray1DNumeric, config: windowed.Univariate
 ) -> NDArray1DFloat64 | NDArray1DFloat32: ...
 def bivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
     config: geometric.Bivariate | windowed.Bivariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 def trivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | TemporalArray,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
     config: geometric.Trivariate | windowed.Trivariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 def quadrivariate(
     grid: GridHolder,
-    x: NDArray1DFloat64,
-    y: NDArray1DFloat64,
-    z: NDArray1DFloat64 | TemporalArray,
-    u: NDArray1DFloat64,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    u: NDArray1DNumeric,
     config: geometric.Quadrivariate | windowed.Quadrivariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 

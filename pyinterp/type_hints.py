@@ -20,6 +20,12 @@ if TYPE_CHECKING:
         OneDim,
         np.dtype[np.integer[Any] | np.floating[Any]],
     ]
+    NDArray1DNumericWithTime: TypeAlias = np.ndarray[
+        OneDim,
+        np.dtype[
+            np.integer[Any] | np.floating[Any] | np.datetime64 | np.timedelta64
+        ],
+    ]
     NDArray1DUInt8: TypeAlias = np.ndarray[
         OneDim,
         np.dtype[np.uint8],
