@@ -9,7 +9,7 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING
 
-import numpy
+import numpy as np
 
 
 if TYPE_CHECKING:
@@ -52,7 +52,7 @@ def interpolate(
     xi: NDArray1DFloat64,
     height: float = 0.0,
     coordinates: Coordinates | None = None,
-    half_window_size: int = 10,
+    half_window_size: int = 3,
 ) -> tuple[NDArray1DFloat64, NDArray1DFloat64]:
     """Interpolate the given orbit at the given coordinates.
 
@@ -80,16 +80,15 @@ def interpolate(
     x, y, z = coordinates.lla_to_ecef(
         lon,
         lat,
-        numpy.full_like(lon, height),
+        np.full_like(lon, height),
     )
 
-    r = numpy.sqrt(x * x + y * y + z * z * mz * mz)
-
-    x_axis = core.Axis(xp - xp[0], 1e-6, False)
+    r = np.sqrt(x * x + y * y + z * z * mz * mz)
+    x_axis = core.Axis(xp - xp[0], 1e-6)
     xi = xi - xp[0]
 
     config = (
-        core.config.windowed.Univariate.linear()
+        core.config.windowed.Univariate.c_spline()
         .with_half_window_size(half_window_size)
         .with_boundary_mode(
             core.config.windowed.BoundaryConfig.shrink(),
@@ -117,7 +116,7 @@ def interpolate(
         config=config,
     )
 
-    r /= numpy.sqrt(x * x + y * y + z * z)
+    r /= np.sqrt(x * x + y * y + z * z)
     x *= r
     y *= r
     z *= r * (1 / mz)
@@ -132,7 +131,7 @@ def interpolate(
 
 
 def _rearrange_orbit(
-    cycle_duration: numpy.timedelta64,
+    cycle_duration: np.timedelta64,
     lon: NDArray1DFloat64,
     lat: NDArray1DFloat64,
     time: NDArray1DTimeDelta64,
@@ -156,8 +155,8 @@ def _rearrange_orbit(
 
 
     """
-    dy = numpy.roll(lat, 1) - lat
-    indexes = numpy.where((dy < 0) & (numpy.roll(dy, 1) >= 0))[0]
+    dy = np.roll(lat, 1) - lat
+    indexes = np.where((dy < 0) & (np.roll(dy, 1) >= 0))[0]
 
     # If the orbit is already starting from pass 1, nothing to do
     if indexes[0] < int(indexes.mean()):
@@ -167,11 +166,11 @@ def _rearrange_orbit(
     # of pass 1
     shift = indexes[-1]
 
-    lon = numpy.hstack([lon[shift:], lon[:shift]])
-    lat = numpy.hstack([lat[shift:], lat[:shift]])
-    time = numpy.hstack([time[shift:], time[:shift]])
+    lon = np.hstack([lon[shift:], lon[:shift]])
+    lat = np.hstack([lat[shift:], lat[:shift]])
+    time = np.hstack([time[shift:], time[:shift]])
     time = (time - time[0]) % cycle_duration
-    if numpy.any(time < numpy.timedelta64(0, "s")):
+    if np.any(time < np.timedelta64(0, "s")):
         raise ValueError("Time is negative")
     return lon, lat, time
 
@@ -191,10 +190,9 @@ def _calculate_pass_time(
 
 
     """
-    dy = numpy.roll(lat, 1) - lat
-    indexes = numpy.where(
-        ((dy < 0) & (numpy.roll(dy, 1) >= 0))
-        | ((dy > 0) & (numpy.roll(dy, 1) <= 0))
+    dy = np.roll(lat, 1) - lat
+    indexes = np.where(
+        ((dy < 0) & (np.roll(dy, 1) >= 0)) | ((dy > 0) & (np.roll(dy, 1) <= 0))
     )[0]
     # The duration of the first pass is zero.
     indexes[0] = 0
@@ -236,7 +234,7 @@ class Orbit:
     #: Spheroid model used.
     wgs: Spheroid | None
 
-    def cycle_duration(self) -> numpy.timedelta64:
+    def cycle_duration(self) -> np.timedelta64:
         """Get the cycle duration."""
         return self.time[-1]
 
@@ -250,7 +248,7 @@ class Orbit:
         """
         return len(self.pass_time)
 
-    def orbit_duration(self) -> numpy.timedelta64:
+    def orbit_duration(self) -> np.timedelta64:
         """Get the orbit duration.
 
         Returns:
@@ -260,8 +258,8 @@ class Orbit:
         """
         duration = self.cycle_duration().astype(
             "timedelta64[us]"
-        ) / numpy.timedelta64(int(self.passes_per_cycle() // 2), "us")
-        return numpy.timedelta64(int(duration), "us")
+        ) / np.timedelta64(int(self.passes_per_cycle() // 2), "us")
+        return np.timedelta64(int(duration), "us")
 
     def curvilinear_distance(self) -> NDArray1DFloat64:
         """Get the curvilinear distance.
@@ -281,7 +279,7 @@ class Orbit:
             strategy=Strategy.THOMAS,
         )
 
-    def pass_duration(self, number: int) -> numpy.timedelta64:
+    def pass_duration(self, number: int) -> np.timedelta64:
         """Get the duration of a given pass.
 
         Args:
@@ -345,7 +343,7 @@ class Orbit:
             raise ValueError(f"pass_number must be in [1, {passes_per_cycle}")
         return (cycle_number - 1) * self.passes_per_cycle() + pass_number
 
-    def delta_t(self) -> numpy.timedelta64:
+    def delta_t(self) -> np.timedelta64:
         """Return the average time difference between two measurements.
 
         Calculate the mean time interval between consecutive measurements.
@@ -356,14 +354,14 @@ class Orbit:
 
 
         """
-        return numpy.diff(self.time).mean()
+        return np.diff(self.time).mean()
 
     def iterate(
         self,
-        first_date: numpy.datetime64 | None = None,
-        last_date: numpy.datetime64 | None = None,
+        first_date: np.datetime64 | None = None,
+        last_date: np.datetime64 | None = None,
         absolute_pass_number: int = 1,
-    ) -> Iterator[tuple[int, int, numpy.datetime64]]:
+    ) -> Iterator[tuple[int, int, np.datetime64]]:
         """Obtain all half-orbits within the defined time interval.
 
         Args:
@@ -381,7 +379,7 @@ class Orbit:
 
 
         """
-        date = first_date or numpy.datetime64("now")
+        date = first_date or np.datetime64("now")
         last_date = last_date or date + self.cycle_duration()
         while date <= last_date:
             cycle_number, pass_number = self.decode_absolute_pass_number(
@@ -408,12 +406,12 @@ class EquatorCoordinates:
     #: Longitude
     longitude: float
     #: Product dataset name
-    time: numpy.datetime64
+    time: np.datetime64
 
     @classmethod
     def undefined(cls) -> EquatorCoordinates:
         """Create an undefined instance."""
-        return cls(numpy.nan, numpy.datetime64("NaT"))
+        return cls(np.nan, np.datetime64("NaT"))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -470,13 +468,13 @@ class Swath(Pass):
 
 
         """
-        valid = numpy.full_like(self.x_ac, 0, dtype=numpy.bool_)
+        valid = np.full_like(self.x_ac, 0, dtype=np.bool_)
         valid[
-            (numpy.abs(self.x_ac) >= requirement_bounds[0])
-            & (numpy.abs(self.x_ac) <= requirement_bounds[1])
+            (np.abs(self.x_ac) >= requirement_bounds[0])
+            & (np.abs(self.x_ac) <= requirement_bounds[1])
         ] = 1
-        along_track = numpy.full(self.lon_nadir.shape, 1, dtype=numpy.bool_)
-        return along_track[:, numpy.newaxis] * valid
+        along_track = np.full(self.lon_nadir.shape, 1, dtype=np.bool_)
+        return along_track[:, np.newaxis] * valid
 
     def insert_central_pixel(self) -> Swath:
         """Insert a central pixel dividing the swath in two.
@@ -497,9 +495,9 @@ class Swath(Pass):
             fill_value: NDArray1DFloat64,
         ) -> NDArray2DFloat64:
             """Insert a central pixel in a given array."""
-            return numpy.c_[
+            return np.c_[
                 array[:, :central_pixel],
-                fill_value[:, numpy.newaxis],
+                fill_value[:, np.newaxis],
                 array[:, central_pixel:],
             ]
 
@@ -518,7 +516,7 @@ class Swath(Pass):
             _insert(
                 self.x_ac,
                 central_pixel,
-                numpy.zeros(num_lines, dtype=self.x_ac.dtype),
+                np.zeros(num_lines, dtype=self.x_ac.dtype),
             ),
         )
 
@@ -548,7 +546,7 @@ def _equator_properties(
         return EquatorCoordinates.undefined()
 
     # Search the nearest point to the equator
-    i1 = (numpy.abs(lat_nadir)).argmin()
+    i1 = (np.abs(lat_nadir)).argmin()
     i0 = i1 - 1 if i1 > 0 else 1
     if lat_nadir[i0] * lat_nadir[i1] > 0:
         i0, i1 = (i1, i1 + 1) if i1 < lat_nadir.size - 1 else (i1 - 1, i1)
@@ -562,8 +560,8 @@ def _equator_properties(
             lat1,
         ),
         LineString(
-            numpy.array([lon1[0] - 0.5, lon1[1] + 0.5]),
-            numpy.array(
+            np.array([lon1[0] - 0.5, lon1[1] + 0.5]),
+            np.array(
                 [0, 0],
                 dtype="float64",
             ),
@@ -575,8 +573,8 @@ def _equator_properties(
     point = points[0]
 
     # Calculate the time of the point on the equator
-    lon1 = numpy.insert(lon1, 1, point.lon)
-    lat1 = numpy.insert(lat1, 1, 0)
+    lon1 = np.insert(lon1, 1, point.lon)
+    lat1 = np.insert(lat1, 1, 0)
     x_al = curvilinear_distance(
         LineString(
             lon1,
@@ -588,14 +586,14 @@ def _equator_properties(
 
     # Pop the along track distance at the equator
     x_eq = x_al[1]
-    x_al = numpy.delete(
+    x_al = np.delete(
         x_al,
         1,
     )
 
     return EquatorCoordinates(
         point.lon,
-        numpy.interp(x_eq, x_al, time[i0 : i1 + 1].astype("i8")).astype(
+        np.interp(x_eq, x_al, time[i0 : i1 + 1].astype("i8")).astype(
             time.dtype
         ),
     )
@@ -606,7 +604,7 @@ def calculate_orbit(
     lon_nadir: NDArray1DFloat64,
     lat_nadir: NDArray1DFloat64,
     time: NDArray1DTimeDelta64,
-    cycle_duration: numpy.timedelta64 | None = None,
+    cycle_duration: np.timedelta64 | None = None,
     along_track_resolution: float | None = None,
     spheroid: Spheroid | None = None,
 ) -> Orbit:
@@ -633,27 +631,27 @@ def calculate_orbit(
     # If the first point of the given orbit starts at the equator, we need to
     # skew this first pass.
     if -_EQUATOR_LAT_THRESHOLD <= lat_nadir[0] <= _EQUATOR_LAT_THRESHOLD:
-        dy = numpy.roll(lat_nadir, 1) - lat_nadir
-        indexes = numpy.where(
-            ((dy < 0) & (numpy.roll(dy, 1) >= 0))
-            | ((dy > 0) & (numpy.roll(dy, 1) <= 0))
+        dy = np.roll(lat_nadir, 1) - lat_nadir
+        indexes = np.where(
+            ((dy < 0) & (np.roll(dy, 1) >= 0))
+            | ((dy > 0) & (np.roll(dy, 1) <= 0))
         )[0]
         lat_nadir = lat_nadir[indexes[1:]]
         lon_nadir = lon_nadir[indexes[1:]]
         time = time[indexes[1:]]
 
     lon_nadir = (lon_nadir + 180) % 360 - 180
-    time = time.astype("m8[ns]")
+    time = time.astype("m8[ms]")
 
-    if numpy.mean(numpy.diff(time)) > numpy.timedelta64(500, "ms"):
-        time_hr = numpy.arange(
-            time[0], time[-1], numpy.timedelta64(500, "ms"), dtype=time.dtype
+    if np.mean(np.diff(time)) > np.timedelta64(500, "ms"):
+        time_hr = np.arange(
+            time[0], time[-1], np.timedelta64(500, "ms"), dtype="m8[ms]"
         )
         lon_nadir, lat_nadir = interpolate(
             lon_nadir,
             lat_nadir,
-            (time - time[0]).view("i8") * 1e-9,
-            (time_hr - time_hr[0]).view("i8") * 1e-9,
+            time.view("i8"),
+            time_hr.view("i8"),
             height=height,
             coordinates=coordinates,
             half_window_size=50,
@@ -661,7 +659,7 @@ def calculate_orbit(
         time = time_hr
 
     if cycle_duration is not None:
-        indexes = numpy.where(time < cycle_duration)[0]
+        indexes = np.where(time < cycle_duration)[0]
         lon_nadir = lon_nadir[indexes]
         lat_nadir = lat_nadir[indexes]
         time = time[indexes]
@@ -689,7 +687,7 @@ def calculate_orbit(
     )
 
     # Interpolate the final orbit according the given along track resolution
-    x_al = numpy.arange(
+    x_al = np.arange(
         distance[0],
         distance[-2],
         along_track_resolution or 2,
@@ -705,7 +703,7 @@ def calculate_orbit(
         half_window_size=10,
     )
 
-    time = numpy.interp(x_al, distance[:-1], time[:-1].astype("i8")).astype(
+    time = np.interp(x_al, distance[:-1], time[:-1].astype("i8")).astype(
         time.dtype
     )
 
@@ -713,7 +711,7 @@ def calculate_orbit(
         height,
         lat_nadir,
         lon_nadir,
-        numpy.sort(_calculate_pass_time(lat_nadir, time)),
+        np.sort(_calculate_pass_time(lat_nadir, time)),
         time,
         x_al,
         coordinates.spheroid,  # type: ignore[arg-type]
@@ -742,9 +740,9 @@ def calculate_pass(
     index = pass_number - 1
     # Selected indexes corresponding to the current pass
     if index == len(orbit.pass_time) - 1:
-        indexes = numpy.where(orbit.time >= orbit.pass_time[-1])[0]
+        indexes = np.where(orbit.time >= orbit.pass_time[-1])[0]
     else:
-        indexes = numpy.where(
+        indexes = np.where(
             (orbit.time >= orbit.pass_time[index])
             & (orbit.time < orbit.pass_time[index + 1])
         )[0]
@@ -766,9 +764,9 @@ def calculate_pass(
             ),
             bbox,
         )
-        if numpy.all(~mask):
+        if np.all(~mask):
             return None
-        if numpy.any(mask):
+        if np.any(mask):
             lon_nadir = lon_nadir[mask]
             lat_nadir = lat_nadir[mask]
             time = time[mask]
@@ -824,11 +822,10 @@ def calculate_swath(
     # Number of points in half of the swath
     half_swath = int((half_swath - half_gap) / across_track_resolution) + 1
     x_ac = (
-        numpy.arange(half_swath, dtype=float) * along_track_resolution
-        + half_gap
+        np.arange(half_swath, dtype=float) * along_track_resolution + half_gap
     )
-    x_ac = numpy.hstack((-numpy.flip(x_ac), x_ac)) * 1e3
-    x_ac = numpy.full((len(half_orbit), x_ac.size), x_ac)
+    x_ac = np.hstack((-np.flip(x_ac), x_ac)) * 1e3
+    x_ac = np.full((len(half_orbit), x_ac.size), x_ac)
 
     lon, lat = core.geometry.satellite.calculate_swath(
         half_orbit.lon_nadir,
