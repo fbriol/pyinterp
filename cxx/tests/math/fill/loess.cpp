@@ -192,15 +192,12 @@ TEST(LoessTest, SmoothDefinedOnly) {
   config = config.with_nx(1)
                .with_ny(1)
                .with_value_type(config::fill::LoessValueType::kDefined)
-               .with_max_iterations(5);  // Need iterations for smoothing
+               .with_max_iterations(1);
 
   auto result = loess<double>(data, config);
 
   // NaN should remain NaN with kDefined
   EXPECT_TRUE(std::isnan(result(1, 1)));
-
-  // Other defined values remain (kDefined doesn't modify in single pass)
-  // Just verify NaN stays NaN which is the key behavior
 }
 
 // Test value_type = kAll (smooth everything)

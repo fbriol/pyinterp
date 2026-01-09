@@ -24,9 +24,10 @@ template <LoessScalar T>
   if (distance > T{1}) {
     return T{0};
   }
-  constexpr T power = T{3};
-  const auto d_cubed = std::pow(distance, power);
-  return std::pow(T{1} - d_cubed, power);
+  // (1 - d^3)^3
+  const auto d3 = distance * distance * distance;
+  const auto tmp = T{1} - d3;
+  return tmp * tmp * tmp;
 }
 
 /// Determines if a value should be processed based on its defined status.
@@ -56,59 +57,78 @@ struct LoessWorkspace {
 };
 
 /// Compute LOESS value for a single point.
-template <LoessScalar T>
-[[nodiscard]] auto loess_point(const RowMajorMatrix<T>& data,
+/// @param[in] data_values Matrix containing the values for neighbor
+/// calculation.
+/// @param[in] config LOESS configuration parameters.
+/// @param[in] workspace Thread-local workspace for computations.
+/// @param[in] ix Row index of the target point.
+/// @param[in] iy Column index of the target point.
+/// @param[in] current_value Current value at (ix, iy) to return if no neighbors
+/// found.
+/// @return Computed LOESS value for the point at (ix, iy).
+template <LoessScalar T, typename Derived>
+[[nodiscard]] auto loess_point(const Eigen::MatrixBase<Derived>& data_values,
                                const config::fill::Loess& config,
                                const LoessWorkspace& workspace,
-                               const int64_t ix, const int64_t iy) -> T {
-  const auto z = data(ix, iy);
-
-  if (!should_process(z, config.value_type())) {
-    return z;
-  }
-
-  // Accumulate weighted values
+                               const int64_t ix, const int64_t iy,
+                               const T current_value) -> T {
   T weighted_sum{0};
   T weight_sum{0};
 
+  const auto nx_inv = T{1} / static_cast<T>(config.nx());
+  const auto ny_inv = T{1} / static_cast<T>(config.ny());
+
   for (const auto wx : workspace.x_frame) {
     for (const auto wy : workspace.y_frame) {
-      const auto zi = data(wx, wy);
+      const auto zi = data_values(wx, wy);
 
       if (!std::isnan(zi)) {
-        // Compute normalized distance
-        const auto dx = static_cast<T>(wx - ix) / static_cast<T>(config.nx());
-        const auto dy = static_cast<T>(wy - iy) / static_cast<T>(config.ny());
+        // Normalize distances
+        const auto dx = static_cast<T>(wx - ix) * nx_inv;
+        const auto dy = static_cast<T>(wy - iy) * ny_inv;
         const auto distance = std::sqrt(dx * dx + dy * dy);
 
         // Apply tri-cube weight
         const auto weight = tricube_weight(distance);
+
         weighted_sum += weight * zi;
         weight_sum += weight;
       }
     }
   }
 
-  return weight_sum != T{0} ? weighted_sum / weight_sum : z;
+  return weight_sum != T{0} ? weighted_sum / weight_sum : current_value;
 }
 
-/// Process a single row (x-slice) of the matrix.
-template <LoessScalar T>
-void process_row(const RowMajorMatrix<T>& input, RowMajorMatrix<T>& output,
-                 const config::fill::Loess& config, LoessWorkspace& workspace,
-                 const int64_t ix) {
-  const auto num_rows = input.rows();
-  const auto num_cols = input.cols();
+/// Process a single row.
+/// @param[in] data_values Matrix providing neighbor values.
+/// @param[in] data_validity Matrix providing validity checks (should_process).
+/// @param[out] result Matrix to store computed LOESS values.
+/// @param[in] config LOESS configuration parameters.
+/// @param[in,out] workspace Thread-local workspace for computations.
+/// @param[in] ix Row index to process.
+template <LoessScalar T, typename Derived1, typename Derived2>
+void process_row(const Eigen::MatrixBase<Derived1>& data_values,
+                 const Eigen::MatrixBase<Derived2>& data_validity,
+                 RowMajorMatrix<T>& result, const config::fill::Loess& config,
+                 LoessWorkspace& workspace, const int64_t ix) {
+  const auto num_rows = data_values.rows();
+  const auto num_cols = data_values.cols();
 
   // Build frame indices for x-axis
   frame_index(ix, num_rows, config.is_periodic(), workspace.x_frame);
 
   // Process all columns for this row
   for (int64_t iy = 0; iy < num_cols; ++iy) {
-    // Build frame indices for y-axis (never circular)
-    frame_index(iy, num_cols, /*is_angle=*/false, workspace.y_frame);
+    // Check validity against the specific validity matrix
+    if (!should_process(data_validity(ix, iy), config.value_type())) {
+      result(ix, iy) = data_values(ix, iy);
+      continue;
+    }
 
-    output(ix, iy) = loess_point(input, config, workspace, ix, iy);
+    frame_index(iy, num_cols, /*is_angle=*/false, workspace.y_frame);
+    result(ix, iy) = loess_point<T>(data_values, config, workspace, ix, iy,
+                                    data_values(ix, iy));
   }
 }
 
@@ -153,16 +173,23 @@ template <LoessScalar T>
 }
 
 /// Single-pass LOESS processing.
-template <LoessScalar T>
-void loess_single_pass(const RowMajorMatrix<T>& input,
-                       RowMajorMatrix<T>& output,
+/// @param[in] data_values Matrix containing the values for neighbor
+/// calculation.
+/// @param[in] data_validity Matrix providing validity checks (should_process).
+/// @param[out] result Matrix to store computed LOESS values.
+/// @param[in] config LOESS configuration parameters.
+template <LoessScalar T, typename Derived1, typename Derived2>
+void loess_single_pass(const Eigen::MatrixBase<Derived1>& data_values,
+                       const Eigen::MatrixBase<Derived2>& data_validity,
+                       RowMajorMatrix<T>& result,
                        const config::fill::Loess& config) {
   parallel_for(
-      input.rows(),
+      data_values.rows(),
       [&](std::int64_t start, std::int64_t end) {
         LoessWorkspace workspace(config.nx(), config.ny());
         for (int64_t ix = start; ix < end; ++ix) {
-          process_row(input, output, config, workspace, ix);
+          process_row(data_values, data_validity, result, config, workspace,
+                      ix);
         }
       },
       config.num_threads());
@@ -175,11 +202,11 @@ void loess_single_pass(const RowMajorMatrix<T>& input,
 /// The weight function is the tri-cube: w(d) = (1 - |d|³)³
 ///
 /// @tparam T Floating-point scalar type
-/// @param data Input matrix to process
-/// @param nx Half-window size along x-axis (rows)
-/// @param ny Half-window size along y-axis (columns)
-/// @param value_type Which values to process
-/// @param config LOESS configuration
+/// @param[in] data Input matrix to process
+/// @param[in] nx Half-window size along x-axis (rows)
+/// @param[in] ny Half-window size along y-axis (columns)
+/// @param[in] value_type Which values to process
+/// @param[in] config LOESS configuration
 /// @return New matrix with processed values
 template <LoessScalar T>
 [[nodiscard]] auto loess(const EigenDRef<const RowMajorMatrix<T>>& data,
@@ -187,22 +214,29 @@ template <LoessScalar T>
     -> RowMajorMatrix<T> {
   RowMajorMatrix<T> result(data);
 
-  // Single-pass for non-undefined processing or single iteration
-  if (config.value_type() != config::fill::LoessValueType::kUndefined ||
-      config.max_iterations() <= 1) {
-    detail::loess_single_pass(result, result, config);
+  // Single Pass Filling
+  if (config.max_iterations() == 1) {
+    detail::loess_single_pass(data, data, result, config);
     return result;
   }
 
-  // Iterative filling for undefined values
+  // Iterative Filling
+
+  // Apply first guess (replaces NaNs with 0 or Zonal Average)
+  // 'result' now contains NO NaNs.
   detail::apply_first_guess(result, config.first_guess());
 
-  RowMajorMatrix<T> previous(data.rows(), data.cols());
+  // If max_iterations is 0, we just return the guess.
+  if (config.max_iterations() == 0) {
+    return result;
+  }
+
+  RowMajorMatrix<T> previous;
 
   for (uint32_t iter = 0; iter < config.max_iterations(); ++iter) {
     previous = result;
 
-    detail::loess_single_pass(previous, result, config);
+    detail::loess_single_pass(previous, data, result, config);
 
     // Check convergence
     if (detail::compute_max_difference(result, previous) <
