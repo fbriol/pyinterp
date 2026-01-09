@@ -33,7 +33,8 @@ class Writer {
   /// @param[in,out] other The other Writer to append
   void write(Writer&& other) {
     auto other_buffer = std::move(other).release();
-    write(other_buffer);
+    // Append directly without writing size prefix
+    buffer_.insert(buffer_.end(), other_buffer.begin(), other_buffer.end());
   }
 
   /// Write trivially copyable types
