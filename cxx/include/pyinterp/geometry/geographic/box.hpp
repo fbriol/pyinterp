@@ -13,6 +13,18 @@ class Box : public pyinterp::geometry::Box<Point> {
  public:
   using pyinterp::geometry::Box<Point>::Box;
 
+  /// @brief Constructor from corner points
+  /// @param[in] min_corner Minimum corner point (lon, lat)
+  /// @param[in] max_corner Maximum corner point (lon, lat)
+  constexpr Box(const Point& min_corner, const Point& max_corner) noexcept
+      : pyinterp::geometry::Box<Point>(
+            Point(min_corner.lon(), min_corner.lat()),
+            Point(max_corner.lon() < min_corner.lon()
+                      ? math::normalize_period(max_corner.lon(),
+                                               min_corner.lon(), 360.0)
+                      : max_corner.lon(),
+                  max_corner.lat())) {}
+
   /// @brief Returns the global bounding box covering the entire Earth
   [[nodiscard]]
   static constexpr auto global_bounding_box() -> Box {
