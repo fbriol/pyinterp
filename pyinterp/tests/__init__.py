@@ -88,3 +88,30 @@ def load_grid4d() -> xr.Dataset:
 def ephemeris_path() -> pathlib.Path:
     """Return the path to the ephemeris test file."""
     return ROOT / "ephemeris.txt"
+
+
+def load_aoml() -> xr.Dataset:
+    """Return path to the AOML dataset."""
+
+    def _decode_datetime64(array: np.ndarray) -> np.ndarray:
+        """Decode datetime64 data."""
+        array = array.astype("timedelta64[h]") + np.datetime64(
+            "2001-12-19T18:00:00"
+        )
+        return array.astype("M8[ns]")
+
+    path = ROOT.joinpath("aoml_v2019.json")
+    with path.open("r") as stream:
+        data = json.load(stream)
+    for item in ("ud", "vd"):
+        data["data_vars"][item]["data"] = [
+            x if x is not None else float("nan")
+            for x in data["data_vars"][item]["data"]
+        ]
+    ds = xr.Dataset.from_dict(data)
+    ds["time"] = xr.DataArray(
+        _decode_datetime64(ds["time"].values),
+        dims=["time"],
+        attrs={"long_name": "time"},
+    )
+    return ds
