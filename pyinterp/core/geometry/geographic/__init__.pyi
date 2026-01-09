@@ -5,6 +5,9 @@ import numpy as np
 
 from ....type_hints import NDArray1DFloat64, NDArray1DUInt32, NDArray2DFloat64
 from ... import config
+from . import algorithms
+
+
 
 _ConceptElement = TypeVar("_ConceptElement", Point, LineString, Polygon)
 
@@ -37,6 +40,7 @@ __all__ = [
     "Spheroid",
     "_Concept",
     "_ConceptElement",
+    "algorithms",
 ]
 
 class Box:

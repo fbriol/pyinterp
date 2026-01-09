@@ -7,7 +7,7 @@ geospatial operations, and statistical analysis tools.
 import copyreg
 from typing import Any
 
-from . import core, fill
+from . import core, fill, geohash
 from .core import (
     Axis,
     Binning1D,
@@ -50,6 +50,7 @@ __all__ = [
     "config",
     "dateutils",
     "fill",
+    "geohash",
     "geometry",
     "inverse_distance_weighting",
     "kriging",

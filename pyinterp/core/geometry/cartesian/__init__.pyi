@@ -2,6 +2,7 @@ import collections.abc
 from typing import Iterator, TypeVar, overload
 
 from ....type_hints import NDArray1DFloat64
+from . import algorithms
 
 _ConceptElement = TypeVar("_ConceptElement", Point, LineString, Polygon)
 
@@ -30,6 +31,7 @@ __all__ = [
     "Segment",
     "_Concept",
     "_ConceptElement",
+    "algorithms",
 ]
 
 class Box:
