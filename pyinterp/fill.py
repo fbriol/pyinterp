@@ -253,7 +253,8 @@ def loess(
         config: Configuration object (if provided, keyword args are ignored)
         nx: Window size in X direction
         ny: Window size in Y direction
-        max_iterations: Maximum number of iterations
+        max_iterations: Maximum number of iterations. If the value is 1, a
+            single-pass LOESS is performed, the first guess option is ignored.
         epsilon: Convergence criterion
         value_type: Which values to use in regression
         first_guess: Initial guess method
