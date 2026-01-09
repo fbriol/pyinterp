@@ -48,6 +48,9 @@ __all__ = [
     "Grid2D",
     "Grid3D",
     "Grid4D",
+    "Histogram2D",
+    "Histogram2DFloat32",
+    "Histogram2DFloat64",
     "RTree3D",
     "RTree3DFloat32",
     "RTree3DFloat64",
@@ -516,6 +519,79 @@ class Grid4D(GridHolder[_DType]):
     def z(self) -> Axis: ...
     @property
     def u(self) -> Axis: ...
+
+class Histogram2DHolder(Generic[_FloatDType]):
+    def __init__(
+        self,
+        x: Axis,
+        y: Axis,
+        compression: int | None = ...,
+    ) -> None: ...
+    def clear(self) -> None: ...
+    def count(self) -> NDArray2DInt64: ...
+    def max(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def min(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def push(
+        self,
+        x: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        y: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        z: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+    ) -> None: ...
+    def quantile(self, q: float) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def __copy__(self) -> Histogram2DHolder[_FloatDType]: ...
+    def __iadd__(
+        self, other: Histogram2DHolder[_FloatDType]
+    ) -> Histogram2DHolder[_FloatDType]: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: None = None,
+) -> Histogram2DHolder[np.float64]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: Literal["float32"],
+) -> Histogram2DHolder[np.float32]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> Histogram2DHolder[np.float64]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Histogram2DHolder[_FloatDType]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: str,
+) -> Histogram2DHolder[np.float32] | Histogram2DHolder[np.float64]: ...
+
+Histogram2DFloat32: TypeAlias = Histogram2DHolder[np.float32]
+Histogram2DFloat64: TypeAlias = Histogram2DHolder[np.float64]
 
 class TemporalGrid4D(GridHolder[_DType]):
     @property

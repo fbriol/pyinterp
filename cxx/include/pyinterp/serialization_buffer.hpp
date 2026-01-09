@@ -30,10 +30,20 @@ class Writer {
   Writer() = default;
 
   /// Write an other Writer's contents into this buffer
+  /// This writes the size followed by the data (for compatibility with vector
+  /// serialization)
   /// @param[in,out] other The other Writer to append
   void write(Writer&& other) {
     auto other_buffer = std::move(other).release();
-    // Append directly without writing size prefix
+    write(other_buffer);
+  }
+
+  /// Append another Writer's contents directly without size prefix
+  /// Use this for nested serialization where each component has its own format
+  /// (e.g., when serializing Axis or TDigest that have their own magic numbers)
+  /// @param[in,out] other The other Writer to append
+  void append(Writer&& other) {
+    auto other_buffer = std::move(other).release();
     buffer_.insert(buffer_.end(), other_buffer.begin(), other_buffer.end());
   }
 

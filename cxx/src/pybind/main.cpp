@@ -10,6 +10,7 @@
 #include "pyinterp/pybind/geometric.hpp"
 #include "pyinterp/pybind/geometry.hpp"
 #include "pyinterp/pybind/grid.hpp"
+#include "pyinterp/pybind/histogram2d.hpp"
 #include "pyinterp/pybind/period.hpp"
 #include "pyinterp/pybind/rtree.hpp"
 #include "pyinterp/pybind/tdigest.hpp"
@@ -25,6 +26,7 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_geohash(m);
   pyinterp::pybind::init_rtree_3d(m);
   pyinterp::pybind::init_binning(m);
+  pyinterp::pybind::init_histogram2d(m);
   pyinterp::pybind::init_descriptive_statistics(m);
   pyinterp::pybind::init_tdigest(m);
   pyinterp::pybind::init_fill(m);
