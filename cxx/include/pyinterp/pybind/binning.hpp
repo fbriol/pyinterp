@@ -13,6 +13,7 @@
 #include <concepts>
 #include <cstdint>
 #include <optional>
+#include <ranges>
 #include <tuple>
 #include <utility>
 
@@ -192,14 +193,12 @@ class Binning2D {
   auto operator+=(const Binning2D& other) -> Binning2D& {
     validate_compatibility(other);
 
-    for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
-      for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
-        auto& lhs = acc_(ix, iy);
-        const auto& rhs = other.acc_(ix, iy);
-
-        if (lhs.count() == 0 && rhs.count() != 0) {
+    for (auto [lhs, rhs] :
+         std::ranges::views::zip(acc_.reshaped(), other.acc_.reshaped())) {
+      if (rhs.count() != 0) {
+        if (lhs.count() == 0) {
           lhs = rhs;
-        } else if (lhs.count() != 0 && rhs.count() != 0) {
+        } else {
           lhs += rhs;
         }
       }
@@ -332,12 +331,10 @@ class Binning2D {
       -> Matrix<ResultType> {
     Matrix<ResultType> result(x_.size(), y_.size());
 
-    for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
-      for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
-        result(ix, iy) = static_cast<T>(func(acc_(ix, iy)));
-      }
+    for (auto [lhs, rhs] :
+         std::ranges::views::zip(result.reshaped(), acc_.reshaped())) {
+      lhs = static_cast<ResultType>(func(rhs));
     }
-
     return result;
   }
 
