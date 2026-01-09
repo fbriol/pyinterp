@@ -10,7 +10,10 @@ from typing import Any
 from . import core, fill
 from .core import (
     Axis,
+    Binning1D,
+    Binning2D,
     Grid,
+    Histogram2D,
     RTree3D,
     TemporalAxis,
     config,
@@ -35,7 +38,10 @@ from .rtree import (
 
 __all__ = [
     "Axis",
+    "Binning1D",
+    "Binning2D",
     "Grid",
+    "Histogram2D",
     "RTree3D",
     "TemporalAxis",
     "bivariate",
