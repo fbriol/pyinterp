@@ -290,7 +290,7 @@ class Axis {
   [[nodiscard]] constexpr auto normalize_coordinate(const T coordinate,
                                                     const T min) const noexcept
       -> T {
-    if (is_periodic_ && (coordinate >= min + period_ || coordinate < min)) {
+    if (period_ != T(0) && (coordinate >= min + period_ || coordinate < min)) {
       return math::normalize_period<T>(coordinate, min, period_);
     }
     return coordinate;
