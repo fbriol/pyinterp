@@ -12,10 +12,7 @@ First, let's import the necessary libraries and load a sample dataset.
 """
 
 # %%
-import timeit
-
 import numpy as np
-import pandas as pd
 
 import pyinterp
 import pyinterp.backends.xarray
@@ -74,41 +71,6 @@ print(f"Are indices for -180° and 180° the same? {idx_1 == idx_2}")
 t_axis = pyinterp.TemporalAxis(time)
 print("Time axis:")
 print(t_axis)
-
-# %%
-# Performance Comparison
-# ----------------------
-# ``pyinterp`` axis objects are implemented in C++ and are significantly faster
-# for lookups than equivalent objects in libraries like ``pandas``. Let's
-# compare the performance of :py:class:`pyinterp.Axis` against
-# ``pandas.Index`` for finding indices.
-#
-# **Longitude Axis:**
-values = lon[10:20] + 1 / 3
-index = pd.Index(lon)
-print("Performance for Longitude Axis:")
-print(
-    f"  pandas.Index:  "
-    f"{timeit.timeit('index.searchsorted(values)', globals=globals()):.6f}s"
-)
-print(
-    f"  pyinterp.Axis: "
-    f"{timeit.timeit('x_axis.find_index(values)', globals=globals()):.6f}s"
-)
-
-# %%
-# **Time Axis:**
-index = pd.Index(time)
-values = time + np.timedelta64(1, "ns")
-print("Performance for Time Axis:")
-print(
-    f"  pandas.Index:        "
-    f"{timeit.timeit('index.searchsorted(values)', globals=globals()):.6f}s"
-)
-print(
-    f"  pyinterp.TemporalAxis: "
-    f"{timeit.timeit('t_axis.find_index(values)', globals=globals()):.6f}s"
-)
 
 # %%
 # Creating a Grid
