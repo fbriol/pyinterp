@@ -63,6 +63,7 @@ Let's start by importing the necessary libraries.
 # %%
 import json
 import timeit
+from typing import cast
 
 import cartopy.crs
 import cartopy.feature
@@ -435,7 +436,10 @@ print(f"Number of rings: {len(polygon_obj['coordinates'])}")
 gulf_wkt = (
     "POLYGON((-97.5 20, -97.5 30, -82.5 30, -82.5 20, -90 17.5, -97.5 20))"
 )
-gulf_of_mexico = geographic.algorithms.from_wkt(gulf_wkt)
+gulf_of_mexico = cast(
+    geographic.Polygon,
+    geographic.algorithms.from_wkt(gulf_wkt),
+)
 
 # %%
 # Create a grid of points
@@ -650,6 +654,7 @@ if crossovers:
             crossover.point.lon + 0.02,
             crossover.point.lat + 0.02,
             f"X{i + 1}",
+            s="",
             fontsize=12,
             fontweight="bold",
             transform=cartopy.crs.PlateCarree(),
