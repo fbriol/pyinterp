@@ -18,6 +18,8 @@ using nb::literals::operator""_a;
 namespace pyinterp::geohash::pybind {
 
 constexpr auto kGeohashClassDoc = R"doc(
+Geohash: Base32 string encoding a rectangular geographic area.
+
 Geohashing is a geocoding method used to encode geographic coordinates
 (latitude and longitude) into a short string of digits and letters
 delineating an area on a map, which is called a cell, with varying

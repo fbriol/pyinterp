@@ -35,12 +35,13 @@ Examples:
     >>> import numpy as np
     >>> import pyinterp
 
-    # Create a regular axis from 0 to 10 with step of 1
+    >>> # Create a regular axis from 0 to 10 with step of 1
     >>> values = np.arange(0, 11, dtype='float64')
     >>> axis = pyinterp.Axis(values)
 
-    # Create a regular periodic axis from 0° to 350° with a 10° increment.
-    # Since 360 is equivalent to 0, it is intentionally omitted from the array.
+    >>> # Create a regular periodic axis from 0° to 350° with a 10° increment.
+    >>> # Since 360 is equivalent to 0, it is intentionally omitted from the
+    >>> # array.
     >>> values = np.arange(0, 351, 10, dtype='float64')
     >>> axis_periodic = pyinterp.Axis(
     ...     values,
@@ -48,7 +49,8 @@ Examples:
     ...     period=360.0   # Period of the axis
     ... )
 
-    # Create an irregular axis with tolerance
+    >>> # Create an irregular axis with tolerance
+
     >>> values = np.array([0.0, 1.1, 2.5, 4.0, 7.3], dtype='float64')
     >>> axis_irregular = pyinterp.Axis(
     ...     values,

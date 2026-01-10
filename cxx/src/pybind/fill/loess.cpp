@@ -19,17 +19,25 @@ Fill undefined values using locally weighted regression (LOESS).
 
 The LOESS algorithm uses a tri-cube weight function to compute weighted
 averages within a local window around each point. The weight function is:
-w(d) = (1 - |d|³)³ for |d| ≤ 1, and 0 otherwise.
+
+.. math::
+    w(d) = \begin{cases}
+      (1 - |d|^3)^3 & |d| \le 1 \\
+      0 & \text{otherwise}
+    \end{cases}
 
 Args:
     data: Input 2D array containing data to fill/smooth.
     config: LOESS configuration with:
+
         - nx: Half-window size along the x-axis (rows).
         - ny: Half-window size along the y-axis (columns).
         - value_type: Which values to process:
+
             * LoessValueType.kUndefined: Fill only NaN values (iterative)
             * LoessValueType.kDefined: Smooth only non-NaN values
             * LoessValueType.kAll: Both fill and smooth
+
         - first_guess: Initial guess strategy (zonal_average or zero)
         - is_periodic: Whether the x-axis is periodic (e.g., longitude)
         - max_iterations: Maximum iterations for convergence

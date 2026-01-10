@@ -144,7 +144,7 @@ Args:
         Defaults to 12.
 
 Returns:
-    Geohash codes as numpy string array (dtype |S{precision}).
+    Geohash codes as numpy string array (dtype ``S{precision}``).
 
 Raises:
     ValueError: If the given precision is not within [1, 12].

@@ -41,7 +41,8 @@ Examples:
     >>> import numpy as np
     >>> import pyinterp
 
-    # Create RTree for Cartesian coordinates (e.g., planar system)
+    Create RTree for Cartesian coordinates (e.g., planar system)
+
     >>> coords = np.array([
     ...     [0.0, 0.0, 0.0],
     ...     [1.0, 1.0, 0.0]
@@ -50,11 +51,13 @@ Examples:
     >>> tree = pyinterp.RTree3D()
     >>> tree.packing(coords, values)
 
-    # Query k-nearest neighbors
+    Query k-nearest neighbors
+
     >>> query_coords = np.array([[0.5, 0.5, 0.0]])
     >>> distances, values = tree.query(query_coords, k=2)
 
-    # Create RTree with geodetic coordinates (lon, lat, alt)
+    Create RTree with geodetic coordinates (lon, lat, alt)
+
     >>> geodetic_coords = np.array([
     ...     [0.0, 45.0, 100.0],
     ...     [1.0, 46.0, 200.0]
@@ -73,7 +76,7 @@ Args:
     coordinates: Matrix of shape (n, 3) or (n, 2) containing point coordinates.
         If spheroid was provided: (lon, lat, alt) in degrees/degrees/meters
         If spheroid was not provided: Cartesian coordinates in any consistent
-            unit system (e.g., meters for ECEF, units on a plane, etc.)
+        unit system (e.g., meters for ECEF, units on a plane, etc.)
         If shape is (n, 2), the third coordinate is assumed to be zero.
     values: Vector of size n containing values at each point.
 
@@ -93,7 +96,7 @@ Args:
     coordinates: Matrix of shape (n, 3) or (n, 2) containing point coordinates.
         If spheroid was provided: (lon, lat, alt) in degrees/degrees/meters
         If spheroid was not provided: Cartesian coordinates in any consistent
-            unit system (e.g., meters for ECEF, units on a plane, etc.)
+        unit system (e.g., meters for ECEF, units on a plane, etc.)
         If shape is (n, 2), the third coordinate is assumed to be zero.
     values: Vector of size n containing values at each point.
 
@@ -118,9 +121,10 @@ Args:
 
 Returns:
     Tuple of (distances, values) matrices of shape [n_points x k].
+
     - distances: Distance from each query point to its k-nearest neighbors.
-                 When no spheroid is provided, distances are in the same units
-                 as the Cartesian coordinates.
+      When no spheroid is provided, distances are in the same units
+      as the Cartesian coordinates.
     - values: Values at those k-nearest neighbors
 
 Note:
@@ -386,7 +390,7 @@ Examples:
     >>> import numpy as np
     >>> import pyinterp
 
-    # Create RTree for Cartesian coordinates with float64 (default)
+    >>> # Create RTree for Cartesian coordinates with float64 (default)
     >>> coords = np.array([
     ...     [0.0, 0.0, 0.0],
     ...     [1.0, 1.0, 0.0]
@@ -395,17 +399,17 @@ Examples:
     >>> tree = pyinterp.RTree3D()
     >>> tree.packing(coords, values)
 
-    # Create RTree with float32 for reduced memory usage
+    >>> # Create RTree with float32 for reduced memory usage
     >>> coords_f32 = coords.astype('float32')
     >>> values_f32 = values.astype('float32')
     >>> tree_f32 = pyinterp.RTree3D(dtype='float32')
     >>> tree_f32.packing(coords_f32, values_f32)
 
-    # Query k-nearest neighbors
+    >>> # Query k-nearest neighbors
     >>> query_coords = np.array([[0.5, 0.5, 0.0]])
     >>> distances, values = tree.query(query_coords, k=2)
 
-    # Create RTree with geodetic coordinates (lon, lat, alt)
+    >>> # Create RTree with geodetic coordinates (lon, lat, alt)
     >>> geodetic_coords = np.array([
     ...     [0.0, 45.0, 100.0],
     ...     [1.0, 46.0, 200.0]
