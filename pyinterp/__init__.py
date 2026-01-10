@@ -7,7 +7,7 @@ geospatial operations, and statistical analysis tools.
 import copyreg
 from typing import Any
 
-from . import core, fill, geohash
+from . import core, fill, geohash, geometry
 from .core import (
     Axis,
     Binning1D,
@@ -19,7 +19,6 @@ from .core import (
     TemporalAxis,
     config,
     dateutils,
-    geometry,
     period,
 )
 from .regular_grid_interpolator import (
