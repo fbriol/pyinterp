@@ -90,6 +90,7 @@ fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 
 # %%
 # The bivariate method supports multiple interpolation techniques:
+#
 # - **Default methods**: bilinear, nearest neighbor, inverse distance weighting
 # - **Advanced methods**: bicubic, akima, akima_periodic, c_spline,
 #   c_spline_not_a_knot, c_spline_periodic, linear, polynomial, steffen

@@ -692,10 +692,10 @@ class RegularGridInterpolator:
                 For windowed methods (bicubic, c_spline, etc.), additional
                 options include:
 
-                - ``window_size_x`` (int): Window size in X direction
-                - ``window_size_y`` (int): Window size in Y direction
+                - ``half_window_size_x`` (int): Half window size in X direction
+                - ``half_window_size_y`` (int): Half window size in Y direction
                 - ``boundary_mode`` (str): Boundary handling mode
-                  (``"expand"``, ``"wrap"``, ``"symmetric"``, ``"undefined"``)
+                  (``"shrink"``, ``"undef"``)
 
                 For 3D/4D grids:
 
@@ -722,8 +722,8 @@ class RegularGridInterpolator:
             >>> result = interp(
             ...     {"lon": [10.5], "lat": [45.2]},
             ...     method="bicubic",
-            ...     window_size_x=10,
-            ...     window_size_y=10,
+            ...     half_window_size_x=10,
+            ...     half_window_size_y=10,
             ... )
 
             >>> # With bounds checking

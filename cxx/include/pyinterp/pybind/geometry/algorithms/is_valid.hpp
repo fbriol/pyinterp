@@ -17,6 +17,7 @@ constexpr auto kIsValidDoc = R"doc(
 Check if a geometry is valid according to OGC standards.
 
 Validity rules (OGC Simple Features specification):
+
 - Points: Always valid (unless coordinates are NaN/Inf)
 - LineStrings: Must have at least 2 points
 - Rings: Must be closed and have at least 4 points

@@ -1,0 +1,16 @@
+name: pyinterp
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.11
+  - cartopy
+  - gcsfs
+  - intake
+  - intake-xarray
+  - jupyter
+  - numcodecs
+  - pandas
+  - pyinterp>=2026.01.0
+  - pytest
+  - sphinx-gallery
+  - sphinx-inline-tabs

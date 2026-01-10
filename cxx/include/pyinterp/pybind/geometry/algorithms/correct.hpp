@@ -15,6 +15,7 @@ constexpr auto kCorrectDoc = R"doc(
 Corrects a geometry to make it valid according to OGC rules.
 
 This function applies several corrections:
+
 - Ensures rings are closed (first point equals last point)
 - Ensures correct orientation (exterior rings counter-clockwise, holes
   clockwise)

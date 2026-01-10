@@ -213,9 +213,11 @@ def inverse_distance_weighting(
     Args:
         tree: R*Tree containing the scattered data.
         coordinates: Query coordinates as a NumPy array with shape:
+
             * (N, 2): For geographic.RTree, representing (longitude, latitude).
             * (N, 2) or (N, 3): For RTree3DHolder, representing
               (longitude, latitude[, altitude]).
+
         config: Configuration object (if provided, keyword args are ignored)
         k: Number of nearest neighbors to use
         p: Power parameter for IDW
@@ -276,9 +278,11 @@ def radial_basis_function(
     Args:
         tree: R*Tree containing the scattered data.
         coordinates: Query coordinates as a NumPy array with shape:
+
             * (N, 2): For geographic.RTree, representing (longitude, latitude).
             * (N, 2) or (N, 3): For RTree3DHolder, representing
               (longitude, latitude[, altitude]).
+
         config: Configuration object (if provided, keyword args are ignored)
         k: Number of nearest neighbors to use
         rbf: RBF kernel type
@@ -341,9 +345,11 @@ def kriging(
     Args:
         tree: R*Tree containing the scattered data.
         coordinates: Query coordinates as a NumPy array with shape:
+
             * (N, 2): For geographic.RTree, representing (longitude, latitude).
             * (N, 2) or (N, 3): For RTree3DHolder, representing
               (longitude, latitude[, altitude]).
+
         config: Configuration object (if provided, keyword args are ignored)
         k: Number of nearest neighbors to use
         covariance_model: Covariance function type
@@ -409,9 +415,11 @@ def window_function(
     Args:
         tree: R*Tree containing the scattered data.
         coordinates: Query coordinates as a NumPy array with shape:
+
             * (N, 2): For geographic.RTree, representing (longitude, latitude).
             * (N, 2) or (N, 3): For RTree3DHolder, representing
               (longitude, latitude[, altitude]).
+
         config: Configuration object (if provided, keyword args are ignored)
         k: Number of nearest neighbors to use
         wf: Window kernel type
@@ -463,9 +471,11 @@ def query(
     Args:
         tree: R*Tree containing the scattered data.
         coordinates: Query coordinates as a NumPy array with shape:
+
             * (N, 2): For geographic.RTree, representing (longitude, latitude).
             * (N, 2) or (N, 3): For RTree3DHolder, representing
               (longitude, latitude[, altitude]).
+
         config: Configuration object (if provided, keyword args are ignored)
         k: Number of nearest neighbors to return
         radius: Search radius (None = no limit)

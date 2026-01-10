@@ -654,7 +654,6 @@ if crossovers:
             crossover.point.lon + 0.02,
             crossover.point.lat + 0.02,
             f"X{i + 1}",
-            s="",
             fontsize=12,
             fontweight="bold",
             transform=cartopy.crs.PlateCarree(),
