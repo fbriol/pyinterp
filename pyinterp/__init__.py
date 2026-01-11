@@ -49,6 +49,20 @@ from .rtree import (
 )
 
 
+# Create Grid type aliases for runtime
+# These mirror the type stubs in core/__init__.pyi
+Grid1D = Grid
+Grid2D = Grid
+Grid3D = Grid
+Grid4D = Grid
+
+# Also add them to the core module namespace for core.Grid1D access
+core.Grid1D = Grid1D  # type: ignore[assignment,misc]
+core.Grid2D = Grid2D  # type: ignore[assignment,misc]
+core.Grid3D = Grid3D  # type: ignore[assignment,misc]
+core.Grid4D = Grid4D  # type: ignore[assignment,misc]
+
+
 __all__ = [
     "Axis",
     "Binning1D",
@@ -59,6 +73,10 @@ __all__ = [
     "Binning2DFloat64",
     "DescriptiveStatistics",
     "Grid",
+    "Grid1D",
+    "Grid2D",
+    "Grid3D",
+    "Grid4D",
     "GridHolder",
     "Histogram2D",
     "Histogram2DFloat32",
