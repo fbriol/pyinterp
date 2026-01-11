@@ -81,7 +81,7 @@ class Base32 {
 
  private:
   /// Invalid character in the decoding table.
-  static constexpr char kInvalid{-1};
+  static constexpr char kInvalid{static_cast<char>(0xFF)};
   /// Base32 encoding table.
   static constexpr std::array<char, 32> kEncode{
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'b',
