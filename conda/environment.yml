@@ -1,5 +1,7 @@
 name: pyinterp
 dependencies:
+  - gxx>=15
+  - ninja
   - libboost-devel
   - cartopy>=0.20.0
   - cmake
