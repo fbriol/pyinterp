@@ -162,10 +162,6 @@ def update_conda_files(version: str) -> None:
     if meta.exists():
         update_meta(meta, version)
         update_environment(
-            pathlib.Path(WORKING_DIRECTORY, "conda", "environment.yml"),
-            version,
-        )
-        update_environment(
             pathlib.Path(WORKING_DIRECTORY, "binder", "environment.yml"),
             version,
         )
