@@ -40,7 +40,7 @@ jobs:
         create-args: |
           python=3.12
         environment-name: pyinterp
-        environment-file: conda/environment.yml
+        environment-file: conda/linux.yml
         init-shell: bash
 
     - name: Build extension with code coverage and the C++ tests
@@ -102,7 +102,7 @@ jobs:
         create-args: |
           python=${{ matrix.python-version }}
         environment-name: pyinterp
-        environment-file: conda/environment.yml
+        environment-file: conda/linux.yml
         init-shell: bash
 
     - name: Build extension
@@ -190,7 +190,7 @@ jobs:
         create-args: |
           python=3.12
         environment-name: pyinterp
-        environment-file: conda/environment.yml
+        environment-file: conda/osx.yml
         init-shell: bash
 
     - name: Build extension
@@ -241,7 +241,7 @@ jobs:
         create-args: |
           python=3.12
         environment-name: pyinterp
-        environment-file: conda/environment.yml
+        environment-file: conda/win.yml
 
     - name: Building Testing Python Package
       shell: bash -l {0}
