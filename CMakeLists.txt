@@ -418,7 +418,6 @@ endif()
 # ##############################################################################
 find_package(Boost 1.80 REQUIRED)
 target_include_directories(pyinterp SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(core_objects SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(core SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 # ##############################################################################
