@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <utility>
 
 #include "pyinterp/math/interpolate/cache.hpp"
@@ -561,7 +562,7 @@ TEST(Performance, AsymmetricCache) {
   auto duration =
       std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-  auto time_ns = duration / static_cast<double>(iterations);
+  auto time_ns = static_cast<int>(duration / static_cast<double>(iterations));
   RecordProperty("AsymmetricCacheTimeNS", time_ns);
 }
 

@@ -4,6 +4,12 @@
 # license that can be found in the LICENSE file.
 enable_testing()
 
+# Force Release runtime library for MSVC to match GTest build
+if(MSVC)
+  string(REPLACE "/MDd" "/MD" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  string(REPLACE "/D_DEBUG" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+endif()
+
 # Create a new test suite.
 macro(ADD_TESTCASE testname sources)
   set(libraries ${ARGN})
@@ -15,6 +21,14 @@ macro(ADD_TESTCASE testname sources)
                    --gtest_output=xml:test_${testname}.xml)
   if(CODE_COVERAGE)
     add_coverage(test_${testname})
+  endif()
+  # Force Release runtime for MSVC to match GTest build
+  if(MSVC)
+    target_compile_options(test_${testname} PRIVATE /MD /bigobj)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      target_compile_definitions(test_${testname}
+                                 PRIVATE _ITERATOR_DEBUG_LEVEL=0)
+    endif()
   endif()
 endmacro()
 

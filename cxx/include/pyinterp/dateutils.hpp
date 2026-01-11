@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "pyinterp/eigen.hpp"
+#include "pyinterp/math.hpp"
 
 // Detect compiler builtins for checked arithmetic
 #ifndef __has_builtin
@@ -412,7 +413,7 @@ class FractionalSeconds {
   }
 
   /// @brief Get the maximum number of digits for the fractional part
-  [[nodiscard]] constexpr auto ndigits() const noexcept -> int {
+  [[nodiscard]] __CONSTEXPR auto ndigits() const noexcept -> int {
     return static_cast<int>(
         std::log10(static_cast<double>(order_of_magnitude_)));
   }

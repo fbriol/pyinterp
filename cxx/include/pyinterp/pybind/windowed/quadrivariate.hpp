@@ -92,12 +92,16 @@ template <typename GridType, typename ResultType, typename ZType>
 
   if (cfg.third_axis().method() == config::AxisMethod::kLinear) {
     // Linear interpolation along Z axis
-    f0 = math::interpolate::linear(z, z0, z1, f00, f10);
-    f1 = math::interpolate::linear(z, z0, z1, f01, f11);
+    f0 =
+        static_cast<ResultType>(math::interpolate::linear(z, z0, z1, f00, f10));
+    f1 =
+        static_cast<ResultType>(math::interpolate::linear(z, z0, z1, f01, f11));
   } else {
     // Nearest neighbor interpolation along Z axis
-    f0 = math::interpolate::nearest(z, z0, z1, f00, f10);
-    f1 = math::interpolate::nearest(z, z0, z1, f01, f11);
+    f0 = static_cast<ResultType>(
+        math::interpolate::nearest(z, z0, z1, f00, f10));
+    f1 = static_cast<ResultType>(
+        math::interpolate::nearest(z, z0, z1, f01, f11));
   }
 
   if (cfg.fourth_axis().method() == config::AxisMethod::kLinear) {

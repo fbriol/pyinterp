@@ -439,7 +439,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             cmake_args.append("-G" + self.generator)
         elif is_windows:
             cmake_args.append(
-                "-G" + os.environ.get("CMAKE_GEN", "Visual Studio 16 2019")
+                "-G" + os.environ.get("CMAKE_GEN", "Visual Studio 17 2022")
             )
 
         prepare_cmake_arguments(

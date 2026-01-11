@@ -200,10 +200,10 @@ template <typename Type>
 
   for (size_t it = 0; it < config.max_iterations(); ++it) {
     ++iteration;
-    max_residual =
-        detail::gauss_seidel<Type>(grid, mask, config.is_periodic(),
-                                   config.relaxation(), config.num_threads());
-    if (max_residual < config.epsilon()) {
+    max_residual = detail::gauss_seidel<Type>(
+        grid, mask, config.is_periodic(),
+        static_cast<Type>(config.relaxation()), config.num_threads());
+    if (max_residual < static_cast<Type>(config.epsilon())) {
       break;
     }
   }

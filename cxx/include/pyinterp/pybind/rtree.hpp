@@ -379,7 +379,8 @@ auto RTree3D<T>::query(const Eigen::Ref<const CoordinateMatrix>& coordinates,
     -> std::tuple<Matrix<distance_t>, Matrix<promotion_t>> {
   return batch_query(coordinates, config,
                      [this, config](const point_t& pt, uint32_t neighbors) {
-                       return base_t::query(pt, neighbors, config.radius(),
+                       return base_t::query(pt, neighbors,
+                                            static_cast<T>(config.radius()),
                                             config.boundary_check());
                      });
 }
@@ -394,9 +395,9 @@ auto RTree3D<T>::inverse_distance_weighting(
   return batch_interpolate(
       coordinates, config.num_threads(),
       [this, config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::inverse_distance_weighting(pt, config.radius(),
-                                                  config.k(), config.p(),
-                                                  config.boundary_check());
+        return base_t::inverse_distance_weighting(
+            pt, static_cast<T>(config.radius()), config.k(), config.p(),
+            config.boundary_check());
       });
 }
 
@@ -407,14 +408,16 @@ auto RTree3D<T>::kriging(const Eigen::Ref<const CoordinateMatrix>& coordinates,
                          const config::rtree::Kriging& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   auto model = math::interpolate::Kriging<promotion_t>(
-      config.sigma(), config.lambda(), config.nugget(),
-      config.covariance_model(), config.drift_function());
+      static_cast<promotion_t>(config.sigma()),
+      static_cast<promotion_t>(config.lambda()),
+      static_cast<promotion_t>(config.nugget()), config.covariance_model(),
+      config.drift_function());
   return batch_interpolate(
       coordinates, config.num_threads(),
       [this, &model,
        &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::kriging(model, pt, config.radius(), config.k(),
-                               config.boundary_check());
+        return base_t::kriging(model, pt, static_cast<T>(config.radius()),
+                               config.k(), config.boundary_check());
       });
 }
 
@@ -426,13 +429,15 @@ auto RTree3D<T>::radial_basis_function(
     const config::rtree::RadialBasisFunction& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   auto model = math::interpolate::RBF<promotion_t>(
-      config.epsilon(), config.smooth(), config.rbf());
+      static_cast<promotion_t>(config.epsilon()),
+      static_cast<promotion_t>(config.smooth()), config.rbf());
   return batch_interpolate(
       coordinates, config.num_threads(),
       [this, &model,
        &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
         return base_t::radial_basis_function(
-            model, pt, config.radius(), config.k(), config.boundary_check());
+            model, pt, static_cast<T>(config.radius()), config.k(),
+            config.boundary_check());
       });
 }
 
@@ -444,13 +449,14 @@ auto RTree3D<T>::window_function(
     const config::rtree::InterpolationWindow& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   auto model = math::interpolate::InterpolationWindow<coordinate_t>(
-      config.wf(), config.arg());
+      config.wf(), static_cast<coordinate_t>(config.arg()));
   return batch_interpolate(
       coordinates, config.num_threads(),
       [this, &model,
        &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::window_function(model, pt, config.radius(), config.k(),
-                                       config.boundary_check());
+        return base_t::window_function(model, pt,
+                                       static_cast<T>(config.radius()),
+                                       config.k(), config.boundary_check());
       });
 }
 

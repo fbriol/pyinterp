@@ -6,6 +6,7 @@
 
 #include <boost/geometry/srs/spheroid.hpp>
 #include <cstdint>
+#include <optional>
 
 #include "pyinterp/geometry/geographic/spheroid.hpp"
 

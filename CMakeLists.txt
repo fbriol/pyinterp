@@ -81,14 +81,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       CACHE STRING "" FORCE)
 endif()
 
+# By default, build type is set to release, with debugging information.
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE
+      "RelWithDebInfo"
+      CACHE STRING "Choose the type of build" FORCE)
+endif()
+
 set_property(
   CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
                                   "RelWithDebInfo" "ASan")
 
-# By default, build type is set to release, with debugging information.
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
-endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # The library must be built using C++23 compiler.
@@ -101,7 +104,7 @@ include(CheckCXXCompilerFlag)
 if(NOT WIN32)
   check_cxx_compiler_flag("-std=c++23" HAS_CPP23_FLAG)
 else()
-  check_cxx_compiler_flag("/std:c++23" HAS_CPP23_FLAG)
+  check_cxx_compiler_flag("/std:c++latest" HAS_CPP23_FLAG)
 endif()
 if(NOT HAS_CPP23_FLAG)
   message(FATAL_ERROR "Unsupported compiler -- requires C++23 support!")
@@ -160,6 +163,7 @@ if(NOT WIN32)
 endif()
 
 if(MSVC)
+  add_compile_options(/MP)
   # Disable warnings about using deprecated std::equal_to<>::result_type
   add_definitions(-D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING)
   # Disable auto-linking and use cmake's dependency handling
@@ -253,6 +257,22 @@ find_package(
   COMPONENTS Interpreter Development.Module
   REQUIRED)
 include_directories(${Python3_INCLUDE_DIRS})
+
+# Ensure Python::Module target exists (needed for nanobind on Windows)
+if(NOT TARGET Python::Module)
+  if(NOT TARGET Python::Python)
+    add_library(Python::Python INTERFACE IMPORTED)
+    set_target_properties(
+      Python::Python
+      PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${Python3_INCLUDE_DIRS}"
+                 INTERFACE_LINK_LIBRARIES "${Python3_LIBRARIES}")
+  endif()
+  add_library(Python::Module INTERFACE IMPORTED)
+  # cmake-format: off
+  set_target_properties(
+    Python::Module PROPERTIES INTERFACE_LINK_LIBRARIES "Python::Python")
+  # cmake-format: on
+endif()
 
 # BLAS
 #

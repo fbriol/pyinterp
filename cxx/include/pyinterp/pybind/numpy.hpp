@@ -42,7 +42,7 @@ inline auto retrieve_dtype(const std::string &name,
   auto arr_kind = nanobind::cast<std::string>(nanobind::str(arr_dtype));
   try {
     return dateutils::DType(arr_kind);
-  } catch (const std::invalid_argument &e) {
+  } catch (const std::invalid_argument &) {
     throw std::invalid_argument(
         name + " must be a numpy.datetime64 or numpy.timedelta64 array, got " +
         arr_kind);

@@ -106,8 +106,8 @@ constexpr auto Polynomial<T>::compute_coefficients(const Vector<T>& xa,
 template <std::floating_point T>
 auto Polynomial<T>::taylor(const Vector<T>& xa, const T x) const -> Vector<T> {
   const auto size = xa.size();
-  auto c = Vector<T>(size);
-  auto w = Vector<T>(size);
+  Vector<T> c = Vector<T>::Zero(size);
+  Vector<T> w = Vector<T>::Zero(size);
 
   // Initialize
   w(size - 1) = T{1};

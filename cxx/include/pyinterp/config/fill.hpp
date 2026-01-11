@@ -10,6 +10,7 @@
 #include <string_view>
 
 #include "pyinterp/config/common.hpp"
+#include "pyinterp/math.hpp"
 
 namespace pyinterp::config::fill {
 
@@ -189,7 +190,7 @@ class Loess : public FillBase<Loess> {
   /// @param[in] value Half-window size along x-axis
   /// @return Updated configuration
   /// @throws std::invalid_argument if value is zero
-  [[nodiscard]] constexpr auto with_nx(this Loess self, uint32_t value)
+  [[nodiscard]] __CONSTEXPR auto with_nx(this Loess self, uint32_t value)
       -> Loess {
     Loess::check_windows_size(value);
     self.nx_ = value;
@@ -204,7 +205,7 @@ class Loess : public FillBase<Loess> {
   /// @param[in] value Half-window size along y-axis
   /// @return Updated configuration
   /// @throws std::invalid_argument if value is zero
-  [[nodiscard]] constexpr auto with_ny(this Loess self, uint32_t value)
+  [[nodiscard]] __CONSTEXPR auto with_ny(this Loess self, uint32_t value)
       -> Loess {
     Loess::check_windows_size(value);
     self.ny_ = value;

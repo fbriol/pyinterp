@@ -247,7 +247,7 @@ class RegularTest : public testing::Test {
  protected:
   using Axis = axis::Regular<T>;
 
-  auto CreateAxis(T start, T stop, T num) -> Axis {
+  auto CreateAxis(T start, T stop, size_t num) -> Axis {
     return Axis(start, stop, num);
   }
 };

@@ -106,7 +106,8 @@ class Spheroid {
 
   /// @brief Gets the linear eccentricity
   /// @return E = √(a² - b²)
-  [[nodiscard]] constexpr auto linear_eccentricity() const noexcept -> double {
+  [[nodiscard]] __CONSTEXPR auto linear_eccentricity() const noexcept
+      -> double {
     const double b = semi_minor_axis();
     return std::sqrt(semi_major_axis_ * semi_major_axis_ - b * b);
   }
@@ -119,7 +120,7 @@ class Spheroid {
 
   /// @brief Gets the authalic radius (radius of sphere with same surface area)
   /// @return R₂ = √[(a² + ab²/E × ln((a+E)/b)) / 2]
-  [[nodiscard]] constexpr auto authalic_radius() const noexcept -> double {
+  [[nodiscard]] __CONSTEXPR auto authalic_radius() const noexcept -> double {
     const double b = semi_minor_axis();
     const double E = linear_eccentricity();
     const double a2 = semi_major_axis_ * semi_major_axis_;
@@ -132,7 +133,7 @@ class Spheroid {
 
   /// @brief Gets the volumetric radius (radius of sphere with same volume)
   /// @return R₃ = ∛(a²b)
-  [[nodiscard]] constexpr auto volumetric_radius() const noexcept -> double {
+  [[nodiscard]] __CONSTEXPR auto volumetric_radius() const noexcept -> double {
     return std::cbrt(semi_major_axis_ * semi_major_axis_ * semi_minor_axis());
   }
 
@@ -140,7 +141,7 @@ class Spheroid {
   /// @param latitude Latitude in degrees
   /// @return R(φ) = √[((a²cos(φ))² + (b²sin(φ))²) / ((a·cos(φ))² +
   /// (b·sin(φ))²)]
-  [[nodiscard]] constexpr auto geocentric_radius(
+  [[nodiscard]] __CONSTEXPR auto geocentric_radius(
       const double latitude) const noexcept -> double {
     const double cos_phi = math::cosd(latitude);
     const double sin_phi = math::sind(latitude);

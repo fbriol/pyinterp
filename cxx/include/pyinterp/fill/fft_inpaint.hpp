@@ -62,7 +62,8 @@ template <std::floating_point Type>
           std::to_string(static_cast<int>(config.first_guess())));
   }
 
-  const Type sigma_sq = Type(2) * config.sigma() * config.sigma();
+  const auto sigma_sq =
+      Type(2) * static_cast<Type>(config.sigma() * config.sigma());
 
   // Gaussian weight computation
   auto gaussian_weight = [sigma_sq](Type u, Type v) -> Type {

@@ -9,6 +9,7 @@
 
 #include "pyinterp/config/common.hpp"
 #include "pyinterp/geometry/rtree.hpp"
+#include "pyinterp/math.hpp"
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
@@ -319,7 +320,7 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
 
   /// @brief Get the window function argument.
   /// @return Optional window function argument
-  [[nodiscard]] constexpr auto arg() const noexcept -> double {
+  [[nodiscard]] __CONSTEXPR auto arg() const noexcept -> double {
     if (!std::isnan(arg_)) {
       return arg_;
     }

@@ -116,15 +116,17 @@ void bind_container_view(nanobind::module_& m, std::string_view class_name,
           [](ViewType& view, Eigen::Index idx) -> ElementType& {
             return view.get(idx);
           },
-          "index"_a, nanobind::rv_policy::reference_internal,
+          nanobind::arg("index"), nanobind::rv_policy::reference_internal,
           "Get element at index.")
       .def(
           "__setitem__",
           [](ViewType& view, Eigen::Index idx, const ElementType& elem) {
             view.set(idx, elem);
           },
-          "index"_a, "item"_a, "Set element at index.")
-      .def("append", &ViewType::append, "Add an element.", "item"_a)
+          nanobind::arg("index"), nanobind::arg("item"),
+          "Set element at index.")
+      .def("append", &ViewType::append, "Add an element.",
+           nanobind::arg("item"))
       .def("clear", &ViewType::clear, "Remove all elements.")
       .def("__iter__", [](ViewType& view) {
         nanobind::list items;

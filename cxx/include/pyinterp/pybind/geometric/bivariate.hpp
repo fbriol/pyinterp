@@ -81,7 +81,7 @@ template <template <class> class Point, typename DataType, typename ResultType>
   const auto y1 = static_cast<ResultType>(y_axis.coordinate_value(iy1));
 
   const auto p = Point<ResultType>(
-      x_axis.normalize_coordinate(static_cast<ResultType>(x), x0),
+      static_cast<ResultType>(x_axis.normalize_coordinate(x, x0)),
       static_cast<ResultType>(y));
   const auto p0 = Point<ResultType>(x0, y0);
   const auto p1 = Point<ResultType>(x1, y1);

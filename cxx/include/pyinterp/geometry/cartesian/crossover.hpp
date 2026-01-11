@@ -13,6 +13,7 @@
 #include "pyinterp/geometry/cartesian/multi_point.hpp"
 #include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/geometry/crossover.hpp"
+#include "pyinterp/math.hpp"
 
 namespace pyinterp::geometry::cartesian {
 
@@ -84,8 +85,8 @@ class Crossover : public geometry::Crossover<Point> {
   /// @param[in] x2 Longitude of the second point
   /// @param[in] x3 Longitude of the third point
   /// @return True if the motion is retrograde; false otherwise
-  constexpr auto is_retrograde(const double x1, const double x2,
-                               const double x3) -> bool {
+  __CONSTEXPR auto is_retrograde(const double x1, const double x2,
+                                 const double x3) -> bool {
     constexpr auto k180 = 180.0;
     auto delta = std::min(std::max(x1 - x2, -k180), k180);
     if (std::abs(delta) == k180) {

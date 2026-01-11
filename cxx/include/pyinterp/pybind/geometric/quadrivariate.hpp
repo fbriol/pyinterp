@@ -124,7 +124,7 @@ template <template <class> class Point, typename GridType, typename ResultType,
 
   const auto query = SpatialPoint4D(
       Point<ResultType>(
-          x_axis.normalize_coordinate(static_cast<ResultType>(x), x0),
+          static_cast<ResultType>(x_axis.normalize_coordinate(x, x0)),
           static_cast<ResultType>(y)),
       z, u);
   const auto bounds_lower = SpatialPoint4D(Point<ResultType>(x0, y0), z0, u0);

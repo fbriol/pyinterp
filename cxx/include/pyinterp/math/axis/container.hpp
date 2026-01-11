@@ -428,8 +428,9 @@ class AbstractRegular : public Abstract<T> {
           "An axis with a single value requires distinct start and stop "
           "values.");
     }
-    step_ = num == 1 ? stop - start
-                     : (stop - start) / static_cast<int64_t>(num - 1);
+    step_ = static_cast<T>(num == 1 ? stop - start
+                                    : (stop - start) /
+                                          static_cast<int64_t>(num - 1));
     // The inverse step of this axis is stored in order to optimize the search
     // for an index for a given value by avoiding a division.
     this->is_ascending_ = this->calculate_is_ascending();

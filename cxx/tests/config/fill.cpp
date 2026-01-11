@@ -140,13 +140,13 @@ TEST_F(LoessTest, WithNy) {
 
 TEST_F(LoessTest, WithNxZeroThrows) {
   Loess config;
-  volatile size_t zero = 0;  // to prevent compiler optimization
+  volatile uint32_t zero = 0;  // to prevent compiler optimization
   EXPECT_THROW(static_cast<void>(config.with_nx(zero)), std::invalid_argument);
 }
 
 TEST_F(LoessTest, WithNyZeroThrows) {
   Loess config;
-  volatile size_t zero = 0;  // to prevent compiler optimization
+  volatile uint32_t zero = 0;  // to prevent compiler optimization
   EXPECT_THROW(static_cast<void>(config.with_ny(zero)), std::invalid_argument);
 }
 

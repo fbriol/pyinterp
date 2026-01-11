@@ -44,7 +44,7 @@ class Box : public pyinterp::geometry::Box<Point> {
   /// @brief Check if two boxes are equal
   /// @param[in] other Other box to compare with
   /// @return True if the boxes are equal, false otherwise
-  [[nodiscard]] constexpr auto operator==(const Box& other) const noexcept {
+  [[nodiscard]] __CONSTEXPR auto operator==(const Box& other) const noexcept {
     return boost::geometry::equals(*this, other);
   }
 
@@ -77,7 +77,7 @@ class Box : public pyinterp::geometry::Box<Point> {
   /// @param[in] x Input number
   /// @return Maximum power of 10 less than or equal to x
   [[nodiscard]]
-  static constexpr auto max_decimal_power(const double x) -> double {
+  static __CONSTEXPR auto max_decimal_power(const double x) -> double {
     auto m = static_cast<int32_t>(std::floor(std::log10(x)));
     return math::power10(m);
   }

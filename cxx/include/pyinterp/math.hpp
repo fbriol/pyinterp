@@ -10,6 +10,12 @@
 #include <type_traits>
 #include <utility>
 
+#if (defined(__GNUC__) || defined(__clang__)) && (__cplusplus >= 202303L)
+#define __CONSTEXPR constexpr
+#else
+#define __CONSTEXPR inline
+#endif
+
 namespace pyinterp::math {
 
 /// @brief Convert degrees to radians
@@ -212,7 +218,7 @@ constexpr auto pow(const T &x) -> T {
 /// @brief Fast calculation of 2^n
 /// @param[in] exponent Exponent value
 /// @return 2 raised to the power of exponent
-constexpr auto power2(int32_t exponent) noexcept -> double {
+__CONSTEXPR auto power2(int32_t exponent) noexcept -> double {
   return std::exp2(static_cast<double>(exponent));
 }
 
