@@ -242,20 +242,6 @@ class CMakeExtension(setuptools.Extension):
     # pylint: enable=too-few-public-methods
 
 
-def check_ninja_available() -> bool:
-    """Check if Ninja build system is available."""
-    try:
-        subprocess.run(
-            ["ninja", "--version"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
-        return True
-    except FileNotFoundError:
-        return False
-
-
 def get_parallel_jobs() -> int:
     """Calculate optimal number of parallel jobs based on available memory.
 
@@ -289,7 +275,6 @@ def prepare_cmake_arguments(
     extdir: str,
     cmake_args: list[str],
     build_args: list[str],
-    generator: str | None = None,
 ) -> None:
     """Update cmake and build arguments based on the platform."""
     # Calculate memory-aware parallel jobs
@@ -304,21 +289,11 @@ def prepare_cmake_arguments(
         if code_coverage:
             cmake_args += ["-DCODE_COVERAGE=ON"]
     else:
-        # Determine if we're using Ninja or Visual Studio
-        using_ninja = (generator is not None and "Ninja" in generator)
-
-        if using_ninja:
-            # Ninja: Use memory-aware parallel jobs
-            build_args += ["--", f"-j{parallel_jobs}"]
-        else:
-            # Visual Studio generator needs platform specification
-            cmake_args += [
-                "-DCMAKE_GENERATOR_PLATFORM=x64",
-                f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={extdir}",
-            ]
-            # MSBuild: Specify explicit job count to prevent memory issues
-            # /m without a number lets MSBuild decide, but /m:N sets a limit
-            build_args += ["--", f"/m:{parallel_jobs}"]
+        cmake_args += [
+            "-DCMAKE_GENERATOR_PLATFORM=x64",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={extdir}",
+        ]
+        build_args += ["--", f"/m:{parallel_jobs}"]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -491,20 +466,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             generator = self.generator
             cmake_args.append("-G" + generator)
         elif is_windows:
-            # On Windows, prefer Ninja if available and not explicitly set
-            # via CMAKE_GEN environment variable, as it provides better
-            # parallel compilation performance
             if "CMAKE_GEN" in os.environ:
                 generator = os.environ["CMAKE_GEN"]
-            elif check_ninja_available():
-                generator = "Ninja"
-                print("Using Ninja generator for faster parallel compilation")
             else:
                 generator = "Visual Studio 17 2022"
-                print(
-                    "Ninja not found. Using Visual Studio generator. "
-                    "For faster builds, install Ninja: pip install ninja"
-                )
             cmake_args.append("-G" + generator)
 
         prepare_cmake_arguments(
@@ -514,7 +479,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             extdir,
             cmake_args,
             build_args,
-            generator,
         )
 
         if self.cmake_args:
