@@ -328,7 +328,8 @@ else()
 endif()
 
 # Eigen3
-include_directories(SYSTEM PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+include_directories(SYSTEM PRIVATE
+                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
 
 # GoogleTest
 include(CTest)
@@ -360,7 +361,8 @@ endif()
 
 # MKL does not provide a Discrete Cosine Transform (DCT). Always use pocketfft
 # for DCTs even when MKL is chosen as the FFT backend.
-include_directories(SYSTEM PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
+include_directories(SYSTEM PRIVATE
+                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
 if(FFT_IMPLEMENTATION STREQUAL "pocketfft")
   set(FFT_LIBRARIES)
 endif()
