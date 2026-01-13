@@ -2,14 +2,13 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/geometry/geographic/algorithms/azimuth.hpp"
-
 #include <nanobind/nanobind.h>
 
 #include <boost/geometry.hpp>
 #include <optional>
 
 #include "pyinterp/geometry/cartesian/point.hpp"
+#include "pyinterp/geometry/geographic/algorithms/azimuth.hpp"
 
 namespace nb = nanobind;
 using nb::literals::operator""_a;

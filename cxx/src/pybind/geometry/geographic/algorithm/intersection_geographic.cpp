@@ -3,12 +3,11 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/geographic/algorithms/intersection.hpp"
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
 
+#include "pyinterp/geometry/geographic/algorithms/intersection.hpp"
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;

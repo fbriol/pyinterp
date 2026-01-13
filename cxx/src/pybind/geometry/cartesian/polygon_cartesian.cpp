@@ -3,8 +3,6 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/cartesian/polygon.hpp"
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
@@ -16,6 +14,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "pyinterp/geometry/cartesian/polygon.hpp"
 #include "pyinterp/geometry/cartesian/ring.hpp"
 #include "pyinterp/pybind/geometry/container_view.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"

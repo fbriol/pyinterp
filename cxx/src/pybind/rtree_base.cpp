@@ -2,8 +2,6 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/pybind/rtree.hpp"
-
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -15,6 +13,7 @@
 #include <string_view>
 
 #include "pyinterp/pybind/dtype_to_str.hpp"
+#include "pyinterp/pybind/rtree.hpp"
 
 namespace nb = nanobind;
 

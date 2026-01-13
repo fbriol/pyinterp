@@ -3,8 +3,6 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/cartesian/multi_linestring.hpp"
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
@@ -18,6 +16,7 @@
 #include <utility>
 
 #include "pyinterp/geometry/cartesian/linestring.hpp"
+#include "pyinterp/geometry/cartesian/multi_linestring.hpp"
 #include "pyinterp/pybind/geometry/container_view.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 

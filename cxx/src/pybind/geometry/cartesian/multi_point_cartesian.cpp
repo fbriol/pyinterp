@@ -3,8 +3,6 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/cartesian/multi_point.hpp"
-
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
@@ -18,6 +16,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "pyinterp/geometry/cartesian/multi_point.hpp"
 #include "pyinterp/geometry/cartesian/point.hpp"
 #include "pyinterp/pybind/geometry/container_view.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"

@@ -3,12 +3,11 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/pybind/geometry/algorithms/for_each_point_covered_by.hpp"
-
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
+#include "pyinterp/pybind/geometry/algorithms/for_each_point_covered_by.hpp"
 
 namespace pyinterp::geometry::cartesian::pybind {
 

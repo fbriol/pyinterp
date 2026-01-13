@@ -3,8 +3,6 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/cartesian/segment.hpp"
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
@@ -15,6 +13,7 @@
 #include <stdexcept>
 
 #include "pyinterp/geometry/cartesian/point.hpp"
+#include "pyinterp/geometry/cartesian/segment.hpp"
 #include "pyinterp/pybind/ndarray_serialization.hpp"
 
 namespace nb = nanobind;

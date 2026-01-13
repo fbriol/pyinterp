@@ -2,11 +2,10 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/pybind/geometric/quadrivariate.hpp"
-
 #include <nanobind/nanobind.h>
 
 #include "pyinterp/geometry/point.hpp"
+#include "pyinterp/pybind/geometric/quadrivariate.hpp"
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/grid_dispatch.hpp"
 

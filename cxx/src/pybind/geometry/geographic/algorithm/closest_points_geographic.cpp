@@ -2,14 +2,13 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/geometry/geographic/algorithms/closest_points.hpp"
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 
 #include <boost/geometry.hpp>
 #include <optional>
 
+#include "pyinterp/geometry/geographic/algorithms/closest_points.hpp"
 #include "pyinterp/geometry/geographic/algorithms/strategy.hpp"
 #include "pyinterp/geometry/geographic/spheroid.hpp"
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"

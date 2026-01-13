@@ -3,12 +3,11 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/geographic/algorithms/convex_hull.hpp"
-
 #include <nanobind/nanobind.h>
 
 #include <boost/geometry.hpp>
 
+#include "pyinterp/geometry/geographic/algorithms/convex_hull.hpp"
 #include "pyinterp/geometry/geographic/algorithms/strategy.hpp"
 #include "pyinterp/geometry/geographic/polygon.hpp"
 #include "pyinterp/geometry/geographic/spheroid.hpp"

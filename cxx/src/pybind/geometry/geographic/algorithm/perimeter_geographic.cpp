@@ -3,11 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/geographic/algorithms/perimeter.hpp"
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 
+#include "pyinterp/geometry/geographic/algorithms/perimeter.hpp"
 #include "pyinterp/geometry/geographic/algorithms/strategy.hpp"
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 

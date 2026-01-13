@@ -3,11 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-#include "pyinterp/geometry/geographic/algorithms/simplify.hpp"
-
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 
+#include "pyinterp/geometry/geographic/algorithms/simplify.hpp"
 #include "pyinterp/geometry/geographic/linestring.hpp"
 #include "pyinterp/geometry/geographic/multi_linestring.hpp"
 #include "pyinterp/geometry/geographic/multi_polygon.hpp"
