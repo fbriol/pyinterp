@@ -210,7 +210,7 @@ check_floating_point_is_iec559()
 # ##############################################################################
 # Configure the build options
 # ##############################################################################
-option(CODE_COVERAGE "Enable coverage reporting" OFF)
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
 
 # ##############################################################################
@@ -232,12 +232,22 @@ endif()
 # ##############################################################################
 add_library(cpp_coverage INTERFACE)
 
-if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
-    target_link_options(cpp_coverage INTERFACE --coverage)
+if(ENABLE_COVERAGE)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_MODULE_PATH
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMake-codecov/cmake"
+        "${CMAKE_MODULE_PATH}")
+    find_package(codecov)
+    target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+      target_link_options(cpp_coverage INTERFACE --coverage)
+    else()
+      target_link_libraries(cpp_coverage INTERFACE --coverage)
+    endif()
   else()
-    target_link_libraries(cpp_coverage INTERFACE --coverage)
+    message(
+      FATAL_ERROR
+        "Code coverage is only supported with GCC and Clang compilers.")
   endif()
 endif()
 
@@ -425,6 +435,15 @@ if(ENABLE_CLANG_TIDY)
 endif()
 
 # ##############################################################################
+# Set up coverage
+# ##############################################################################
+if(ENABLE_COVERAGE)
+  list(APPEND LCOV_REMOVE_PATTERNS "\"${PROJECT_SOURCE_DIR}/cxx/tests/*\"")
+  list(APPEND LCOV_REMOVE_PATTERNS "\"${PROJECT_SOURCE_DIR}/third_party/*\"")
+  coverage_evaluate()
+endif()
+
+# ##############################################################################
 # Print configuration summary
 # ##############################################################################
 
@@ -441,7 +460,7 @@ function(format_enabled value_ result_var)
   endif()
 endfunction()
 
-format_enabled(CODE_COVERAGE CODE_COVERAGE_LINE)
+format_enabled(ENABLE_COVERAGE CODE_COVERAGE_LINE)
 format_enabled(ENABLE_CLANG_TIDY CLANG_TIDY_LINE)
 
 set(CONFIG_LINES

@@ -10,6 +10,9 @@ ProcessorCount(NUM_CORES)
 # Create the pure C++ library used by pybind
 file(GLOB_RECURSE LIB_SRC "src/library/*.cpp")
 add_library(pyinterp ${LIB_SRC})
+if(ENABLE_COVERAGE)
+  add_coverage(pyinterp)
+endif()
 target_include_directories(pyinterp
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if(MSVC)
@@ -25,6 +28,9 @@ target_link_libraries(
   core
   PRIVATE BLAS::BLAS pyinterp
   PUBLIC cpp_coverage)
+if(ENABLE_COVERAGE)
+  add_coverage(core)
+endif()
 if(MSVC)
   target_compile_options(core PRIVATE /MD)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")

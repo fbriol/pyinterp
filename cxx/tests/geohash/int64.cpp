@@ -726,7 +726,7 @@ TEST_F(GeoHashInt64Test, BoundingBoxesLargeArea) {
 
 TEST_F(GeoHashInt64Test, NeighborHashesType) {
   // Verify NeighborHashes is the correct type
-  NeighborHashes nh;
+  NeighborHashes nh{};
   EXPECT_EQ(nh.size(), 8);
   EXPECT_EQ(nh.rows(), 8);
   EXPECT_EQ(nh.cols(), 1);

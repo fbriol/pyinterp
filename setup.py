@@ -20,6 +20,9 @@ import setuptools
 import setuptools.command.build_ext
 
 
+# Type alias for user options
+USER_OPTIONS = list[tuple[str, str, str]] | list[tuple[str, str | None, str]]
+
 # Check Python requirement
 MAJOR = sys.version_info[0]
 MINOR = sys.version_info[1]
@@ -270,7 +273,6 @@ def get_parallel_jobs() -> int:
 
 def prepare_cmake_arguments(
     is_windows: bool,
-    code_coverage: bool,
     config: str,
     extdir: str,
     cmake_args: list[str],
@@ -286,8 +288,6 @@ def prepare_cmake_arguments(
             cmake_args += [
                 f"-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}"
             ]
-        if code_coverage:
-            cmake_args += ["-DCODE_COVERAGE=ON"]
     else:
         cmake_args += [
             "-DCMAKE_GENERATOR_PLATFORM=x64",
@@ -302,21 +302,57 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     user_options = setuptools.command.build_ext.build_ext.user_options
     user_options += [
-        ("build-unittests", None, "Build the unit tests of the C++ extension"),
-        ("c-compiler=", None, "Preferred C compiler"),
-        ("fft=", None, "Select FFT library: pocketfft or MKL"),
-        ("cmake-args=", None, "Additional arguments for CMake"),
-        ("code-coverage", None, "Enable coverage reporting"),
-        ("cxx-compiler=", None, "Preferred C++ compiler"),
-        ("generator=", None, "Selected CMake generator"),
-        ("mkl=", None, "Using MKL as BLAS library"),
-        ("reconfigure", None, "Forces CMake to reconfigure this project"),
+        (
+            "build-unittests",
+            None,
+            "Build the unit tests of the C++ extension",
+        ),
+        (
+            "enable-coverage",
+            None,
+            "Enable coverage reporting",
+        ),
+        (
+            "export-compile-commands",
+            None,
+            "Export compile commands for tooling",
+        ),
+        (
+            "fft=",
+            None,
+            "Select FFT library: pocketfft or MKL",
+        ),
+        (
+            "cmake-args=",
+            None,
+            "Additional arguments for CMake",
+        ),
+        (
+            "cxx-compiler=",
+            None,
+            "Preferred C++ compiler",
+        ),
+        (
+            "generator=",
+            None,
+            "Selected CMake generator",
+        ),
+        (
+            "mkl=",
+            None,
+            "Using MKL as BLAS library",
+        ),
+        (
+            "reconfigure",
+            None,
+            "Forces CMake to reconfigure this project",
+        ),
     ]
 
     boolean_options = setuptools.command.build_ext.build_ext.boolean_options
     boolean_options += [
-        "build_unittests",
-        "code_coverage",
+        "enable_coverage",
+        "export_compile_commands",
         "mkl",
         "reconfigure",
     ]
@@ -324,10 +360,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     def initialize_options(self) -> None:
         """Set the default values of the options."""
         super().initialize_options()
-        self.build_unittests = None
-        self.code_coverage = None
+        self.export_compile_commands = None
+        self.enable_coverage = None
         self.c_compiler = None
-        self.cmake_args = None
         self.cxx_compiler = None
         self.fft = None
         self.generator = None
@@ -337,7 +372,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     def finalize_options(self) -> None:
         """Set final values for all the options that this command supports."""
         super().finalize_options()
-        if self.code_coverage is not None and platform.system() == "Windows":
+        if self.enable_coverage is not None and platform.system() == "Windows":
             raise RuntimeError("Code coverage is not supported on Windows")
         if self.fft is not None and self.fft not in FFT_CHOICES:
             raise ValueError(
@@ -390,11 +425,14 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         conda_prefix = self.conda_prefix()
 
-        if self.c_compiler is not None:
-            result.append("-DCMAKE_C_COMPILER=" + self.c_compiler)
-
         if self.cxx_compiler is not None:
             result.append("-DCMAKE_CXX_COMPILER=" + self.cxx_compiler)
+
+        if self.enable_coverage:
+            result.append("-DENABLE_COVERAGE=ON")
+
+        if self.export_compile_commands:
+            result.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 
         if self.fft is not None:
             result.append(f"-DFFT_IMPLEMENTATION={self.fft}")
@@ -412,28 +450,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cfg: str
         if self.debug:
             cfg = "Debug"
-        elif self.code_coverage:
+        elif self.enable_coverage:
             cfg = "RelWithDebInfo"
         else:
             cfg = "Release"
         return cfg
-
-    def cmake_arguments(self, cfg: str, extdir: str) -> list[str]:
-        """Return the cmake arguments."""
-        cmake_args: list[str] = [
-            "-DCMAKE_BUILD_TYPE=" + cfg,
-            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
-            "-DPython3_EXECUTABLE=" + sys.executable,
-            *self.set_cmake_user_options(),
-        ]
-
-        if platform.python_implementation() == "PyPy":
-            cmake_args.append("-DPython3_FIND_IMPLEMENTATIONS=PyPy")
-        elif "Pyston" in sys.version:
-            cmake_args.append(
-                "-DPython3_INCLUDE_DIR=" + sysconfig.get_path("include")
-            )
-        return cmake_args
 
     def get_extdir(self, ext: CMakeExtension) -> pathlib.Path:
         """Detect if the build is in editable mode."""
@@ -455,7 +476,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         extdir = str(self.get_extdir(ext))
 
         cfg = self.get_config()
-        cmake_args = self.cmake_arguments(cfg, extdir)
+        cmake_args: list[str] = [
+            "-DCMAKE_BUILD_TYPE=" + cfg,
+            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
+            "-DPython3_EXECUTABLE=" + sys.executable,
+            *self.set_cmake_user_options(),
+        ]
         build_args = ["--config", cfg]
 
         is_windows = platform.system() == "Windows"
@@ -474,33 +500,29 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         prepare_cmake_arguments(
             is_windows,
-            self.code_coverage is not None,
             cfg,
             extdir,
             cmake_args,
             build_args,
         )
 
-        if self.cmake_args:
-            cmake_args.extend(self.cmake_args.split())
-
         os.chdir(str(build_temp))
 
-        # Has CMake ever been executed?
-        if pathlib.Path(
-            build_temp, "CMakeFiles", "TargetDirectories.txt"
-        ).exists():
-            # The user must force the reconfiguration
-            configure = self.reconfigure is not None
-        else:
-            configure = True
+        # Configure CMake if needed or requested
+        configure = (
+            (self.reconfigure is not None)
+            if pathlib.Path(
+                build_temp,
+                "CMakeFiles",
+                "TargetDirectories.txt",
+            ).exists()
+            else True
+        )
 
         if configure:
             self.spawn(["cmake", str(WORKING_DIRECTORY), *cmake_args])
         if not self.dry_run:
-            cmake_cmd = ["cmake", "--build", "."]
-            if self.build_unittests is None:
-                cmake_cmd += ["--target", "core"]
+            cmake_cmd = ["cmake", "--build", ".", "--target", "core"]
             self.spawn(cmake_cmd + build_args)  # type: ignore[arg-type]
         os.chdir(str(WORKING_DIRECTORY))
 
@@ -511,7 +533,7 @@ class CxxTestRunner(setuptools.Command):
     """Compile and launch the C++ tests."""
 
     description: ClassVar[str] = "run the C++ tests"
-    user_options: ClassVar[list[tuple[str, str | None, str]]] = []
+    user_options: ClassVar[USER_OPTIONS] = []
 
     def initialize_options(self) -> None:
         """Set the default values of the options."""
