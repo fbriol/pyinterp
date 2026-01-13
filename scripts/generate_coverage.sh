@@ -67,10 +67,7 @@ lcov --remove coverage.info "${ROOT}/cxx/tests/*" "${ROOT}/third_party/*" "pyint
 
 # Generate the html report
 cd ${ROOT}
-genhtml build/coverage.info --output-directory build/coverage_html --prefix "${ROOT}"
-
-# Merge the xunit reports
-python scripts/merge_xunit.py build -o build/junit.xml
+genhtml build/coverage.info --output-directory build/htmllcov --prefix "${ROOT}"
 
 # Show the coverage
-python scripts/coverage.py build/coverage_html/index.html
+python scripts/coverage.py build/htmllcov/index.html

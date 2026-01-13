@@ -43,36 +43,16 @@ jobs:
         environment-file: conda/linux.yml
         init-shell: bash
 
-    - name: Build extension with code coverage and the C++ tests
+    - name: Generate coverage data
       shell: bash -l {0}
       run: |
-        python setup.py build_ext --code-coverage --build-unittests
-        python setup.py build
-
-    - name: Run tests and measure coverage
-      shell: bash -l {0}
-      run: |
-        pytest -v -ra --cov=build --cov-report=lcov --measure-coverage
-        python setup.py gtest
-
-    - name: Filter and merge coverage
-      shell: bash -l {0}
-      run: |
-        lcov --add-tracefile coverage_cpp.lcov --add-tracefile coverage.lcov --output-file merged_coverage.lcov
-        lcov -r merged_coverage.lcov "${CONDA_PREFIX}/*" "/usr/*" "*/third_party/*" --output-file filtered_merged_coverage.lcov
-        genhtml filtered_merged_coverage.lcov --output-directory htmllcov
-
-    - name: Print total coverage
-      shell: bash -l {0}
-      run: |
-        percent=$(lcov -l filtered_merged_coverage.lcov|tail -1|grep -o '[0-9]\+\.[0-9]\+%' | head -n 1)
-        echo "Total coverage: $percent"
+        ./scripts/generate_coverage.sh
 
     - name: Upload HTML report as artifact
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: htmllcov
+        path: build/htmllcov
 
   linux:
     name: ${{ matrix.python-version }}-posix
