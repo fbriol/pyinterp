@@ -80,10 +80,12 @@ template <typename GridType, typename ResultType, typename ZType>
 
   if (cfg.third_axis().method() == config::AxisMethod::kLinear) {
     // Linear interpolation along Z axis
-    return {math::interpolate::linear(z, z0, z1, f0, f1)};
+    return {
+        static_cast<ResultType>(math::interpolate::linear(z, z0, z1, f0, f1))};
   }
   // Nearest neighbor interpolation along Z axis
-  return {math::interpolate::nearest(z, z0, z1, f0, f1)};
+  return {
+      static_cast<ResultType>(math::interpolate::nearest(z, z0, z1, f0, f1))};
 }
 
 /// @brief Vectorized trivariate interpolation
