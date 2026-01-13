@@ -1,22 +1,24 @@
 name: pyinterp
 dependencies:
-  - cxx-compiler
-  - libboost-devel
   - cartopy>=0.20.0
+  - clang_osx-64
+  - clangxx_osx-64
   - cmake
   - coverage
   - dask
-  - sphinx-book-theme
   - gtest
+  - lcov
+  - libboost-devel
+  - libcxx
   - numcodecs
   - numpy
   - pandas
   - pip
   - pypandoc
   - pytest
-  - lcov
   - pytest-cov
   - setuptools
+  - sphinx-book-theme
   - sphinx-gallery
   - sphinx-inline-tabs
   - xarray
