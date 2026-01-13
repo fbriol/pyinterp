@@ -222,7 +222,8 @@ struct InverseDistanceWeighting final : public Bivariate<Point, T> {
 
       // Compute weight: 1 / distance^exp = 1 / (sqrt(dist_squared))^exp
       // = 1 / dist_squared^(exp/2)
-      const auto weight = static_cast<T>(1 / std::pow(dist_squared, exp_ * 0.5));
+      const auto weight =
+          static_cast<T>(1 / std::pow(dist_squared, exp_ * 0.5));
       weight_sum += weight;
       weighted_value_sum += corner_value * weight;
     }
