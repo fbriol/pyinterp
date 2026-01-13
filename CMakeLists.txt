@@ -256,7 +256,7 @@ find_package(
   Python3
   COMPONENTS Interpreter Development.Module
   REQUIRED)
-include_directories(SYSTEM ${Python3_INCLUDE_DIRS})
+include_directories(SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
 # Ensure Python::Module target exists (needed for nanobind on Windows)
 if(NOT TARGET Python::Module)
@@ -302,7 +302,7 @@ if(BLAS_FOUND)
     if(MKL_INCLUDE_DIR)
       add_definitions(-DEIGEN_USE_MKL_ALL)
       add_definitions(-DMKL_LP64)
-      include_directories(SYSTEM ${MKL_INCLUDE_DIR})
+      include_directories(SYSTEM PRIVATE ${MKL_INCLUDE_DIR})
     endif()
   endif()
 else()
@@ -328,7 +328,7 @@ else()
 endif()
 
 # Eigen3
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+include_directories(SYSTEM PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
 
 # GoogleTest
 include(CTest)
@@ -360,7 +360,7 @@ endif()
 
 # MKL does not provide a Discrete Cosine Transform (DCT). Always use pocketfft
 # for DCTs even when MKL is chosen as the FFT backend.
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
+include_directories(SYSTEM PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
 if(FFT_IMPLEMENTATION STREQUAL "pocketfft")
   set(FFT_LIBRARIES)
 endif()
@@ -411,7 +411,7 @@ include_directories(SYSTEM
 # External dependencies
 # ##############################################################################
 find_package(Boost 1.80 REQUIRED)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(cxx)
 
